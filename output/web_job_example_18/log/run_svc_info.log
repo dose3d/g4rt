@@ -1,0 +1,25 @@
+[2023-12-13 14:37:22.628] RunSvc [debug] Logger RunSvc configured.
+[2023-12-13 14:37:22.629] RunSvc [info] Logger recreated.
+[2023-12-13 14:37:22.629] RunSvc [info] Service initialization...
+[2023-12-13 14:37:22.629] RunSvc [info] Importing configuration from:
+../jobs/web/web_job.toml
+[2023-12-13 14:37:22.629] RunSvc [info] Launching 4 thread(s)
+[2023-12-13 14:37:22.629] RunSvc [info] Launching emstandard_opt3 physics model
+[2023-12-13 14:37:22.629] RunSvc [info] Launching 2 control points
+[2023-12-13 14:37:22.671] RunSvc [info] FullSimulationMode
+[2023-12-13 14:37:22.672] RunSvc [info] RNG Seed: 137 
+[2023-12-13 14:37:22.672] RunSvc [info] UserG4Initialization...
+[2023-12-13 14:37:22.676] RunSvc [info] Initialisation elapsed time [s]: 0.004430652
+[2023-12-13 14:37:28.378] RunSvc [debug] Writing Geometry Data
+[2023-12-13 14:37:28.848] RunSvc [debug] Writing Control Point Data (CP-0)
+[2023-12-13 14:37:29.023] RunSvc [debug] Writing Control Point Data (CP-1)
+[2023-12-13 14:37:29.103] RunSvc [info] Job output dir: /home/geant4/workspace/g4rt/output/web_job_example_18
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-1_sim.root
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-1_field_mask.root
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-0_sim.root
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-0_field_mask.root
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-1_field_mask_scoring_volume.root
+[2023-12-13 14:37:29.170] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/sim/cp-0_field_mask_scoring_volume.root
+[2023-12-13 14:37:29.171] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_18/geo/world_geometry.root
+[2023-12-13 14:37:29.260] RunSvc [info] Merging to file: /home/geant4/workspace/g4rt/output/web_job_example_18/web_job_example.root - done!
+[2023-12-13 14:37:29.260] RunSvc [info] Goodbye from G4RT!

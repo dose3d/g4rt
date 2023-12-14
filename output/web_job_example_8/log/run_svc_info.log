@@ -1,0 +1,21 @@
+[2023-12-13 10:40:08.868] RunSvc [debug] Logger RunSvc configured.
+[2023-12-13 10:40:08.868] RunSvc [info] Logger recreated.
+[2023-12-13 10:40:08.868] RunSvc [info] Service initialization...
+[2023-12-13 10:40:08.868] RunSvc [info] Importing configuration from:
+../jobs/web/web_job.toml
+[2023-12-13 10:40:08.868] RunSvc [info] Launching 4 thread(s)
+[2023-12-13 10:40:08.869] RunSvc [info] Launching emstandard_opt3 physics model
+[2023-12-13 10:40:08.869] RunSvc [info] Launching 1 control points
+[2023-12-13 10:40:08.910] RunSvc [info] FullSimulationMode
+[2023-12-13 10:40:08.911] RunSvc [info] RNG Seed: 137 
+[2023-12-13 10:40:08.911] RunSvc [info] UserG4Initialization...
+[2023-12-13 10:40:08.914] RunSvc [info] Initialisation elapsed time [s]: 0.003454747
+[2023-12-13 10:40:28.090] RunSvc [debug] Writing Geometry Data
+[2023-12-13 10:40:28.505] RunSvc [debug] Writing Control Point Data (CP-0)
+[2023-12-13 10:40:28.671] RunSvc [info] Output dir: /home/geant4/workspace/g4rt/output/web_job_example_8
+[2023-12-13 10:40:28.731] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_8/sim/cp-0_sim.root
+[2023-12-13 10:40:28.731] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_8/sim/cp-0_field_mask.root
+[2023-12-13 10:40:28.731] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_8/sim/cp-0_field_mask_scoring_volume.root
+[2023-12-13 10:40:28.731] RunSvc [debug] AddFile: /home/geant4/workspace/g4rt/output/web_job_example_8/geo/world_geometry.root
+[2023-12-13 10:40:28.793] RunSvc [info] Merging to file: /home/geant4/workspace/g4rt/output/web_job_example_8/web_job_example.root - done!
+[2023-12-13 10:40:28.793] RunSvc [info] Goodbye from G4RT!

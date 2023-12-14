@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+
+  <define/>
+
+  <materials>
+    <isotope N="1" Z="1" name="H10x560c8fefa520">
+      <atom unit="g/mole" value="1.00782503081372"/>
+    </isotope>
+    <isotope N="2" Z="1" name="H20x560c8fef9bc0">
+      <atom unit="g/mole" value="2.01410199966617"/>
+    </isotope>
+    <element name="H0x560c8fefa570">
+      <fraction n="0.999885" ref="H10x560c8fefa520"/>
+      <fraction n="0.000115" ref="H20x560c8fef9bc0"/>
+    </element>
+    <isotope N="12" Z="6" name="C120x560c8fefeb60">
+      <atom unit="g/mole" value="12"/>
+    </isotope>
+    <isotope N="13" Z="6" name="C130x560c8fefef00">
+      <atom unit="g/mole" value="13.0034"/>
+    </isotope>
+    <element name="C0x560c8fefef50">
+      <fraction n="0.9893" ref="C120x560c8fefeb60"/>
+      <fraction n="0.0107" ref="C130x560c8fefef00"/>
+    </element>
+    <isotope N="14" Z="7" name="N140x560c8feff090">
+      <atom unit="g/mole" value="14.0031"/>
+    </isotope>
+    <isotope N="15" Z="7" name="N150x560c8feff0e0">
+      <atom unit="g/mole" value="15.0001"/>
+    </isotope>
+    <element name="N0x560c8feff130">
+      <fraction n="0.99632" ref="N140x560c8feff090"/>
+      <fraction n="0.00368" ref="N150x560c8feff0e0"/>
+    </element>
+    <isotope N="16" Z="8" name="O160x560c8feff2d0">
+      <atom unit="g/mole" value="15.9949"/>
+    </isotope>
+    <isotope N="17" Z="8" name="O170x560c8feff320">
+      <atom unit="g/mole" value="16.9991"/>
+    </isotope>
+    <isotope N="18" Z="8" name="O180x560c8feff370">
+      <atom unit="g/mole" value="17.9992"/>
+    </isotope>
+    <element name="O0x560c8feff3f0">
+      <fraction n="0.99757" ref="O160x560c8feff2d0"/>
+      <fraction n="0.00038" ref="O170x560c8feff320"/>
+      <fraction n="0.00205" ref="O180x560c8feff370"/>
+    </element>
+    <material name="RMPS4700x560c8ff077b0" state="solid">
+      <T unit="K" value="293.15"/>
+      <MEE unit="eV" value="68.7440204372717"/>
+      <D unit="g/cm3" value="1.21"/>
+      <fraction n="0.0592510448551221" ref="H0x560c8fefa570"/>
+      <fraction n="0.779895957583851" ref="C0x560c8fefef50"/>
+      <fraction n="0.00344509397142662" ref="N0x560c8feff130"/>
+      <fraction n="0.1574079035896" ref="O0x560c8feff3f0"/>
+    </material>
+    <material name="G4_Galactic0x560c8fefa390" state="gas">
+      <T unit="K" value="2.73"/>
+      <P unit="pascal" value="3e-18"/>
+      <MEE unit="eV" value="21.8"/>
+      <D unit="g/cm3" value="1e-25"/>
+      <fraction n="1" ref="H0x560c8fefa570"/>
+    </material>
+    <isotope N="36" Z="18" name="Ar360x560c8ff03330">
+      <atom unit="g/mole" value="35.9675"/>
+    </isotope>
+    <isotope N="38" Z="18" name="Ar380x560c8ff08580">
+      <atom unit="g/mole" value="37.9627"/>
+    </isotope>
+    <isotope N="40" Z="18" name="Ar400x560c8ff09100">
+      <atom unit="g/mole" value="39.9624"/>
+    </isotope>
+    <element name="Ar0x560c8ff09180">
+      <fraction n="0.003365" ref="Ar360x560c8ff03330"/>
+      <fraction n="0.000632" ref="Ar380x560c8ff08580"/>
+      <fraction n="0.996003" ref="Ar400x560c8ff09100"/>
+    </element>
+    <material name="Usr_G4AIR20C0x560c8ff09eb0" state="gas">
+      <T unit="K" value="295.15"/>
+      <MEE unit="eV" value="85.7"/>
+      <D unit="g/cm3" value="0.0012041"/>
+      <fraction n="0.000124000124000124" ref="C0x560c8fefef50"/>
+      <fraction n="0.755267755267755" ref="N0x560c8feff130"/>
+      <fraction n="0.231781231781232" ref="O0x560c8feff3f0"/>
+      <fraction n="0.0128270128270128" ref="Ar0x560c8ff09180"/>
+    </material>
+  </materials>
+
+  <solids>
+    <box lunit="mm" name="D3D_0_0_0Box0x560c90189480" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_0_0Box0x560c9018ba20" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_0_0Box0x560c9018bec0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_0_1Box0x560c9018c480" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_0_1Box0x560c9018ca90" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_0_1Box0x560c9018d0a0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_0_2Box0x560c9018d710" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_0_2Box0x560c9018dd80" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_0_2Box0x560c9018e3f0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_0_3Box0x560c9018ea60" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_0_3Box0x560c9018f0d0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_0_3Box0x560c9018f740" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_0_4Box0x560c9018fdb0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_0_4Box0x560c90190420" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_0_4Box0x560c90190a90" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_1_0Box0x560c90191450" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_1_0Box0x560c90191ac0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_1_0Box0x560c90192140" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_1_1Box0x560c901927b0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_1_1Box0x560c90192d70" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_1_1Box0x560c901933b0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_1_2Box0x560c90193a20" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_1_2Box0x560c90194090" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_1_2Box0x560c90194700" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_1_3Box0x560c90194d70" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_1_3Box0x560c901953e0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_1_3Box0x560c90195a50" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_0_1_4Box0x560c901960c0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_1_1_4Box0x560c90196730" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="D3D_2_1_4Box0x560c90196da0" x="10.4" y="10.4" z="10.4"/>
+    <box lunit="mm" name="patientEnvBox0x560c9017a380" x="50" y="50" z="80"/>
+    <box lunit="mm" name="worldG0x560c9017a270" x="12000" y="12000" z="12000"/>
+  </solids>
+
+  <structure>
+    <volume name="D3D_0_0_0LV0x560c90189500">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_0_0Box0x560c90189480"/>
+    </volume>
+    <volume name="D3D_1_0_0LV0x560c9018bac0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_0_0Box0x560c9018ba20"/>
+    </volume>
+    <volume name="D3D_2_0_0LV0x560c9018bfc0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_0_0Box0x560c9018bec0"/>
+    </volume>
+    <volume name="D3D_0_0_1LV0x560c9018c580">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_0_1Box0x560c9018c480"/>
+    </volume>
+    <volume name="D3D_1_0_1LV0x560c9018cb90">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_0_1Box0x560c9018ca90"/>
+    </volume>
+    <volume name="D3D_2_0_1LV0x560c9018d1a0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_0_1Box0x560c9018d0a0"/>
+    </volume>
+    <volume name="D3D_0_0_2LV0x560c9018d810">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_0_2Box0x560c9018d710"/>
+    </volume>
+    <volume name="D3D_1_0_2LV0x560c9018de80">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_0_2Box0x560c9018dd80"/>
+    </volume>
+    <volume name="D3D_2_0_2LV0x560c9018e4f0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_0_2Box0x560c9018e3f0"/>
+    </volume>
+    <volume name="D3D_0_0_3LV0x560c9018eb60">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_0_3Box0x560c9018ea60"/>
+    </volume>
+    <volume name="D3D_1_0_3LV0x560c9018f1d0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_0_3Box0x560c9018f0d0"/>
+    </volume>
+    <volume name="D3D_2_0_3LV0x560c9018f840">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_0_3Box0x560c9018f740"/>
+    </volume>
+    <volume name="D3D_0_0_4LV0x560c9018feb0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_0_4Box0x560c9018fdb0"/>
+    </volume>
+    <volume name="D3D_1_0_4LV0x560c90190520">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_0_4Box0x560c90190420"/>
+    </volume>
+    <volume name="D3D_2_0_4LV0x560c90190b90">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_0_4Box0x560c90190a90"/>
+    </volume>
+    <volume name="D3D_0_1_0LV0x560c90191550">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_1_0Box0x560c90191450"/>
+    </volume>
+    <volume name="D3D_1_1_0LV0x560c90191bc0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_1_0Box0x560c90191ac0"/>
+    </volume>
+    <volume name="D3D_2_1_0LV0x560c90192240">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_1_0Box0x560c90192140"/>
+    </volume>
+    <volume name="D3D_0_1_1LV0x560c8ff12050">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_1_1Box0x560c901927b0"/>
+    </volume>
+    <volume name="D3D_1_1_1LV0x560c90192e70">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_1_1Box0x560c90192d70"/>
+    </volume>
+    <volume name="D3D_2_1_1LV0x560c901934b0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_1_1Box0x560c901933b0"/>
+    </volume>
+    <volume name="D3D_0_1_2LV0x560c90193b20">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_1_2Box0x560c90193a20"/>
+    </volume>
+    <volume name="D3D_1_1_2LV0x560c90194190">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_1_2Box0x560c90194090"/>
+    </volume>
+    <volume name="D3D_2_1_2LV0x560c90194800">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_1_2Box0x560c90194700"/>
+    </volume>
+    <volume name="D3D_0_1_3LV0x560c90194e70">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_1_3Box0x560c90194d70"/>
+    </volume>
+    <volume name="D3D_1_1_3LV0x560c901954e0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_1_3Box0x560c901953e0"/>
+    </volume>
+    <volume name="D3D_2_1_3LV0x560c90195b50">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_1_3Box0x560c90195a50"/>
+    </volume>
+    <volume name="D3D_0_1_4LV0x560c901961c0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_0_1_4Box0x560c901960c0"/>
+    </volume>
+    <volume name="D3D_1_1_4LV0x560c90196830">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_1_1_4Box0x560c90196730"/>
+    </volume>
+    <volume name="D3D_2_1_4LV0x560c90196ea0">
+      <materialref ref="RMPS4700x560c8ff077b0"/>
+      <solidref ref="D3D_2_1_4Box0x560c90196da0"/>
+    </volume>
+    <volume name="patientEnvLV0x560c90188a20">
+      <materialref ref="G4_Galactic0x560c8fefa390"/>
+      <solidref ref="patientEnvBox0x560c9017a380"/>
+      <physvol name="D3D_0_0_0PV0x560c9018a170">
+        <volumeref ref="D3D_0_0_0LV0x560c90189500"/>
+        <position name="D3D_0_0_0PV0x560c9018a170_pos" unit="mm" x="-12.4" y="-6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_1_0_0PV0x560c9018af10">
+        <volumeref ref="D3D_1_0_0LV0x560c9018bac0"/>
+        <position name="D3D_1_0_0PV0x560c9018af10_pos" unit="mm" x="0" y="-6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_2_0_0PV0x560c9018c0f0">
+        <volumeref ref="D3D_2_0_0LV0x560c9018bfc0"/>
+        <position name="D3D_2_0_0PV0x560c9018c0f0_pos" unit="mm" x="12.4" y="-6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_0_0_1PV0x560c9018c6b0">
+        <volumeref ref="D3D_0_0_1LV0x560c9018c580"/>
+        <position name="D3D_0_0_1PV0x560c9018c6b0_pos" unit="mm" x="-12.4" y="-6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_1_0_1PV0x560c9018ccc0">
+        <volumeref ref="D3D_1_0_1LV0x560c9018cb90"/>
+        <position name="D3D_1_0_1PV0x560c9018ccc0_pos" unit="mm" x="0" y="-6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_2_0_1PV0x560c9018d2d0">
+        <volumeref ref="D3D_2_0_1LV0x560c9018d1a0"/>
+        <position name="D3D_2_0_1PV0x560c9018d2d0_pos" unit="mm" x="12.4" y="-6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_0_0_2PV0x560c9018d940">
+        <volumeref ref="D3D_0_0_2LV0x560c9018d810"/>
+        <position name="D3D_0_0_2PV0x560c9018d940_pos" unit="mm" x="-12.4" y="-6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_1_0_2PV0x560c9018dfb0">
+        <volumeref ref="D3D_1_0_2LV0x560c9018de80"/>
+        <position name="D3D_1_0_2PV0x560c9018dfb0_pos" unit="mm" x="0" y="-6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_2_0_2PV0x560c9018e620">
+        <volumeref ref="D3D_2_0_2LV0x560c9018e4f0"/>
+        <position name="D3D_2_0_2PV0x560c9018e620_pos" unit="mm" x="12.4" y="-6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_0_0_3PV0x560c9018ec90">
+        <volumeref ref="D3D_0_0_3LV0x560c9018eb60"/>
+        <position name="D3D_0_0_3PV0x560c9018ec90_pos" unit="mm" x="-12.4" y="-6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_1_0_3PV0x560c9018f300">
+        <volumeref ref="D3D_1_0_3LV0x560c9018f1d0"/>
+        <position name="D3D_1_0_3PV0x560c9018f300_pos" unit="mm" x="0" y="-6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_2_0_3PV0x560c9018f970">
+        <volumeref ref="D3D_2_0_3LV0x560c9018f840"/>
+        <position name="D3D_2_0_3PV0x560c9018f970_pos" unit="mm" x="12.4" y="-6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_0_0_4PV0x560c9018ffe0">
+        <volumeref ref="D3D_0_0_4LV0x560c9018feb0"/>
+        <position name="D3D_0_0_4PV0x560c9018ffe0_pos" unit="mm" x="-12.4" y="-6.2" z="35.8"/>
+      </physvol>
+      <physvol name="D3D_1_0_4PV0x560c90190650">
+        <volumeref ref="D3D_1_0_4LV0x560c90190520"/>
+        <position name="D3D_1_0_4PV0x560c90190650_pos" unit="mm" x="0" y="-6.2" z="35.8"/>
+      </physvol>
+      <physvol name="D3D_2_0_4PV0x560c90190cc0">
+        <volumeref ref="D3D_2_0_4LV0x560c90190b90"/>
+        <position name="D3D_2_0_4PV0x560c90190cc0_pos" unit="mm" x="12.4" y="-6.2" z="35.8"/>
+      </physvol>
+      <physvol name="D3D_0_1_0PV0x560c90191680">
+        <volumeref ref="D3D_0_1_0LV0x560c90191550"/>
+        <position name="D3D_0_1_0PV0x560c90191680_pos" unit="mm" x="-12.4" y="6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_1_1_0PV0x560c90191cf0">
+        <volumeref ref="D3D_1_1_0LV0x560c90191bc0"/>
+        <position name="D3D_1_1_0PV0x560c90191cf0_pos" unit="mm" x="0" y="6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_2_1_0PV0x560c90192370">
+        <volumeref ref="D3D_2_1_0LV0x560c90192240"/>
+        <position name="D3D_2_1_0PV0x560c90192370_pos" unit="mm" x="12.4" y="6.2" z="-13.8"/>
+      </physvol>
+      <physvol name="D3D_0_1_1PV0x560c90192930">
+        <volumeref ref="D3D_0_1_1LV0x560c8ff12050"/>
+        <position name="D3D_0_1_1PV0x560c90192930_pos" unit="mm" x="-12.4" y="6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_1_1_1PV0x560c90192fa0">
+        <volumeref ref="D3D_1_1_1LV0x560c90192e70"/>
+        <position name="D3D_1_1_1PV0x560c90192fa0_pos" unit="mm" x="0" y="6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_2_1_1PV0x560c901935e0">
+        <volumeref ref="D3D_2_1_1LV0x560c901934b0"/>
+        <position name="D3D_2_1_1PV0x560c901935e0_pos" unit="mm" x="12.4" y="6.2" z="-1.4"/>
+      </physvol>
+      <physvol name="D3D_0_1_2PV0x560c90193c50">
+        <volumeref ref="D3D_0_1_2LV0x560c90193b20"/>
+        <position name="D3D_0_1_2PV0x560c90193c50_pos" unit="mm" x="-12.4" y="6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_1_1_2PV0x560c901942c0">
+        <volumeref ref="D3D_1_1_2LV0x560c90194190"/>
+        <position name="D3D_1_1_2PV0x560c901942c0_pos" unit="mm" x="0" y="6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_2_1_2PV0x560c90194930">
+        <volumeref ref="D3D_2_1_2LV0x560c90194800"/>
+        <position name="D3D_2_1_2PV0x560c90194930_pos" unit="mm" x="12.4" y="6.2" z="11"/>
+      </physvol>
+      <physvol name="D3D_0_1_3PV0x560c90194fa0">
+        <volumeref ref="D3D_0_1_3LV0x560c90194e70"/>
+        <position name="D3D_0_1_3PV0x560c90194fa0_pos" unit="mm" x="-12.4" y="6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_1_1_3PV0x560c90195610">
+        <volumeref ref="D3D_1_1_3LV0x560c901954e0"/>
+        <position name="D3D_1_1_3PV0x560c90195610_pos" unit="mm" x="0" y="6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_2_1_3PV0x560c90195c80">
+        <volumeref ref="D3D_2_1_3LV0x560c90195b50"/>
+        <position name="D3D_2_1_3PV0x560c90195c80_pos" unit="mm" x="12.4" y="6.2" z="23.4"/>
+      </physvol>
+      <physvol name="D3D_0_1_4PV0x560c901962f0">
+        <volumeref ref="D3D_0_1_4LV0x560c901961c0"/>
+        <position name="D3D_0_1_4PV0x560c901962f0_pos" unit="mm" x="-12.4" y="6.2" z="35.8"/>
+      </physvol>
+      <physvol name="D3D_1_1_4PV0x560c90196960">
+        <volumeref ref="D3D_1_1_4LV0x560c90196830"/>
+        <position name="D3D_1_1_4PV0x560c90196960_pos" unit="mm" x="0" y="6.2" z="35.8"/>
+      </physvol>
+      <physvol name="D3D_2_1_4PV0x560c90196fd0">
+        <volumeref ref="D3D_2_1_4LV0x560c90196ea0"/>
+        <position name="D3D_2_1_4PV0x560c90196fd0_pos" unit="mm" x="12.4" y="6.2" z="35.8"/>
+      </physvol>
+    </volume>
+    <volume name="worldL0x560c9017d620">
+      <materialref ref="Usr_G4AIR20C0x560c8ff09eb0"/>
+      <solidref ref="worldG0x560c9017a270"/>
+      <physvol name="phmWorldPV0x560c90188cb0">
+        <volumeref ref="patientEnvLV0x560c90188a20"/>
+      </physvol>
+    </volume>
+  </structure>
+
+  <setup name="Default" version="1.0">
+    <world ref="worldL0x560c9017d620"/>
+  </setup>
+
+</gdml>

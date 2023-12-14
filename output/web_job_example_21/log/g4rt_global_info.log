@@ -1,0 +1,39 @@
+[2023-12-13 16:48:20.280] G4Cout [debug] Logger G4Cout configured.
+[2023-12-13 16:48:20.280] G4Cout [info] [INFO]:: UIManager :: Applying command :: /run/initialize
+[2023-12-13 16:48:20.280] G4Cout [info] [INFO]:: NTupleEventAnalisys:: Creating tree:  Dose3D
+[2023-12-13 16:48:20.281] G4Cout [info] [INFO]:: NTupleEventAnalisys:: Creating tree:  Dose3DVoxelised
+[2023-12-13 16:48:20.283] G4Cout [info] --- G4CoupledTransportation is used 
+[2023-12-13 16:48:22.668] G4Cout [info] Pre-beam elapsed time [s] : 2.38804
+[2023-12-13 16:48:22.668] G4Cout [info] [INFO]:: UIManager :: RUN SETUP 
+[2023-12-13 16:48:22.669] G4Cout [info] [32m[INFO][0m:: [34mGENERATING NEW RUN... [0m
+[2023-12-13 16:48:22.669] G4Cout [info] [32m[INFO][0m:: NEvents: 10000
+[2023-12-13 16:48:22.669] G4Cout [info] [32m[INFO][0m:: Rotation: 
+   [ (           1             0             0)
+     (           0             1             0)
+     (           0             0             1) ]
+
+[2023-12-13 16:48:22.678] G4Cout [info] ### Run 0 starts (master).
+[2023-12-13 16:48:22.678] G4Cout [info] [DEUBG]:: NTupleEventAnalisys:: creating TTree data from cell as a single voxel scoring
+[2023-12-13 16:48:22.678] G4Cout [info] [DEUBG]:: NTupleEventAnalisys:: creating TTree data from vexelised cell scoring
+[2023-12-13 16:48:22.679] G4Cout [info] Phantom centre: (0,0,0) [cm] 
+[2023-12-13 16:48:24.321] G4Cout [info] Global-loop elapsed time [s] : 1.64275
+[2023-12-13 16:48:24.378] G4Cout [info] [32m[INFO][0m:: [34mGENERATING NEW RUN... [0m
+[2023-12-13 16:48:24.378] G4Cout [info] [32m[INFO][0m:: NEvents: 10000
+[2023-12-13 16:48:24.378] G4Cout [info] [32m[INFO][0m:: Rotation: 
+   [ (           1             0             0)
+     (           0             1             0)
+     (           0             0             1) ]
+
+[2023-12-13 16:48:24.387] G4Cout [info] ### Run 1 starts (master).
+[2023-12-13 16:48:24.387] G4Cout [info] Phantom centre: (0,0,0) [cm] 
+[2023-12-13 16:48:26.027] G4Cout [info] Global-loop elapsed time [s] : 1.63941
+[2023-12-13 16:48:26.048] G4Cout [info] Post-beam elapsed time [s] : 4e-07
+[2023-12-13 16:48:26.048] G4Cout [info] [INFO]:: LinacUIManager :: Service finalization 
+[2023-12-13 16:48:26.052] G4Cout [info] G4GDML: Writing '/home/geant4/workspace/g4rt/output/web_job_example_21/geo/world_geometry.gdml'...
+[2023-12-13 16:48:26.052] G4Cout [info] G4GDML: Writing definitions...
+[2023-12-13 16:48:26.053] G4Cout [info] G4GDML: Writing materials...
+[2023-12-13 16:48:26.053] G4Cout [info] G4GDML: Writing solids...
+[2023-12-13 16:48:26.053] G4Cout [info] G4GDML: Writing structure...
+[2023-12-13 16:48:26.053] G4Cout [info] G4GDML: Writing setup...
+[2023-12-13 16:48:26.054] G4Cout [info] G4GDML: Writing surfaces...
+[2023-12-13 16:48:26.054] G4Cout [info] G4GDML: Writing '/home/geant4/workspace/g4rt/output/web_job_example_21/geo/world_geometry.gdml' done !

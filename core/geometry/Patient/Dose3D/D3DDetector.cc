@@ -286,8 +286,7 @@ void D3DDetector::AcceptGeoVisitor(GeoSvc *visitor) const {
 void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) const {
   std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
   size += "_"+std::to_string(m_cell_nX_voxels)+"x"+std::to_string(m_cell_nY_voxels)+"x"+std::to_string(m_cell_nZ_voxels);
-  std::string file = "/detector_scoring_volume_positioning.root";
-  file = path_to_out_dir + file;
+  std::string file = path_to_out_dir + "/detector_scoring_volume_positioning.root";
   auto tfile = IO::CreateOutputTFile(file,"Geometry");
 
   auto exportPositioningToTFile = [&](Scoring::Type type){

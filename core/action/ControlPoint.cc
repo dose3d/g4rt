@@ -81,22 +81,6 @@ std::string ControlPoint::GetSimOutputTFileName() const {
     return GetOutputFileName() + "_sim.root";
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///
-// std::string ControlPoint::GetDataTFileName() const {
-//     return GetOutputFileName() + "_data.root";
-// }
-
-////////////////////////////////////////////////////////////////////////////////
-/// TODO use IO::CreateOutputTFile
-std::unique_ptr<TFile> ControlPoint::CreateOutputTFile(const std::string& name) const {
-    auto tf_name = GetOutputFileName() + "_" + name + ".root";
-    auto output_tfile = std::make_unique<TFile>(tf_name.c_str(),"RECREATE");
-    output_tfile->mkdir("Geometry");
-    auto cp_dir = output_tfile->mkdir("RT_Plan");
-    cp_dir->mkdir(TString("CP_"+std::to_string(GetId())));
-    return std::move(output_tfile);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -354,8 +338,9 @@ void ControlPoint::FillScoringDataTagging(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::WriteFieldMaskToTFile() const {
-    auto file = CreateOutputTFile("field_mask"); // TODO use IO::CreateOutputTFile
+    auto fname = GetOutputFileName()+"_field_mask.root";
     auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
+    auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     for(const auto& type : m_data_types){
         auto field_mask = GetFieldMask(type);
@@ -395,8 +380,9 @@ void ControlPoint::WriteFieldMaskToCsv() const {
 void ControlPoint::WriteVolumeFieldMaskToTFile(){
     if(!m_is_scoring_data_filled) 
         FillScoringData();
-    auto file = CreateOutputTFile("field_mask_scoring_volume"); // TODO use IO::CreateOutputTFile
+    auto fname = GetOutputFileName()+"_field_mask_scoring_volume.root";
     auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
+    auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     for(const auto& scoring_type: m_scoring_types) {
         auto& data = m_hashed_scoring_map[scoring_type];

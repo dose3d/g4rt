@@ -56,11 +56,8 @@ class ControlPoint {
     void WriteFieldMaskToTFile() const;
     void WriteFieldMaskToCsv() const;
 
-    void WriteVolumeFieldMaskToTFile();
-    void WriteVolumeFieldMaskToCsv();
-
-    void WriteIntegratedDoseToTFile();
-    void WriteIntegratedDoseToCsv();
+    void WriteVolumeDoseAndTaggingToTFile();
+    void WriteVolumeDoseAndTaggingToCsv();
 
     void ClearCachedData();
 

@@ -81,22 +81,6 @@ std::string ControlPoint::GetSimOutputTFileName() const {
     return GetOutputFileName() + "_sim.root";
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///
-// std::string ControlPoint::GetDataTFileName() const {
-//     return GetOutputFileName() + "_data.root";
-// }
-
-////////////////////////////////////////////////////////////////////////////////
-/// TODO use IO::CreateOutputTFile
-std::unique_ptr<TFile> ControlPoint::CreateOutputTFile(const std::string& name) const {
-    auto tf_name = GetOutputFileName() + "_" + name + ".root";
-    auto output_tfile = std::make_unique<TFile>(tf_name.c_str(),"RECREATE");
-    output_tfile->mkdir("Geometry");
-    auto cp_dir = output_tfile->mkdir("RT_Plan");
-    cp_dir->mkdir(TString("CP_"+std::to_string(GetId())));
-    return std::move(output_tfile);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -354,8 +338,9 @@ void ControlPoint::FillScoringDataTagging(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::WriteFieldMaskToTFile() const {
-    auto file = CreateOutputTFile("field_mask"); // TODO use IO::CreateOutputTFile
+    auto fname = GetOutputFileName()+"_field_mask.root";
     auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
+    auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     for(const auto& type : m_data_types){
         auto field_mask = GetFieldMask(type);
@@ -392,58 +377,96 @@ void ControlPoint::WriteFieldMaskToCsv() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::WriteVolumeFieldMaskToTFile(){
+void ControlPoint::WriteVolumeDoseAndTaggingToTFile(){
     if(!m_is_scoring_data_filled) 
         FillScoringData();
-    auto file = CreateOutputTFile("field_mask_scoring_volume"); // TODO use IO::CreateOutputTFile
+    auto fname = GetOutputFileName()+"_dose_and_volume_tagging.root";
     auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
+    auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     for(const auto& scoring_type: m_scoring_types) {
         auto& data = m_hashed_scoring_map[scoring_type];
         auto type = Scoring::to_string(scoring_type);
         std::vector<double> linearized_mask_vec;
         std::vector<double> infield_tag_vec;
+        std::vector<double> geo_tag_vec;
+        std::vector<double> geo_tag_weighted_vec;
+        std::vector<double> dose_vec;
         for(auto& scoring : data){
             auto pos = scoring.second.GetCentre();
-            for(const auto& i :  svc::linearizeG4ThreeVector(TransformToMaskPosition(pos)))
+            for(const auto& i :  svc::linearizeG4ThreeVector(pos))
                 linearized_mask_vec.emplace_back(i);
             infield_tag_vec.emplace_back(scoring.second.GetMaskTag());
+            geo_tag_vec.emplace_back(scoring.second.GetGeoTag());
+            geo_tag_weighted_vec.emplace_back(scoring.second.GetWeigthedGeoTag());
+            dose_vec.emplace_back(scoring.second.GetDose());
         }
-        std::string name_pos = "FieldMask_ScoringVolumePos_"+type;
-        std::string name_tag = "FieldMask_ScoringVolumeTag_"+type;
+        std::string name_pos = "VolumeFieldMaskTagPosition_"+type;
+        std::string name_ftag = "VolumeFieldMaskTagValue_"+type;
+        std::string name_gtag = "VolumeGeoTagValue_"+type;
+        std::string name_wgtag = "VolumeWeightedGeoTagValue_"+type;
+        std::string name_dose = "Dose_"+type;
         cp_dir->WriteObject(&linearized_mask_vec,name_pos.c_str());
-        cp_dir->WriteObject(&infield_tag_vec,name_tag.c_str());
+        cp_dir->WriteObject(&infield_tag_vec,name_ftag.c_str());
+        cp_dir->WriteObject(&geo_tag_vec,name_gtag.c_str());
+        cp_dir->WriteObject(&geo_tag_weighted_vec,name_wgtag.c_str());
+        cp_dir->WriteObject(&dose_vec,name_dose.c_str());
         file->Write();
     }
     file->Close();
     LOGSVC_INFO("Writing Scoring Volume Field Mask to file {} - done!",file->GetName());
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::WriteVolumeFieldMaskToCsv(){
+void ControlPoint::WriteVolumeDoseAndTaggingToCsv(){
     if(!m_is_scoring_data_filled) 
         FillScoringData();
+    
+    auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
+        auto cxId = hit.GetGlobalID(0);
+        auto cyId = hit.GetGlobalID(1);
+        auto czId = hit.GetGlobalID(2);
+        auto vxId = hit.GetID(0);
+        auto vyId = hit.GetID(1);
+        auto vzId = hit.GetID(2);
+        auto volume_centre = hit.GetCentre();
+        auto dose = hit.GetDose();
+        auto geoTag = hit.GetGeoTag();
+        auto wgeoTag = hit.GetWeigthedGeoTag();
+        auto inField = hit.GetMaskTag();
+        file <<cxId<<","<<cyId<<","<<czId;
+        if(voxelised)
+            file <<","<<vxId<<","<<vyId<<","<<vzId;
+        file <<","<<volume_centre.getX()<<","<<volume_centre.getY()<<","<<volume_centre.getZ();
+        file <<","<<dose<<","<< inField <<","<< geoTag<<","<< wgeoTag;
+        file <<","<< dose / ( geoTag * inField );
+        file <<","<< dose / ( wgeoTag * inField ) << std::endl;
+    };
+
     for(const auto& scoring_type: m_scoring_types) {
         auto& data = m_hashed_scoring_map[scoring_type];
         auto type = Scoring::to_string(scoring_type);
-        auto file = GetOutputFileName()+"_field_mask_scoring_volume_"+svc::tolower(type)+".csv";
-        std::string header = "X [mm],Y [mm],Z [mm],mX [mm],mY [mm],mZ [mm],inFieldTag";
+        auto file = GetOutputFileName()+"_dose_and_volume_tagging_"+svc::tolower(type)+".csv";
+        std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
+        if(scoring_type==Scoring::Type::Voxel)
+            header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
+
         std::ofstream c_outFile;
         c_outFile.open(file.c_str(), std::ios::out);
         c_outFile << header << std::endl;
         for(auto& scoring : data){
-            auto pos = scoring.second.GetCentre();
-            auto trans_pos = TransformToMaskPosition(pos);
-            auto inFieldTag = scoring.second.GetMaskTag();
-            c_outFile   << pos.getX() << ","
-                        << pos.getY() << "," 
-                        << pos.getZ() << "," 
-                        << trans_pos.getX() << ","
-                        << trans_pos.getY() << "," 
-                        << trans_pos.getZ() << "," 
-                        << inFieldTag << std::endl;
+            writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);
+            // auto pos = scoring.second.GetCentre();
+            // auto trans_pos = TransformToMaskPosition(pos);
+            // auto inFieldTag = scoring.second.GetMaskTag();
+            // c_outFile   << pos.getX() << ","
+            //             << pos.getY() << "," 
+            //             << pos.getZ() << "," 
+            //             << trans_pos.getX() << ","
+            //             << trans_pos.getY() << "," 
+            //             << trans_pos.getZ() << "," 
+            //             << inFieldTag << std::endl;
         }
         c_outFile.close();
         LOGSVC_INFO("Writing scoring volume field mask to file {} - done!",file);
@@ -452,20 +475,9 @@ void ControlPoint::WriteVolumeFieldMaskToCsv(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::WriteIntegratedDoseToTFile(){
-    // see WriteIntegratedDoseToFile
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteIntegratedDoseToCsv(){
-    // see WriteIntegratedDoseToFile
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void ControlPoint::ClearCachedData() {
-    // see WriteIntegratedDoseToFile
+    m_hashed_scoring_map.clear();
+    m_is_scoring_data_filled = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -477,6 +489,7 @@ void ControlPoint::IntegrateAndWriteTotalDoseToTFile(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::IntegrateAndWriteTotalDoseToCsv(){
+    // Integration is based on individual control points integration dumped to csv
 
 }
 

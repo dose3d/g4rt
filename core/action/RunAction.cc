@@ -60,6 +60,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   // For the single run only one file can be created
   auto analysisManager =  G4AnalysisManager::Instance();
 
+  std::string output_dir = configSvc->GetValue<std::string>("RunSvc","OutputDir");
   auto runId= std::to_string(aRun->GetRunID());
   G4String file = output_dir+"/run-"+ runId + "-analysis.root";
   LOGSVC_INFO("Set file name: {}",file);

@@ -52,6 +52,9 @@ class IPhysicalVolume {
   virtual void ExportParameterisation();
   
   ///
+  virtual void DefineSensitiveDetector(){};
+  
+  ///
   IPhysicalVolume() = delete;
   
   ///

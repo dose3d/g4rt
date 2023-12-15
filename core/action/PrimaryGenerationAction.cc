@@ -7,6 +7,7 @@
 #include "Services.hh"
 #include "PrimaryParticleInfo.hh"
 #include "G4EventManager.hh"
+#include "BeamCollimation.hh"
 
 
 namespace {
@@ -132,9 +133,13 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
 
   for(int i=0; i<nVrtx;++i){
     auto vrtx = anEvent->GetPrimaryVertex(i);
+    auto model = Service<GeoSvc>()->GetMlcModel();
+    CurrentCentre = vrtx->GetPosition();
+    if(model == EMlcModel::Ghost){
+      CurrentCentre = BeamCollimation::TransformToHeadOuputPlane(vrtx->GetPrimary()->GetMomentum()); 
+    }
       // Set arbitrary cut for field size:
       if(cutFieldSize_a>0){
-        CurrentCentre = vrtx->GetPosition();
         // G4cout << "X: " << CurrentCentre.x() << "Y: " << CurrentCentre.y() << "Z: " << CurrentCentre.z() << G4endl;
         if (fieldshape == "Rectangular"){
           if (CurrentCentre.x()<-cutFieldSize_a || CurrentCentre.x() > cutFieldSize_a || CurrentCentre.y()<-cutFieldSize_b || CurrentCentre.y() > cutFieldSize_b ){

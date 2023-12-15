@@ -61,7 +61,9 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto analysisManager =  G4AnalysisManager::Instance();
 
   auto runId= std::to_string(aRun->GetRunID());
-  analysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName());
+  G4String file = output_dir+"/run-"+ runId + "-analysis.root";
+  LOGSVC_INFO("Set file name: {}",file);
+  analysisManager->SetFileName(file);
   analysisManager->OpenFile();
 
   //Master mode or sequential

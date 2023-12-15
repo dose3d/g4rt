@@ -470,9 +470,13 @@ void RunSvc::BuildGeometryMode() {
 void RunSvc::FullSimulationMode() {
   LOGSVC_INFO("FullSimulationMode");
   auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
-  if (sourceName.compare("gps") == 0)
-    m_macFiles.push_back(m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName"));
-
+  if (sourceName.compare("gps") == 0){
+    auto macFile = m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName");
+    if(macFile.at(0)!='/'){ // Assuming that the path is relative to prejct data
+      macFile = std::string(PROJECT_DATA_PATH)+"/"+macFile;
+    }
+    m_macFiles.push_back(macFile);
+  }
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
   auto userSeed = thisConfig()->GetValue<long>("RNGSeed");
   if (userSeed < 214) {

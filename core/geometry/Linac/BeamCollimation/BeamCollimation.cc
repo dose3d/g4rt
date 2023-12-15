@@ -16,8 +16,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///
 BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"), Configurable("BeamCollimation"){
-  m_leavesA = *m_geoSvc->getLeavesPositioning("A");
-  m_leavesB = *m_geoSvc->getLeavesPositioning("B");
+  // m_leavesA = *m_geoSvc->getLeavesPositioning("A");
+  // m_leavesB = *m_geoSvc->getLeavesPositioning("B");
   Configure();
 }
 
@@ -39,8 +39,8 @@ BeamCollimation *BeamCollimation::GetInstance() {
 ///
 void BeamCollimation::Configure() {
   G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
-  DefineUnit<G4double>("ionizationChamberThicknessP");
-  DefineUnit<G4double>("ionizationChamberThicknessW");
+  // DefineUnit<G4double>("ionizationChamberThicknessP");
+  // DefineUnit<G4double>("ionizationChamberThicknessW");
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   Configurable::PrintConfig();
@@ -89,11 +89,11 @@ void BeamCollimation::Destroy() {
 ///
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
   m_parentPV = parentWorld;
-  Jaw1X();
-  Jaw2X();
-  Jaw1Y();
-  Jaw2Y();
-  //MLC();
+  // Jaw1X();
+  // Jaw2X();
+  // Jaw1Y();
+  // Jaw2Y();
+  MLC();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +102,19 @@ void BeamCollimation::Reset() {
   m_leavesA.clear();
   m_leavesB.clear();
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+
+G4ThreeVector BeamCollimation::TransformToHeadOuputPlane(const G4ThreeVector& momentum){
+  G4double x, y, z, zRatio = 0.;
+  z = 1000 - 320.;
+  zRatio = z/momentum.getZ();
+  x = zRatio * momentum.getX();
+  y = zRatio * momentum.getY();
+  z = -320;
+  return G4ThreeVector(x,y,z);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -286,6 +299,9 @@ bool BeamCollimation::MLC() {
         break;
       case EMlcModel::HD120:
         m_mlc.reset(new MlcHd120(m_parentPV));
+        break;
+      case EMlcModel::Ghost:
+        LOGSVC_INFO("Using Ghost type of MLC")
         break;
     }
 

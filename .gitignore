@@ -13,6 +13,7 @@ data/*
 !data/Primo
 !data/Results/
 !data/dose3d/
+!data/gps/
 build/
 build-vscode/
 output/

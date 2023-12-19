@@ -23,7 +23,7 @@
 RunAction::RunAction():G4UserRunAction(){
   auto analysisManager = G4AnalysisManager::Instance();
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")  )
-    analysisManager->SetNtupleMerging(true); // TODO somehow its use thread-shared objects?
+    analysisManager->SetNtupleMerging(true,10); // TODO somehow its use thread-shared objects?
   analysisManager->SetVerboseLevel(0);
   //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
 }

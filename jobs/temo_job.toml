@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "Two towers 2x2x16 - beam centre shifted to one of tour rows"
 BeamType = "gps" 
-PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 GpsMacFileName = "gps/gpsCLinac.mac"
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true 

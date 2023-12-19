@@ -22,8 +22,9 @@
 ///
 RunAction::RunAction():G4UserRunAction(){
   auto analysisManager = G4AnalysisManager::Instance();
+  // auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")  )
-    analysisManager->SetNtupleMerging(true,10); // TODO somehow its use thread-shared objects?
+    analysisManager->SetNtupleMerging(false); // TODO somehow its use thread-shared objects?
   analysisManager->SetVerboseLevel(0);
   //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
 }
@@ -60,7 +61,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   // For the single run only one file can be created
   auto analysisManager =  G4AnalysisManager::Instance();
   auto runId= std::to_string(aRun->GetRunID());
-  analysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName());
+  analysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName(true));
   analysisManager->OpenFile();
   //Master mode or sequential
   if (IsMaster())

@@ -46,7 +46,7 @@ class ControlPoint {
     
     // G4ThreeVector GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data)
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
-    std::string GetSimOutputTFileName() const;
+    std::string GetSimOutputTFileName(bool workerMT = false) const;
     void WriteIntegratedDoseToFile(bool tfile=true, bool csv=true) const;
 
     // Type of the FieldMask export: 

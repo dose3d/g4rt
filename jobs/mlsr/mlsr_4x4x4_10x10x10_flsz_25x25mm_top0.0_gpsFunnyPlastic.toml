@@ -2,7 +2,7 @@
 JobName = "gps_RMPS_emstandard_upgrade"
 BeamType = "gps"
 PhspInputFileName = "/mnt/c/PRIMO/phsptest/phsptests2-f0" # AGH JH File
-GpsMacFileName = "/home/g4rt/test/diff_size/g4rt/data/gps/CLinac_pararell.mac"
+GpsMacFileName = "/home/geant4/workspace/github/g4rt/data/gps/CLinac_pararell.mac"
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true
 # Physics = "LowE_Penelope" #"LowE_Penelope"

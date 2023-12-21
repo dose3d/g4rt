@@ -99,7 +99,8 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto evtID = anEvent->GetEventID();
   m_primaryGenerator->GeneratePrimaryVertex(anEvent);
   auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
-
+  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
+    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
   G4ThreeVector NewCentre;
   G4ThreeVector CurrentCentre;
   G4ThreeVector AxisOfRotation = G4ThreeVector(0.0,0.0,1.0);
@@ -225,8 +226,4 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       pparticle->SetUserInformation(pparticleInfo);
     }
   }
-
-
-  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
-    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
 }

@@ -258,11 +258,9 @@ void ControlPoint::FillScoringData(){
         tree = static_cast<TTree*>(f->Get(TString(treeName)));
     }
     else{
-        std::cout << "Ajm hir 1 !!!" << std::endl;
         auto subjob_dir = GetOutputDir()+"/subjobs";
         auto filelist = svc::getFilesInDir(subjob_dir);
         tree = new TChain(treeName.c_str());
-        std::cout << "Ajm hir 22 !!!" << std::endl;
         for (const auto &file : filelist){
             auto f_s = std::make_unique<TFile>(TString(file.c_str()));
             auto tree_s = static_cast<TTree*>(f_s->Get(TString(treeName)));
@@ -278,13 +276,9 @@ void ControlPoint::FillScoringData(){
     }
 
     G4int evtRunId; tree->SetBranchAddress("G4RunId",&evtRunId);
-    std::cout << "Ajm hir 55555 !!!" << std::endl;
     G4int cIdx; tree->SetBranchAddress("CellIdX",&cIdx);
-    std::cout << "Ajm hir 666666 !!!" << std::endl;
     G4int cIdy; tree->SetBranchAddress("CellIdY",&cIdy);
-    std::cout << "Ajm hir 7777777 !!!" << std::endl;
     G4int cIdz; tree->SetBranchAddress("CellIdZ",&cIdz);
-    std::cout << "Ajm hir 88888888 !!!" << std::endl;
     G4double c_dose; tree->SetBranchAddress("CellDose",&c_dose);
 
     G4int vIdx;

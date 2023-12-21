@@ -35,8 +35,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ///
     ~VPatient() = default;
 
-    ///
-    virtual void DefineSensitiveDetector() = 0;
 
     /// Pointer to the sensitive detectors, wrapped into the MT service
     G4Cache<VPatientSD*> m_patientSD;

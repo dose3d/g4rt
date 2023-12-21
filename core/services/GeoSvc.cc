@@ -14,7 +14,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-GeoSvc::GeoSvc() : Configurable("GeoSvc") {
+GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"), Logable("GeoAndScoring") {
   Configure();
 }
 
@@ -88,7 +88,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, G4String("MlcCustom")); // Varian-HD120
+    m_config->SetValue(unit, G4String("Ghost")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -157,12 +157,12 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("BuildLinac") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-      thisConfig()->SetValue(unit, G4bool(false));
+      thisConfig()->SetTValue<bool>(unit, G4bool(false));
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("BuildPatient") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-     thisConfig()->SetValue(unit, G4bool(true));
+     thisConfig()->SetTValue<bool>(unit, G4bool(true));
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -186,7 +186,8 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 ///
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
-    G4cout << FGRN("[INFO]")<<":: " << FBLU("GeoSvc:: Service initialization... ") << G4endl;
+    LOGSVC_INFO("Service initialization...");
+    PrintConfig();
 
     auto mlcFile = m_configSvc->GetValue<G4String>("GeoSvc", "MLCInputFileName");
 
@@ -484,6 +485,8 @@ EMlcModel GeoSvc::GetMlcModel() const {
     return EMlcModel::HD120;
   } else if (mlcName.compare("MlcCustom") == 0) {
     return EMlcModel::Custom;
+  } else if (mlcName.compare("Ghost") == 0) {
+    return EMlcModel::Ghost;
   } else if (mlcName.compare("None") == 0) {
     return EMlcModel::None;
   }else {

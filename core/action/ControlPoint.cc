@@ -4,6 +4,7 @@
 #include "IO.hh"
 #include "TFile.h"
 #include "TTree.h"
+#include "TChain.h"
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
@@ -77,8 +78,16 @@ std::string ControlPoint::GetOutputFileName() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::string ControlPoint::GetSimOutputTFileName() const {
-    return GetOutputFileName() + "_sim.root";
+std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
+    auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
+    std::string postfix =  "_sim.root";
+    if(workerMT && numberOfThreads > 1){
+        auto subjob_dir = GetOutputDir()+"/subjobs";
+        IO::CreateDirIfNotExits(subjob_dir);
+        return subjob_dir+"/cp-"+std::to_string(GetId())+postfix;
+    }
+    
+    return GetOutputFileName()+postfix;
 }
 
 
@@ -240,9 +249,31 @@ void ControlPoint::FillScoringData(){
         }
     }
 
+    TTree* tree = nullptr;
     // Now get data from the corresponding tfile/tree
-    auto f = std::make_unique<TFile>(TString(GetSimOutputTFileName()));
-    auto tree = static_cast<TTree*>(f->Get(TString(treeName)));
+    auto singleRootTfile =  GetSimOutputTFileName();
+    // auto chain = 
+    if (svc::checkIfFileExist(singleRootTfile)){
+        auto f = std::make_unique<TFile>(TString(singleRootTfile));
+        tree = static_cast<TTree*>(f->Get(TString(treeName)));
+    }
+    else{
+        auto subjob_dir = GetOutputDir()+"/subjobs";
+        auto filelist = svc::getFilesInDir(subjob_dir);
+        tree = new TChain(treeName.c_str());
+        for (const auto &file : filelist){
+            auto f_s = std::make_unique<TFile>(TString(file.c_str()));
+            auto tree_s = static_cast<TTree*>(f_s->Get(TString(treeName)));
+
+            std::cout << "File  "  << file << std::endl;
+            std::cout << "Tree entries:  "  << tree_s->GetEntriesFast() << std::endl;
+
+            dynamic_cast<TChain*>(tree)->AddFile(file.c_str());
+        }
+        // tree = static_cast<TTree*>(f->GetTree());
+        std::cout << "Chain n trees" << dynamic_cast<TChain*>(tree)->GetNtrees() << std::endl;
+
+    }
 
     G4int evtRunId; tree->SetBranchAddress("G4RunId",&evtRunId);
     G4int cIdx; tree->SetBranchAddress("CellIdX",&cIdx);
@@ -284,6 +315,7 @@ void ControlPoint::FillScoringData(){
     m_is_scoring_data_filled = true;
     FillScoringDataTagging();
     LOGSVC_INFO("Filling scoring data (CP-{}) - done!",GetId());
+    delete tree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -30,6 +30,7 @@ NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
 void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& treeDescription,const G4String& scoringVolumeName){
 
   if(scoringVolumeName.empty()){
+    LOGSVC_INFO("Creating tree: {}",treeName);
     // Given tree is related to single scoring volume (hits collection)
     m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
     m_ttree_collection.back().m_name = treeName;
@@ -50,7 +51,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& 
         ++treeIdx;
     }
     if (!treeExists){
-      G4cout<< "[INFO]:: NTupleEventAnalisys:: Creating tree:  " << treeName << G4endl;
+      LOGSVC_INFO("Creating tree: {}",treeName);
       m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
       m_ttree_collection.back().m_name = treeName;
       m_ttree_collection.back().m_description = treeDescription;
@@ -216,6 +217,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
   }
   auto& evtColl = m_ntuple_collection.Get(treeName); // Note: once the treeName is wrong this gives undefined beheviour!!
   int nHits = hitsColl->entries();
+  // LOGSVC_INFO("nHist: {}",nHits);
   if(nHits==0){
    return; // no hits in this event
   }

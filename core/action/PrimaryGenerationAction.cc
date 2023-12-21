@@ -7,6 +7,7 @@
 #include "Services.hh"
 #include "PrimaryParticleInfo.hh"
 #include "G4EventManager.hh"
+#include "BeamCollimation.hh"
 
 
 namespace {
@@ -98,7 +99,8 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto evtID = anEvent->GetEventID();
   m_primaryGenerator->GeneratePrimaryVertex(anEvent);
   auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
-
+  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
+    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
   G4ThreeVector NewCentre;
   G4ThreeVector CurrentCentre;
   G4ThreeVector AxisOfRotation = G4ThreeVector(0.0,0.0,1.0);
@@ -132,9 +134,13 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
 
   for(int i=0; i<nVrtx;++i){
     auto vrtx = anEvent->GetPrimaryVertex(i);
+    auto model = Service<GeoSvc>()->GetMlcModel();
+    CurrentCentre = vrtx->GetPosition();
+    if(model == EMlcModel::Ghost){
+      CurrentCentre = BeamCollimation::TransformToHeadOuputPlane(vrtx->GetPrimary()->GetMomentum()); 
+    }
       // Set arbitrary cut for field size:
       if(cutFieldSize_a>0){
-        CurrentCentre = vrtx->GetPosition();
         // G4cout << "X: " << CurrentCentre.x() << "Y: " << CurrentCentre.y() << "Z: " << CurrentCentre.z() << G4endl;
         if (fieldshape == "Rectangular"){
           if (CurrentCentre.x()<-cutFieldSize_a || CurrentCentre.x() > cutFieldSize_a || CurrentCentre.y()<-cutFieldSize_b || CurrentCentre.y() > cutFieldSize_b ){
@@ -220,8 +226,4 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       pparticle->SetUserInformation(pparticleInfo);
     }
   }
-
-
-  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
-    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
 }

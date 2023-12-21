@@ -51,7 +51,7 @@ void MlcHd120::DefaultConfig(const std::string &unit) {
     if (unit.compare("Label") == 0)
         thisConfig()->SetValue(unit, std::string("Varian HD120 MLC"));
     if (unit.compare("PositionningFileType") == 0)
-        thisConfig()->SetValue(unit, std::string("RTPlan"));
+        thisConfig()->SetValue(unit, std::string("Custom")); /// RTPlan, Custom
 
 }
 
@@ -85,8 +85,8 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
 
     auto air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
-    G4ThreeVector head_halfSize(22./2*cm, 68./2*cm, 7./2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 450. * mm);
+    G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
+    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, -269. * mm);
     auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
     auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
     auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
@@ -184,7 +184,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
         /////////////////////////////////////////////////////////////////////////////
 
         if (i%2==0) {
-            std::cout << i << std::endl;
+            // std::cout << i << std::endl;
             auto name = "LeafY1PV" + G4String(std::to_string(i));
 
             /////////////////////////////////////////////////////////////////////////////
@@ -257,7 +257,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
         /////////////////////////////////////////////////////////////////////////////
 
         else {
-            std::cout << i << std::endl;
+            // std::cout << i << std::endl;
             auto name = "LeafY1PV" + G4String(std::to_string(i));
 
             /////////////////////////////////////////////////////////////////////////////
@@ -678,11 +678,11 @@ void MlcHd120::SetCustomPositioning(const std::string& fieldSize){
                     G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "To many leafs configuration!");
 
                 auto y1_translation = m_y1_leaves[leafsCounter]->GetTranslation();
-                y1_translation.setY(y1_translation.getY()+y1y2_position.at(0) );
+                y1_translation.setX(y1_translation.getX()+y1y2_position.at(1));
                 m_y1_leaves[leafsCounter]->SetTranslation(y1_translation);
 
                 auto y2_translation = m_y2_leaves[leafsCounter]->GetTranslation();
-                y2_translation.setY(y2_translation.getY()+y1y2_position.at(1) );
+                y2_translation.setX(y2_translation.getX()+y1y2_position.at(0));
                 m_y2_leaves[leafsCounter]->SetTranslation(y2_translation);
 
                 ++leafsCounter;

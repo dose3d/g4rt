@@ -44,7 +44,8 @@ enum class EMlcModel {
   None,
   Custom,     // Varian
   Millennium, // Varian
-  HD120       // Varian
+  HD120,       // Varian
+  Ghost
 };
 
 

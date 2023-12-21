@@ -470,9 +470,13 @@ void RunSvc::BuildGeometryMode() {
 void RunSvc::FullSimulationMode() {
   LOGSVC_INFO("FullSimulationMode");
   auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
-  if (sourceName.compare("gps") == 0)
-    m_macFiles.push_back(m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName"));
-
+  if (sourceName.compare("gps") == 0){
+    auto macFile = m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName");
+    if(macFile.at(0)!='/'){ // Assuming that the path is relative to prejct data
+      macFile = std::string(PROJECT_DATA_PATH)+"/"+macFile;
+    }
+    m_macFiles.push_back(macFile);
+  }
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
   auto userSeed = thisConfig()->GetValue<long>("RNGSeed");
   if (userSeed < 214) {
@@ -896,6 +900,10 @@ void RunSvc::MergeOutput(bool cleanUp) const {
   auto files_to_merge = svc::getFilesInDir(sim_dir,".root");
   auto geo_dir = GeoSvc::GetOutputDir();
   auto files_to_merge_geo = svc::getFilesInDir(geo_dir,".root");
+  if ((Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads"))>1){
+    auto additional_files_to_merge = svc::getFilesInDir(sim_dir+"/subjobs",".root");
+    files_to_merge.insert(std::end(files_to_merge), std::begin(additional_files_to_merge), std::end(additional_files_to_merge));
+  }
   files_to_merge.insert(std::end(files_to_merge), std::begin(files_to_merge_geo), std::end(files_to_merge_geo));
   for(const auto& file : files_to_merge){
     LOGSVC_DEBUG("AddFile: {}",file);

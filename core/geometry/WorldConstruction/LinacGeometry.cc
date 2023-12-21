@@ -49,7 +49,7 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetValue(unit, std::string("Linac Construction Environment"));
 
   if (unit.compare("LinacEnvelopeBoxSize") == 0)
-    thisConfig()->SetValue(unit, G4ThreeVector(1200., 1200., 1200.));  // [mm]
+    thisConfig()->SetValue(unit, G4ThreeVector(950., 950., 680.)); // [mm]
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,8 +102,6 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
   // a call to select the right accelerator
   design();
-  auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
-  
   // create the accelerator-world box
   //auto medium = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
   auto medium = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
@@ -112,11 +110,11 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto accWorldLV = new G4LogicalVolume(accWorldB, medium.get(), "linacWorldLV", 0, 0, 0);
 
   // The centre of this PV is always 0,0,0, hence we need to only do the isoToSim translation
-  SetPhysicalVolume(new G4PVPlacement(0, isoToSim, "acceleratorBox", accWorldLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-630), "acceleratorBox", accWorldLV, parentPV, false, 0));
 
   // create the actual accelerator
   m_headInstance->Construct(GetPhysicalVolume());
-  m_headInstance->WriteInfo();
+  // m_headInstance->WriteInfo();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,5 +172,6 @@ G4RotationMatrix* LinacGeometry::rotateHead(G4double angleX) {
 void LinacGeometry::DefineSensitiveDetector() {
   G4AutoLock lock(&headConstructionMutex);
 
-  // TODO: if (m_headInstance) dynamic_cast<LinacVHead*>(m_headInstance)->ConstructSD(this);
+  if(m_headInstance)
+    m_headInstance->DefineSensitiveDetector();
 }

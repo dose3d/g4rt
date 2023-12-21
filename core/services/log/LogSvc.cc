@@ -72,6 +72,7 @@ void LogSvc::Initialize() {
   m_defaultLogger = std::make_shared<spdlog::logger>("Global", m_consoleSink);
   spdlog::register_logger(m_defaultLogger);
   spdlog::set_default_logger(m_defaultLogger);
+  m_loggersMap["Global"] = m_defaultLogger;
 
   //Default pattern
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %n [%^%l%$] %v");

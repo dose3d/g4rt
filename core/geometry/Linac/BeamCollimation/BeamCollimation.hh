@@ -41,6 +41,8 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   ///
   void DefaultConfig(const std::string &unit) override;
 
+  static G4ThreeVector TransformToHeadOuputPlane(const G4ThreeVector& momentum);
+
   private:
   ///
   BeamCollimation();
@@ -81,6 +83,10 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
 
   ///
   std::unique_ptr<IPhysicalVolume> m_mlc;
+
+  ///
+  void DefineSensitiveDetector() {}
+
 };
 
 #endif // Dose3D_VARIAN_TRUEBEAM_HEAD_MOCKUP_HH

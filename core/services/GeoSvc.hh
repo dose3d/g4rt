@@ -9,7 +9,8 @@
 #define Dose3D_GEOSVC_H
 
 #include "Types.hh"
-#include "Configurable.hh"
+#include "Logable.hh"
+#include "TomlConfigurable.hh"
 
 class WorldConstruction;
 class D3DDetector;
@@ -21,7 +22,7 @@ class VPatient;
 ///\brief The geometry management service.
 /// It is a singleton type the pointer of which can be asses trough the templated method:
 /// Service<GeoSvc>()
-class GeoSvc : public Configurable {
+class GeoSvc : public TomlConfigurable, Logable {
   private:
   GeoSvc();
 
@@ -134,6 +135,9 @@ class GeoSvc : public Configurable {
 
   ///
   void WriteScoringComponentsPositioningToCsv() const;
+  
+  ///
+  void ParseTomlConfig() override {}
 
 };
 

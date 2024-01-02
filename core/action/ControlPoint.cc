@@ -171,8 +171,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
     y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
-        G4String msg_lsvc = msg+": A {}, B {}";
-        LOGSVC_CRITICAL(msg_lsvc.data(),x_range,y_range);
+        LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
     double min_x = - x_range / 2.;

@@ -38,7 +38,7 @@ void WaterPhantom::ParseTomlConfig(){
   }
   else {
     G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg);
+    LOGSVC_CRITICAL(msg.data());
     G4Exception("WaterPhantom", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
   

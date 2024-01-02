@@ -104,7 +104,7 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
         return m_sim_mask_points.Get();
     }
     G4String msg = "Couldn't recognize control point field mask type!";
-    LOGSVC_CRITICAL(msg);
+    LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "GetFieldMask", FatalErrorInArgument , msg);
     return m_plan_mask_points;
 }
@@ -135,7 +135,7 @@ void ControlPoint::FillPlanFieldMask(){
     }
     else{
         G4String msg = "Control Point mask is already filled! This shouldn't happen!";
-        LOGSVC_CRITICAL(msg);
+        LOGSVC_CRITICAL(msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
 
@@ -151,7 +151,7 @@ void ControlPoint::FillPlanFieldMask(){
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
-        LOGSVC_CRITICAL(msg);
+        LOGSVC_CRITICAL(msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
     LOGSVC_DEBUG("Filled with {} number of points",m_plan_mask_points.size());
@@ -171,7 +171,8 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
     y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
-        LOGSVC_CRITICAL(msg+": A {}, B {}",x_range,y_range);
+        G4String msg_lsvc = msg+": A {}, B {}";
+        LOGSVC_CRITICAL(msg_lsvc.data(),x_range,y_range);
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
     double min_x = - x_range / 2.;
@@ -204,7 +205,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
 ///
 void ControlPoint::FillPlanFieldMaskFromRTPlan(){
     G4String msg = "Field Mask RTPlan type not implemented yet!";
-    LOGSVC_CRITICAL(msg);
+    LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
 }
 

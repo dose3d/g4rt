@@ -398,7 +398,7 @@ void RunSvc::ParseTomlConfig(){
   }
   else{
     G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg);
+    LOGSVC_CRITICAL(msg.data());
     G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
 }
@@ -427,7 +427,7 @@ void RunSvc::DefineControlPoints() {
     m_current_control_point = &m_control_points.at(0);
   } else {
     G4String msg = "Any control point is created. Verify job definition";
-    LOGSVC_CRITICAL(msg);
+    LOGSVC_CRITICAL(msg.data());
     G4Exception("RunSvc", "DefineControlPoints", FatalErrorInArgument, msg);
   }
 }

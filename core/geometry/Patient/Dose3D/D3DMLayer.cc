@@ -126,7 +126,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
       LOGSVC_DEBUG("Layer {} translation: {}", GetName(), G4ThreeVector(m_init_x,m_init_y,m_init_z) );
     } else { // 
       G4String msg = "Initial position of the layer hasn't been set properly";
-      LOGSVC_CRITICAL(msg);
+      LOGSVC_CRITICAL(msg.data());
       G4Exception("D3DMLayer", "Construct", FatalErrorInArgument, msg);
     }
     G4double layer_width = D3DCell::SIZE + 2*D3DMLayer::COVER_WIDTH;

@@ -117,14 +117,14 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   // ========== Set/Get inline methods ==========
 
   public:
-  inline void SetTotalParallelRuns(G4int nParallelRuns) { theTotalParallelRuns = nParallelRuns; }
+  // inline void SetTotalParallelRuns(G4int nParallelRuns) { theTotalParallelRuns = nParallelRuns; }
 
-  inline void SetParallelRun(G4int parallelRun) {
-    if (parallelRun > theTotalParallelRuns && parallelRun < 1)
-      G4Exception("G4IAEAReader::SetParallelRun()", "IAEAreader002", FatalErrorInArgument,
-                  "Error in G4IAEAphspReader::SetParallelRun()");
-    theParallelRun = parallelRun;
-  }
+  // inline void SetParallelRun(G4int parallelRun) {
+  //   if (parallelRun > theTotalParallelRuns && parallelRun < 1)
+  //     G4Exception("G4IAEAReader::SetParallelRun()", "IAEAreader002", FatalErrorInArgument,
+  //                 "Error in G4IAEAphspReader::SetParallelRun()");
+  //   theParallelRun = parallelRun;
+  // }
 
   inline void SetTimesRecycled(G4int ntimes) { theTimesRecycled = ntimes; }
 
@@ -184,9 +184,9 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
 
   inline std::vector<std::vector<G4long> > *GetExtraIntsVector() const { return theExtraIntsVector; }
 
-  inline G4int GetTotalParallelRuns() const { return theTotalParallelRuns; }
+  // inline G4int GetTotalParallelRuns() const { return theTotalParallelRuns; }
 
-  inline G4int GetParallelRun() const { return theParallelRun; }
+  // inline G4int GetParallelRun() const { return theParallelRun; } 
 
   inline G4int GetTimesRecycled() const { return theTimesRecycled; }
 
@@ -255,17 +255,15 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   // COUNTERS AND FLAGS
   // -------------------
 
-  G4int theTotalParallelRuns;
-  // For parallel runs, number of fragments in which the PSF is divided into
+  // G4int theTotalParallelRuns;
+  // // For parallel runs, number of fragments in which the PSF is divided into
 
-  G4int theParallelRun;
-  // Sets the fragment of PSF where the particles must be read from
+  // G4int theParallelRun;
+  // // Sets the fragment of PSF where the particles must be read from
 
   G4int theTimesRecycled;
   // Set the number of times that each particle is recycled (not repeated)
 
-  G4int theNStat;
-  // Decides how many events should pass before throwing a new particle
 
   G4long theUsedOriginalParticles;
   // Variable that stores the number of particles readed so far

@@ -107,7 +107,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
     // Region for cuts
   auto regVol = new G4Region(label+"Cuts");
   auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.1 * mm);
+  cuts->SetProductionCut(0.005 * mm);
   regVol->SetProductionCuts(cuts);
   dose3dCellLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(dose3dCellLV);

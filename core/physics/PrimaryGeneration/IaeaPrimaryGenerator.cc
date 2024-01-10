@@ -21,7 +21,7 @@ IaeaPrimaryGenerator::IaeaPrimaryGenerator(const G4String& fileName) {
     // m_iaeaFileReader->SetParallelRun(1 + id_thread);
     // m_iaeaFileReader->SetTotalParallelRuns(max_thread);
 
-    m_iaeaFileReader->SetTimesRecycled(1); // default -> 0 
+    m_iaeaFileReader->SetTimesRecycled(0); // default -> 0 
 
 
     // // TODO: Check these func!!!

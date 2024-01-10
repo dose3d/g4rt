@@ -271,7 +271,7 @@ void ControlPoint::FillScoringData(){
             dynamic_cast<TChain*>(tree)->AddFile(file.c_str());
         }
         // tree = static_cast<TTree*>(f->GetTree());
-        std::cout << "Chain n trees" << dynamic_cast<TChain*>(tree)->GetNtrees() << std::endl;
+        std::cout << "Chain n trees " << dynamic_cast<TChain*>(tree)->GetNtrees() << std::endl;
 
     }
 

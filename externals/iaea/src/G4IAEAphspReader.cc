@@ -549,6 +549,10 @@ void G4IAEAphspReader::ReadThisEvent() {
     iaea_get_used_original_particles(&sourceRead, &nUsedOriginal);
     theUsedOriginalParticles = static_cast<G4long>(nUsedOriginal);
 
+    if ((theCurrentParticle%int(theTotalParticles/10))==0){
+      std::cout << "The " << int(theCurrentParticle/(theTotalParticles/100)) << " % of the phsp file has already been read" << std::endl;
+    }
+
     //  Check whether the end of file has been reached
     //  5 added for sanity check
     // -------------------------------------------------

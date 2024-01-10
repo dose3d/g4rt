@@ -13,9 +13,9 @@ IaeaPrimaryGenerator::IaeaPrimaryGenerator(const G4String& fileName) {
 
   if(!m_iaeaFileReader){ 
 
-    auto id_thread = G4Threading::G4GetThreadId();
-    // auto max_thread = G4Threading::GetNumberOfRunningWorkerThreads();
-    auto max_thread = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
+    // auto id_thread = G4Threading::G4GetThreadId();
+    // // auto max_thread = G4Threading::GetNumberOfRunningWorkerThreads();
+    // auto max_thread = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
 
     m_iaeaFileReader = new G4IAEAphspReader(fileName.data());
     // m_iaeaFileReader->SetParallelRun(1 + id_thread);
@@ -48,10 +48,4 @@ IaeaPrimaryGenerator::IaeaPrimaryGenerator(const G4String& fileName) {
 void IaeaPrimaryGenerator::GeneratePrimaryVertex(G4Event *evt) {
   // the actual generation is defined in G4IAEAphspReader, so it's being delegated:
   m_iaeaFileReader->GeneratePrimaryVertex(evt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-std::vector<G4PrimaryVertex*> IaeaPrimaryGenerator::GeneratePrimaryVertex(G4int evtId){
-  return m_iaeaFileReader->GeneratePrimaryVertex(evtId);
 }

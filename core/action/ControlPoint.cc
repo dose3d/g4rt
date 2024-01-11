@@ -81,7 +81,7 @@ std::string ControlPoint::GetOutputFileName() const {
 std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
     auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
     std::string postfix =  "_sim.root";
-    if(workerMT && numberOfThreads > 1){
+    if(workerMT){ // && numberOfThreads > 1
         auto subjob_dir = GetOutputDir()+"/subjobs";
         IO::CreateDirIfNotExits(subjob_dir);
         return subjob_dir+"/cp-"+std::to_string(GetId())+postfix;
@@ -218,10 +218,10 @@ void ControlPoint::FillScoringData(){
 
     auto getTreeName = [&](){
         // TODO: Once the m_scoring_types includes Voxel the [...]Voxelised[...] tree should be picked up
-        // auto scoring_collection = NTupleEventAnalisys::TreeCollection();
-        // for(const auto& scoring : scoring_collection){
-        //     LOGSVC_INFO("Scoring type: {}",scoring.m_name);
-        // }
+        auto scoring_collection = NTupleEventAnalisys::TreeCollection();
+        for(const auto& scoring : scoring_collection){
+            LOGSVC_INFO("Scoring type: {}",scoring.m_name);
+        }
         return std::string("Dose3DVoxelisedTTree"); // FIXED
     };
 
@@ -252,13 +252,19 @@ void ControlPoint::FillScoringData(){
     TTree* tree = nullptr;
     // Now get data from the corresponding tfile/tree
     auto singleRootTfile =  GetSimOutputTFileName();
+    std::cout << "singleRootTfile " << singleRootTfile << std::endl;
+
     // auto chain = 
     if (svc::checkIfFileExist(singleRootTfile)){
         auto f = std::make_unique<TFile>(TString(singleRootTfile));
         tree = static_cast<TTree*>(f->Get(TString(treeName)));
+        std::cout << "got  " << singleRootTfile << std::endl;
+
     }
     else{
         auto subjob_dir = GetOutputDir()+"/subjobs";
+        std::cout << "getting  " << subjob_dir << std::endl;
+
         auto filelist = svc::getFilesInDir(subjob_dir);
         tree = new TChain(treeName.c_str());
         for (const auto &file : filelist){

@@ -92,11 +92,6 @@ class RunSvc : public TomlConfigurable, Logable {
   ///
   void DefineControlPoints();
 
-  ///
-  void WriteIntegratedDoseToCsv(const std::map<std::size_t, VoxelHit>& data, const ControlPoint& cp, const std::string& file, bool voxelised) const;
-  void WriteIntegratedDoseToNTuple(const std::map<std::size_t, VoxelHit>& data, const ControlPoint& cp, bool voxelised) const;
-  G4ThreeVector GetActivityGeoCentre(const ControlPoint& cp, const std::map<std::size_t, VoxelHit>& data, bool weighted) const;
-
   public:
 
   ///\brief Static method to get instance of this singleton object.
@@ -157,12 +152,6 @@ class RunSvc : public TomlConfigurable, Logable {
   void WriteGeometryData() const;
   void WriteControlPointData();
 
-  // TOBE REMOVED
-  void ExportIntegratedDose() const;
-  void ExportIntegratedTotalDose() const;
-  void ExportControlPointsFieldMask() const;
-  void ExportControlPointsIntegratedDose() const;
-  // ---------------------------------------------------------------------------------------
 };
 
 #endif  // Dose3D_RUNSVC_H

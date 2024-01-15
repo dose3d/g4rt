@@ -41,7 +41,7 @@ void PhysicsList::AddStepMax()
 {
   // Step limitation seen as a process
   StepMax* stepMaxProcess = new StepMax();
-  stepMaxProcess->SetMaxStep(0.05 * mm);
+  stepMaxProcess->SetMaxStep(0.1 * mm);
 
   auto particleIterator=GetParticleIterator();
   particleIterator->reset();

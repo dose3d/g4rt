@@ -69,7 +69,6 @@ void PhysicsList::ConstructProcess() {
   /// electromagnetic physics list
   m_emPhysicsModelCtr->ConstructProcess();
 
-
   //  /// EmStandard additional parameters
   // G4EmParameters* param = G4EmParameters::Instance();
   // /// Auger electron production enabled
@@ -80,8 +79,9 @@ void PhysicsList::ConstructProcess() {
   // param->SetPixe(true);
   // /// Fluorescence enabled
   // param->SetFluo(true);
-
-
+  // ///
+  // param->SetDeexcitationIgnoreCut(true);
+  // param->SetLowestElectronEnergy(10*eV);
 
   /// decay physics list
   m_decayPhysicsModelCtr->ConstructProcess();

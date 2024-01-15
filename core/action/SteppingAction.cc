@@ -13,9 +13,10 @@ SteppingAction::SteppingAction(EventAction* eventAct):G4UserSteppingAction(), m_
 /////////////////////////////////////////////////////////////////////////////
 ///
 void SteppingAction::UserSteppingAction(const G4Step* aStep) {
-  G4int stepNb = aStep->GetTrack()->GetCurrentStepNumber();
-  G4StepPoint* postPoint = aStep->GetPostStepPoint();
-  auto position = postPoint->GetPosition();
+  // ?
+  // G4int stepNb = aStep->GetTrack()->GetCurrentStepNumber();
+  // G4StepPoint* postPoint = aStep->GetPostStepPoint();
+  // auto position = postPoint->GetPosition();
   //G4cout << "\n  [debug]:: step " << stepNb << "   position  " << position << G4endl;
 
 }

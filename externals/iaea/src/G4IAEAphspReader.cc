@@ -80,10 +80,10 @@
 //  G4IAEAphspReader::G4IAEAphspReader(char* filename, const G4int sourceId)
 // ==================================================================================
 
-G4IAEAphspReader::G4IAEAphspReader(char *filename) {
-  theFileName = filename;
-
-  InitializeMembers();
+G4IAEAphspReader::G4IAEAphspReader(char *filename, G4int sourceId) {
+  theFileName = G4String(filename);
+  G4VPrimaryGenerator::particle_time = 0.0;
+  G4VPrimaryGenerator::particle_position = G4ThreeVector();
   InitializeSource(filename);
 }
 
@@ -91,13 +91,8 @@ G4IAEAphspReader::G4IAEAphspReader(char *filename) {
 //  G4IAEAphspReader::G4IAEAphspReader(G4String filename, const G4int sourceId)
 // ===================================================================================
 
-G4IAEAphspReader::G4IAEAphspReader(G4String filename) {
-  theFileName = filename;
-  char *fn = const_cast<char *>(filename.data());
-
-  InitializeMembers();
-  InitializeSource(fn);
-}
+G4IAEAphspReader::G4IAEAphspReader(G4String filename, G4int sourceId)
+  : G4IAEAphspReader(const_cast<char *>(filename.data()),sourceId) {}
 
 // =============================================
 //  G4IAEAphspReader::~G4IAEAphspReader()
@@ -105,33 +100,21 @@ G4IAEAphspReader::G4IAEAphspReader(G4String filename) {
 
 G4IAEAphspReader::~G4IAEAphspReader() {
   // clear and delete the vectors
-  theParticleTypeVector->clear();
-  theEnergyVector->clear();
-  thePositionVector->clear();
-  theMomentumVector->clear();
-  theWeightVector->clear();
+  theParticleTypeVector.clear();
+  theEnergyVector.clear();
+  thePositionVector.clear();
+  theMomentumVector.clear();
+  theWeightVector.clear();
 
   if (theNumberOfExtraFloats > 0) {
-    theExtraFloatsVector->clear();
-    theExtraFloatsTypes->clear();
+    theExtraFloatsVector.clear();
+    theExtraFloatsTypes.clear();
   }
 
   if (theNumberOfExtraInts > 0) {
-    theExtraIntsVector->clear();
-    theExtraIntsTypes->clear();
+    theExtraIntsVector.clear();
+    theExtraIntsTypes.clear();
   }
-
-  delete theParticleTypeVector;
-  delete theEnergyVector;
-  delete thePositionVector;
-  delete theMomentumVector;
-  delete theWeightVector;
-
-  delete theExtraFloatsVector;
-  delete theExtraIntsVector;
-
-  delete theExtraFloatsTypes;
-  delete theExtraIntsTypes;
 
   // IAEA file have to be closed
   const IAEA_I32 sourceRead = static_cast<const IAEA_I32>(theSourceReadId);
@@ -150,54 +133,13 @@ G4IAEAphspReader::~G4IAEAphspReader() {
   }
 }
 
-// ===================================================
-//  void G4IAEAphspReader::InitializeMembers()
-// ===================================================
-
-void G4IAEAphspReader::InitializeMembers() {
-  G4ThreeVector zeroVec;
-  G4ThreeVector yAxis(0.0, 1.0, 0.0);
-  G4ThreeVector zAxis(0.0, 0.0, 1.0);
-
-  particle_time = 0.0;
-  particle_position = zeroVec;
-
-  theOriginalHistories = -1;
-  theTotalParticles = -1;
-  theExtraFloatsTypes = new std::vector<G4int>;
-  theExtraIntsTypes = new std::vector<G4int>;
-
-  theParticleTypeVector = new std::vector<G4int>;
-  theEnergyVector = new std::vector<G4double>;
-  thePositionVector = new std::vector<G4ThreeVector>;
-  theMomentumVector = new std::vector<G4ThreeVector>;
-  theWeightVector = new std::vector<G4double>;
-  theExtraFloatsVector = new std::vector<std::vector<G4double> >;
-  theExtraIntsVector = new std::vector<std::vector<G4long> >;
-
-  theTotalParallelRuns = 1;
-  theParallelRun = 1;
-  theTimesRecycled = 0;
-  theUsedOriginalParticles = 0;
-  theCurrentParticle = 0;
-  theEndOfFile = false;
-  theLastGenerated = true;  // MAC to make the file 'restart' in the first event.
-
-  theGlobalPhspTranslation = zeroVec;
-  theRotationOrder = 123;
-  theAlpha = theBeta = theGamma = 0.;
-  theIsocenterPosition = zeroVec;
-  theCollimatorAngle = theGantryAngle = 0.;
-  theCollimatorRotAxis = zAxis;
-  theGantryRotAxis = yAxis;
-}
-
 // =========================================================
 //  void G4IAEAphspReader::InitializeSource(char* filename)
 // =========================================================
 
 void G4IAEAphspReader::InitializeSource(char *filename) {
   // Now try to open file, and check if all it's OK
+  // TODO - dodać możliwość wprowadzania do tej funkcji theSourceReadId - można będzie zakolejkować 2, 3, 5 phsp. 
 
   IAEA_I32 sourceRead = static_cast<IAEA_I32>(theSourceReadId);
   const IAEA_I32 accessRead = static_cast<const IAEA_I32>(theAccessRead);
@@ -244,7 +186,7 @@ void G4IAEAphspReader::InitializeSource(char *filename) {
   } else {
     theTotalParticles = static_cast<G4long>(nParticles);
     G4cout << "Total number of particles in file " << filename << ".IAEAphsp"
-           << " = " << GetTotalParticles() << G4endl;
+           << " = " << theTotalParticles << G4endl;
   }
 
   // And now store the number of original simulated histories
@@ -253,7 +195,7 @@ void G4IAEAphspReader::InitializeSource(char *filename) {
   iaea_get_total_original_particles(&sourceRead, &nHistories);
   theOriginalHistories = static_cast<G4long>(nHistories);
 
-  G4cout << "Number of original histories in header file " << filename << ".IAEAphsp"
+  G4cout << "Number of initial histories in header file " << filename << ".IAEAphsp"
          << " = " << nHistories << G4endl;
 
   // And finally, we take all the information related to the extra variables
@@ -272,53 +214,50 @@ void G4IAEAphspReader::InitializeSource(char *filename) {
   iaea_get_type_extra_variables(&sourceRead, &result, extraIntsTypes, extraFloatsTypes);
 
   if (theNumberOfExtraFloats > 0) {
-    theExtraFloatsTypes->reserve(theNumberOfExtraFloats);
+    theExtraFloatsTypes.reserve(theNumberOfExtraFloats);
 
     for (G4int j = 0; j < theNumberOfExtraFloats; j++) {
-      theExtraFloatsTypes->push_back(static_cast<G4int>(extraFloatsTypes[j]));
+      theExtraFloatsTypes.push_back(static_cast<G4int>(extraFloatsTypes[j]));
     }
   }
 
   if (theNumberOfExtraInts > 0) {
-    theExtraIntsTypes->reserve(sizeof(G4int));
+    theExtraIntsTypes.reserve(sizeof(G4int));
 
     for (G4int i = 0; i < theNumberOfExtraInts; i++) {
-      theExtraIntsTypes->push_back(static_cast<G4int>(extraIntsTypes[i]));
+      theExtraIntsTypes.push_back(static_cast<G4int>(extraIntsTypes[i]));
     }
   }
 }
 
-// ===============================================================
+// ==============================================================================
 //  void G4IAEAphspReader::GeneratePrimaryVertex(G4Event* evt)
-// ===============================================================
+// ==============================================================================
 // This is the pure virtual method inherited from G4VUserPrimaryGeneratorAction
 // and it is meant to be a template method.
 void G4IAEAphspReader::GeneratePrimaryVertex(G4Event *evt) {
-  auto evtId = evt->GetEventID();
-  auto vvrtx = GeneratePrimaryVertex(evtId);
-  for (const auto& vrtx : vvrtx){
+  for (const auto& vrtx : ReadThisEventPrimaryVertexVector(evt->GetEventID())){
     evt->AddPrimaryVertex(vrtx);
   }
 }
 
-std::vector<G4PrimaryVertex*>  G4IAEAphspReader::GeneratePrimaryVertex(G4int evtId) {
+
+// ==============================================================================
+//  std::vector<G4PrimaryVertex*>  G4IAEAphspReader::GeneratePrimaryVertex(G4int evtId)
+// ==============================================================================
+std::vector<G4PrimaryVertex*> G4IAEAphspReader::ReadThisEventPrimaryVertexVector(G4int evtId) {
   if (theLastGenerated) {
     RestartSourceFile();
     ReadAndStoreFirstParticle();
   }
+  ReadThisEvent();
+  return FillThisEventPrimaryVertexVector(evtId);
 
-  PrepareThisEvent();
-
-  if (theNStat == 0) {
-    ReadThisEvent();
-    return GeneratePrimaryParticles(evtId);
-  }
 }
 
 // ==============================================================================
 //  void G4IAEAphspReader::RestartSourceFile()
 // ==============================================================================
-
 void G4IAEAphspReader::RestartSourceFile() {
   // Restart counters and flags
   theCurrentParticle = 0;
@@ -326,16 +265,16 @@ void G4IAEAphspReader::RestartSourceFile() {
   theLastGenerated = false;
 
   // Clear all the vectors
-  theParticleTypeVector->clear();
-  theEnergyVector->clear();
-  thePositionVector->clear();
-  theMomentumVector->clear();
-  theWeightVector->clear();
-  if (theNumberOfExtraFloats) theExtraFloatsVector->clear();
-  if (theNumberOfExtraInts) theExtraIntsVector->clear();
+  theParticleTypeVector.clear();
+  theEnergyVector.clear();
+  thePositionVector.clear();
+  theMomentumVector.clear();
+  theWeightVector.clear();
+  if (theNumberOfExtraFloats) theExtraFloatsVector.clear();
+  if (theNumberOfExtraInts) theExtraIntsVector.clear();
 
   // Close and open the IAEA source
-  char *filename = const_cast<char *>(theFileName.data());
+  char *filename = const_cast<char*>(theFileName.data());
   IAEA_I32 accessRead = static_cast<IAEA_I32>(theAccessRead);
   IAEA_I32 sourceRead = static_cast<IAEA_I32>(theSourceReadId);
   IAEA_I32 result;
@@ -346,59 +285,40 @@ void G4IAEAphspReader::RestartSourceFile() {
 // ===============================================================
 //  void G4IAEAphspReader::ReadAndStoreFirstParticle()
 // ===============================================================
-
 void G4IAEAphspReader::ReadAndStoreFirstParticle() {
   // Particle properties
-  IAEA_I32 type, nStat;
+  IAEA_I32 type, nStat=0;
   IAEA_Float E, wt, x, y, z, u, v, w;
   IAEA_Float extraFloats[NUM_EXTRA_FLOAT];
   IAEA_I32 extraInts[NUM_EXTRA_LONG];
 
   IAEA_I32 sourceRead = static_cast<IAEA_I32>(theSourceReadId);
 
-  // ------------------------------
-  //  Go to the suitable chunk
-  // ------------------------------
-
-  G4int initParticle = theTotalParticles / theTotalParallelRuns * (theParallelRun - 1);
-  while (theCurrentParticle < initParticle) {
-    theCurrentParticle++;
+  while(nStat!=1){          // unitl particle fron new history is read-in
+    theCurrentParticle++;   // linearized position of this particle in the PSF
     iaea_get_particle(&sourceRead, &nStat, &type, &E, &wt, &x, &y, &z, &u, &v, &w, extraFloats, extraInts);
-  }
-
-  // -------------------------------------------------
-  //  Obtain all the information needed from the file
-  // -------------------------------------------------
-
-  // read IAEA particle
-  theCurrentParticle++;  // to keep the position of this particle in the PSF
-  iaea_get_particle(&sourceRead, &nStat, &type, &E, &wt, &x, &y, &z, &u, &v, &w, extraFloats, extraInts);
-  if (nStat == -1) {
-    G4Exception("G4IAEAphspReader::ReadAndStoreFirstParticle()", "IAEAreader009", RunMustBeAborted,
-                "Cannot find source file");
-  } else if (nStat == 0) {
-    theNStat = 1;  // needed to set this first particle as new event
-  } else {
-    theNStat = nStat;
-    // important to calculate correlations properly
+    if (nStat == -1) {
+      G4Exception("G4IAEAphspReader::ReadAndStoreFirstParticle()", "IAEAreader009", RunMustBeAborted,
+                  "Cannot find source file");
+    } 
   }
 
   // -------------------------------------------------
   //  Store the information into the data members
   // -------------------------------------------------
 
-  theParticleTypeVector->push_back(static_cast<G4int>(type));
-  theEnergyVector->push_back(static_cast<G4double>(E));
+  theParticleTypeVector.push_back(static_cast<G4int>(type));
+  theEnergyVector.push_back(static_cast<G4double>(E));
 
   G4ThreeVector pos, mom;
   pos.set(static_cast<G4double>(x), static_cast<G4double>(y), static_cast<G4double>(z));
 
   mom.set(static_cast<G4double>(u), static_cast<G4double>(v), static_cast<G4double>(w));
 
-  thePositionVector->push_back(pos);
-  theMomentumVector->push_back(mom);
+  thePositionVector.push_back(pos);
+  theMomentumVector.push_back(mom);
 
-  theWeightVector->push_back(static_cast<G4double>(wt));
+  theWeightVector.push_back(static_cast<G4double>(wt));
 
   if (theNumberOfExtraFloats > 0) {
     std::vector<G4double> vExtraFloats;
@@ -407,7 +327,7 @@ void G4IAEAphspReader::ReadAndStoreFirstParticle() {
     for (G4int j = 0; j < theNumberOfExtraFloats; j++) {
       vExtraFloats.push_back(static_cast<G4double>(extraFloats[j]));
     }
-    theExtraFloatsVector->push_back(vExtraFloats);
+    theExtraFloatsVector.push_back(vExtraFloats);
   }
 
   if (theNumberOfExtraInts > 0) {
@@ -417,7 +337,7 @@ void G4IAEAphspReader::ReadAndStoreFirstParticle() {
     for (G4int i = 0; i < theNumberOfExtraInts; i++) {
       vExtraInts.push_back(static_cast<G4long>(extraInts[i]));
     }
-    theExtraIntsVector->push_back(vExtraInts);
+    theExtraIntsVector.push_back(vExtraInts);
   }
 
   //  Update theUsedOriginalParticles
@@ -431,27 +351,33 @@ void G4IAEAphspReader::ReadAndStoreFirstParticle() {
 // ===============================================================
 //  void G4IAEAphspReader::PrepareThisEvent()
 // ===============================================================
-
 void G4IAEAphspReader::PrepareThisEvent() {
-  theNStat--;  // A new event begins
+  // A new event begins
+  // Geant4 Event is binded to single history from PHSP
+  // while single history can contain number of particles
+  // which here are emplaced into number of vertexes
+  // each one with single particle
+  // - this is important to calculate correlations properly
+
 
   // Erase all the elements but the last in the vectors
   // In case that the size of the lists is just 1, there's no need
   // to clean up.
 
-  G4int listSizes = theParticleTypeVector->size();
+  G4int listSizes = theParticleTypeVector.size();
 
   if (listSizes > 1) {
-    theParticleTypeVector->erase(theParticleTypeVector->begin(), theParticleTypeVector->end() - 1);
-    theEnergyVector->erase(theEnergyVector->begin(), theEnergyVector->end() - 1);
-    thePositionVector->erase(thePositionVector->begin(), thePositionVector->end() - 1);
-    theMomentumVector->erase(theMomentumVector->begin(), theMomentumVector->end() - 1);
-    theWeightVector->erase(theWeightVector->begin(), theWeightVector->end() - 1);
+    theParticleTypeVector.erase(theParticleTypeVector.begin(), theParticleTypeVector.end() - 1);
+    theEnergyVector.erase(theEnergyVector.begin(), theEnergyVector.end() - 1);
+    thePositionVector.erase(thePositionVector.begin(), thePositionVector.end() - 1);
+    theMomentumVector.erase(theMomentumVector.begin(), theMomentumVector.end() - 1);
+    theWeightVector.erase(theWeightVector.begin(), theWeightVector.end() - 1);
 
     if (theNumberOfExtraFloats > 0)
-      theExtraFloatsVector->erase(theExtraFloatsVector->begin(), theExtraFloatsVector->end() - 1);
+      theExtraFloatsVector.erase(theExtraFloatsVector.begin(), theExtraFloatsVector.end() - 1);
 
-    if (theNumberOfExtraInts > 0) theExtraIntsVector->erase(theExtraIntsVector->begin(), theExtraIntsVector->end() - 1);
+    if (theNumberOfExtraInts > 0)
+      theExtraIntsVector.erase(theExtraIntsVector.begin(), theExtraIntsVector.end() - 1);
   }
 }
 
@@ -460,8 +386,9 @@ void G4IAEAphspReader::PrepareThisEvent() {
 // ===============================================================
 
 void G4IAEAphspReader::ReadThisEvent() {
+  PrepareThisEvent();
   // Particle properties
-  IAEA_I32 type, nStat;
+  IAEA_I32 type, nStat = 0;
   IAEA_Float E, wt, x, y, z, u, v, w;
   IAEA_I32 extraInts[NUM_EXTRA_LONG];
   IAEA_Float extraFloats[NUM_EXTRA_FLOAT];
@@ -469,39 +396,35 @@ void G4IAEAphspReader::ReadThisEvent() {
   IAEA_I32 sourceRead = static_cast<IAEA_I32>(theSourceReadId);
 
   // the position of the last particle in this chunk
-  G4int endParticle = theTotalParticles / theTotalParallelRuns * theParallelRun;
+  theTotalParticles;
 
   // -------------------------------------------------
   //  Obtain all the information needed from the file
   // -------------------------------------------------
-
-  while (theNStat == 0 && !theEndOfFile) {
+  while ((nStat!=1) && !theEndOfFile) {
     //  Read next IAEA particle
     // -------------------------
-
     theCurrentParticle++;
     iaea_get_particle(&sourceRead, &nStat, &type, &E, &wt, &x, &y, &z, &u, &v, &w, extraFloats, extraInts);
     if (nStat == -1) {
       G4Exception("G4IAEAphspReader::ReadThisEvent()", "IAEAreader010", RunMustBeAborted, "Cannot find source file");
-    } else {
-      theNStat += nStat;  // statistical book-keeping
-    }
+    } 
 
     //  Store the information into the data members
     // ---------------------------------------------
 
-    theParticleTypeVector->push_back(static_cast<G4int>(type));
-    theEnergyVector->push_back(static_cast<G4double>(E));
+    theParticleTypeVector.push_back(static_cast<G4int>(type));
+    theEnergyVector.push_back(static_cast<G4double>(E));
 
     G4ThreeVector pos, mom;
     pos.set(static_cast<G4double>(x), static_cast<G4double>(y), static_cast<G4double>(z));
 
     mom.set(static_cast<G4double>(u), static_cast<G4double>(v), static_cast<G4double>(w));
 
-    thePositionVector->push_back(pos);
-    theMomentumVector->push_back(mom);
+    thePositionVector.push_back(pos);
+    theMomentumVector.push_back(mom);
 
-    theWeightVector->push_back(static_cast<G4double>(wt));
+    theWeightVector.push_back(static_cast<G4double>(wt));
 
     if (theNumberOfExtraFloats > 0) {
       std::vector<G4double> vExtraFloats;
@@ -509,7 +432,7 @@ void G4IAEAphspReader::ReadThisEvent() {
       for (G4int j = 0; j < theNumberOfExtraFloats; j++) {
         vExtraFloats.push_back(static_cast<G4double>(extraFloats[j]));
       }
-      theExtraFloatsVector->push_back(vExtraFloats);
+      theExtraFloatsVector.push_back(vExtraFloats);
     }
 
     if (theNumberOfExtraInts > 0) {
@@ -518,7 +441,7 @@ void G4IAEAphspReader::ReadThisEvent() {
       for (G4int i = 0; i < theNumberOfExtraInts; i++) {
         vExtraInts.push_back(static_cast<G4long>(extraInts[i]));
       }
-      theExtraIntsVector->push_back(vExtraInts);
+      theExtraIntsVector.push_back(vExtraInts);
     }
 
     //  Update theUsedOriginalParticles
@@ -528,30 +451,33 @@ void G4IAEAphspReader::ReadThisEvent() {
     iaea_get_used_original_particles(&sourceRead, &nUsedOriginal);
     theUsedOriginalParticles = static_cast<G4long>(nUsedOriginal);
 
-    //  Check whether the end of chunk has been reached
+    if ((theCurrentParticle%int(theTotalParticles/10))==0){
+      std::cout << "The " << int(theCurrentParticle/(theTotalParticles/100)) << " % of the phsp file has already been read" << std::endl;
+    }
+
+    //  Check whether the end of file has been reached
+    //  endBuffor -> EOF is reached with the value of endBuffor particles before the actuale end.
     // -------------------------------------------------
-    if (theCurrentParticle == endParticle) theEndOfFile = true;
+    G4int endBuffor = 5;
+    if ((theCurrentParticle + endBuffor )>= theTotalParticles){
+      theEndOfFile = true;
+      theLastGenerated = true;
+      G4cout << "WARNING: End of Phase-space file reached during history no: " << theUsedOriginalParticles << "." << G4endl;
+    }  
+
   }
 }
 
 // ===============================================================
 //
-std::vector<G4PrimaryVertex*> G4IAEAphspReader::GeneratePrimaryParticles(G4int evtId) {
-  // Only when the EOF has been reached and theNStat is still 0
-  // all the particles must be read.
-  // Otherwise, don't read the last particle.
+std::vector<G4PrimaryVertex*> G4IAEAphspReader::FillThisEventPrimaryVertexVector(G4int evtId) {
 
-  G4int listSize = theParticleTypeVector->size();
-
-  if (theEndOfFile && theNStat == 0) {
-    // Read all the particles, so this flag switches on
-    theLastGenerated = true;
-
+  G4int listSize = theParticleTypeVector.size() -1 ; // The last particle belongs to a later event
+  if(theLastGenerated){
     // Throw a warning due to the following restarting
     G4cout << "WARNING: End of Phase-space file reached during event " << evtId << "." << G4endl;
-  } else {
-    // The last particle belongs to a later event
-    listSize--;
+    G4cout << "WARNING: End of Phase-space file reached particle no.: " << theCurrentParticle << "." << G4endl;
+
   }
 
   // loop over all the particles obtained from PSF
@@ -563,7 +489,7 @@ std::vector<G4PrimaryVertex*> G4IAEAphspReader::GeneratePrimaryParticles(G4int e
     // --------------------------
 
     G4ParticleDefinition *partDef = 0;
-    switch ((*theParticleTypeVector)[k]) {
+    switch (theParticleTypeVector.at(k)) {
       case 1:
         partDef = G4Gamma::Definition();
         break;
@@ -580,23 +506,23 @@ std::vector<G4PrimaryVertex*> G4IAEAphspReader::GeneratePrimaryParticles(G4int e
         partDef = G4Proton::Definition();
       default:
         G4cout << "Exception occurred at event " << evtId << "\n"
-               << "reading particle code " << (*theParticleTypeVector)[k] << "." << G4endl;
-        G4Exception("G4IAEAphspReader::GeneratePrimaryParticles()", "IAEAreader011", EventMustBeAborted,
+               << "reading particle code " << theParticleTypeVector.at(k) << "." << G4endl;
+        G4Exception("G4IAEAphspReader::FillThisEventPrimaryVertexVector()", "IAEAreader011", EventMustBeAborted,
                     "Unknown particle code in IAEA file");
     }
 
     // Second: Particle position, time and momentum
     // --------------------------------------------
 
-    particle_position = (*thePositionVector)[k];
+    particle_position = thePositionVector.at(k);
     particle_position *= cm;  // IAEA file stores in cm
 
     G4double partMass = partDef->GetPDGMass();
-    G4double partEnergy = static_cast<G4double>((*theEnergyVector)[k]) * MeV + partMass;
+    G4double partEnergy = static_cast<G4double>(theEnergyVector.at(k)) * MeV + partMass;
     G4double partMom = std::sqrt(partEnergy * partEnergy - partMass * partMass);
 
     G4ThreeVector partMomVect;
-    partMomVect = (*theMomentumVector)[k]; // this is only a direction in cartesian coordinates
+    partMomVect = theMomentumVector.at(k); // this is only a direction in cartesian coordinates
     partMomVect *= partMom;
 
     // Third: Translation and rotations
@@ -609,37 +535,33 @@ std::vector<G4PrimaryVertex*> G4IAEAphspReader::GeneratePrimaryParticles(G4int e
     // -------------------------------------------------
     //  Creation of the new primary particle and vertex
     // -------------------------------------------------
-
     // loop to take care of recycling
     for (G4int r = 0; r <= theTimesRecycled; r++) {
       // Create the new primary particle
       G4PrimaryParticle *particle = new G4PrimaryParticle(partDef, partMomVect.x(), partMomVect.y(), partMomVect.z());
-      //auto pEnergy = particle->GetKineticEnergy();
-      auto pTheta = particle->GetMomentum().theta();
-      auto x = particle_position.getX();
-      auto y = particle_position.getY();
-      auto pName = partDef->GetParticleName();
+      
+      // TODO: Filtering logic to placed here. Note, that if the particle vector
+      // auto pEnergy = particle->GetKineticEnergy();
+      // auto pTheta = particle->GetMomentum().theta();
+      // auto x = particle_position.getX();
+      // auto y = particle_position.getY();
+      // auto pName = partDef->GetParticleName();
+      // 
       // if(pTheta<0.2){
       // if(pName =="gamma"){
-      // if( x > -30 && x < 30 && y > -30 && y < 30){
+      // if( x > -30 && x < 30 && y > -30 && y < 30) ...
 
-        particle->SetWeight((*theWeightVector)[k]);
+      particle->SetWeight(theWeightVector.at(k));
 
-        // Create the new primary vertex and set the primary to it
-        G4PrimaryVertex *vertex = new G4PrimaryVertex(particle_position, particle_time);
-        // G4cout <<" particle_position: "<<  particle_position << G4endl;
-        vertex->SetPrimary(particle);
-        vertex_vector.emplace_back(vertex);
-        // And finally set the vertex to this event
-        // evt->AddPrimaryVertex(vertex);
-      // } else {
-      //   // G4cout <<" particle_name: "<<  pName << G4endl;
-      //   //G4cout <<" particle_theta: "<< pTheta << G4endl;
-      //   // G4cout <<" particle x="<< x << "\ty=" << y << "\ttheta=" << pTheta << G4endl;
-      //   delete particle;
-      // }
-
+      // Create the new primary vertex and set the primary to it
+      vertex_vector.push_back(new G4PrimaryVertex(particle_position, particle_time));
+      vertex_vector.back()->SetPrimary(particle);
     }
+  }
+   // after filtering if is empty the ReadThisEvent method should be called again;
+  if (vertex_vector.size()<1){
+    ReadThisEvent();
+    return FillThisEventPrimaryVertexVector(evtId);
   }
   return vertex_vector;
 }
@@ -810,7 +732,6 @@ G4long G4IAEAphspReader::GetTotalParticlesOfType(G4String type) const {
                 "Particle type not valid. Return value -1");
     return -1;
   }
-
   IAEA_I64 nParticles;
   const IAEA_I32 sourceRead = static_cast<const IAEA_I32>(theSourceReadId);
   iaea_get_max_particles(&sourceRead, &particleType, &nParticles);

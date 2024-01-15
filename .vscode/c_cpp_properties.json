@@ -1,0 +1,65 @@
+{
+    "configurations": [
+        {
+            "name": "cvmfs-centos7",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/LCG_98python3/Geant4/10.06.p02/x86_64-centos7-gcc9-opt/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/LCG_98python3/Geant4/10.06.p02/x86_64-centos7-gcc9-opt/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/cvmfs/sft.cern.ch/lcg/releases/gcc/9.1.0-f2757/x86_64-centos7/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "g4rt-jakub",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/include/**",
+                "/opt/geant4/include/**",
+                "/home/g4rt/miniconda3/envs/g4rt/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/home/g4rt/miniconda3/envs/g4rt/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "wsl-ubuntu2204",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/geant4/include/**",
+                "/home/geant4/miniconda3/envs/dose3d/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/home/geant4/miniconda3/envs/dose3d/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "wsl-cvmfs-ubuntu2004",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/LCG_101/Geant4/10.07.p02/x86_64-ubuntu2004-gcc9-opt/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/LCG_101/Geant4/10.07.p02/x86_64-ubuntu2004-gcc9-opt/include/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/clhep/2.4.4.0-b903d/x86_64-ubuntu2004-gcc9-opt/include/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/VecGeom/v1.1.16-2c171/x86_64-ubuntu2004-gcc9-opt/include/**",
+                "/cvmfs/sft.cern.ch/lcg/releases/LCG_101/ROOT/6.24.06/x86_64-ubuntu2004-gcc9-opt/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

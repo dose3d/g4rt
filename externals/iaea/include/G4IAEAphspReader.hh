@@ -51,8 +51,15 @@
  *
  * - 07/12/2009: public version 1.0
  *
+ **********************************************************************************
+ * NOTE by B.Rachwal & J.Hajduga:
+ * Currenttly this reader is refactored to being run in single thread, or within the
+ * lock meachanism, e.g. 
+ * G4Mutex PrimGenMutex = G4MUTEX_INITIALIZER;
+ * G4AutoLock lock(&PrimGenMutex);
+ * ...
+ * 
  **********************************************************************************/
-
 #ifndef G4IAEAphspReader_h
 #define G4IAEAphspReader_h 1
 
@@ -73,10 +80,9 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
 
   public:
   // 'filename' must include the path if needed, but NOT the extension
+  G4IAEAphspReader(char *filename, G4int sourceId);
 
-  G4IAEAphspReader(char *filename);
-
-  G4IAEAphspReader(G4String filename);
+  G4IAEAphspReader(G4String filename, G4int sourceId=0);
 
   private:
   G4IAEAphspReader() {
@@ -90,12 +96,10 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   // ========== Class Methods ==========
 
   public:
-  void GeneratePrimaryVertex(G4Event *evt);  // Mandatory
-  std::vector<G4PrimaryVertex*> GeneratePrimaryVertex(G4int evtId);
+  void GeneratePrimaryVertex(G4Event *evt) override;  // Mandatory
+  std::vector<G4PrimaryVertex*> ReadThisEventPrimaryVertexVector(G4int evtId);
 
   private:
-  void InitializeMembers();
-
   void InitializeSource(char *filename);
 
   void ReadAndStoreFirstParticle();
@@ -104,7 +108,7 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
 
   void ReadThisEvent();
 
-  std::vector<G4PrimaryVertex*> GeneratePrimaryParticles(G4int evtId); 
+  std::vector<G4PrimaryVertex*> FillThisEventPrimaryVertexVector(G4int evtId); 
 
   void PerformRotations(G4ThreeVector &mom);
 
@@ -117,14 +121,14 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   // ========== Set/Get inline methods ==========
 
   public:
-  inline void SetTotalParallelRuns(G4int nParallelRuns) { theTotalParallelRuns = nParallelRuns; }
+  // inline void SetTotalParallelRuns(G4int nParallelRuns) { theTotalParallelRuns = nParallelRuns; }
 
-  inline void SetParallelRun(G4int parallelRun) {
-    if (parallelRun > theTotalParallelRuns && parallelRun < 1)
-      G4Exception("G4IAEAReader::SetParallelRun()", "IAEAreader002", FatalErrorInArgument,
-                  "Error in G4IAEAphspReader::SetParallelRun()");
-    theParallelRun = parallelRun;
-  }
+  // inline void SetParallelRun(G4int parallelRun) {
+  //   if (parallelRun > theTotalParallelRuns && parallelRun < 1)
+  //     G4Exception("G4IAEAReader::SetParallelRun()", "IAEAreader002", FatalErrorInArgument,
+  //                 "Error in G4IAEAphspReader::SetParallelRun()");
+  //   theParallelRun = parallelRun;
+  // }
 
   inline void SetTimesRecycled(G4int ntimes) { theTimesRecycled = ntimes; }
 
@@ -156,37 +160,37 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
 
   inline G4long GetUsedOriginalParticles() const { return theUsedOriginalParticles; }
 
-  inline G4long GetTotalParticles() const { return theTotalParticles; }
+  // inline G4long GetTotalParticles() const { return theTotalParticles; }
 
   inline G4int GetNumberOfExtraFloats() const { return theNumberOfExtraFloats; }
 
   inline G4int GetNumberOfExtraInts() const { return theNumberOfExtraInts; }
 
-  inline std::vector<G4int> *GetExtraFloatsTypes() const { return theExtraFloatsTypes; }
+  inline const std::vector<G4int>& GetExtraFloatsTypes() const { return theExtraFloatsTypes; }
 
-  inline std::vector<G4int> *GetExtraIntsTypes() const { return theExtraIntsTypes; }
+  inline const std::vector<G4int>& GetExtraIntsTypes() const { return theExtraIntsTypes; }
 
   G4long GetTotalParticlesOfType(G4String type) const;
 
   G4double GetConstantVariable(const G4int index) const;
 
-  inline std::vector<G4int> *GetParticleTypeVector() const { return theParticleTypeVector; }
+  inline const std::vector<G4int>& GetParticleTypeVector() const { return theParticleTypeVector; }
 
-  inline std::vector<G4double> *GetEnergyVector() const { return theEnergyVector; }
+  inline const std::vector<G4double>& GetEnergyVector() const { return theEnergyVector; }
 
-  inline std::vector<G4ThreeVector> *GetPositionVector() const { return thePositionVector; }
+  inline const std::vector<G4ThreeVector>& GetPositionVector() const { return thePositionVector; }
 
-  inline std::vector<G4ThreeVector> *GetMomentumVector() const { return theMomentumVector; }
+  inline const std::vector<G4ThreeVector>& GetMomentumVector() const { return theMomentumVector; }
 
-  inline std::vector<G4double> *GetWeightVector() const { return theWeightVector; }
+  inline const std::vector<G4double>& GetWeightVector() const { return theWeightVector; }
 
-  inline std::vector<std::vector<G4double> > *GetExtraFloatsVector() const { return theExtraFloatsVector; }
+  inline const std::vector<std::vector<G4double> >& GetExtraFloatsVector() const { return theExtraFloatsVector; }
 
-  inline std::vector<std::vector<G4long> > *GetExtraIntsVector() const { return theExtraIntsVector; }
+  inline const std::vector<std::vector<G4long> >& GetExtraIntsVector() const { return theExtraIntsVector; }
 
-  inline G4int GetTotalParallelRuns() const { return theTotalParallelRuns; }
+  // inline G4int GetTotalParallelRuns() const { return theTotalParallelRuns; }
 
-  inline G4int GetParallelRun() const { return theParallelRun; }
+  // inline G4int GetParallelRun() const { return theParallelRun; } 
 
   inline G4int GetTimesRecycled() const { return theTimesRecycled; }
 
@@ -220,63 +224,62 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   G4String theFileName;
   // Must include the path, but NOT the IAEA extension
 
-  static const G4int theSourceReadId = 0;
+  // TODO: create setter. For multiple file & pararel readout?  
+  static const G4int theSourceReadId = 0; 
   // The Id the file source has for the IAEA routines
 
   static const G4int theAccessRead = 1;
   // A value needed to open the file in the IAEA codes
 
-  G4long theOriginalHistories;
+  G4long theOriginalHistories = -1;
   // Number of original histories which generated the phase space file
 
-  G4long theTotalParticles;
+  G4long theTotalParticles = -1;
   // Number of particles stored in the phase space file
 
   G4int theNumberOfExtraFloats, theNumberOfExtraInts;
   // Number of extra variables stored for each particle
 
-  std::vector<G4int> *theExtraFloatsTypes;
-  std::vector<G4int> *theExtraIntsTypes;
+  std::vector<G4int> theExtraFloatsTypes;// = new std::vector<G4int>;
+  std::vector<G4int> theExtraIntsTypes;// = new std::vector<G4int>;
   // Identification to classify the different extra variables
 
   // ---------------------
   // PARTICLE PROPERTIES
   // ---------------------
 
-  std::vector<G4int> *theParticleTypeVector;
-  std::vector<G4double> *theEnergyVector;
-  std::vector<G4ThreeVector> *thePositionVector;
-  std::vector<G4ThreeVector> *theMomentumVector;
-  std::vector<G4double> *theWeightVector;
-  std::vector<std::vector<G4double> > *theExtraFloatsVector;
-  std::vector<std::vector<G4long> > *theExtraIntsVector;
+  std::vector<G4int> theParticleTypeVector;
+  std::vector<G4double> theEnergyVector;// =  new std::vector<G4double>;
+  std::vector<G4ThreeVector> thePositionVector;// = new std::vector<G4ThreeVector>;
+  std::vector<G4ThreeVector> theMomentumVector;// = new std::vector<G4ThreeVector>;
+  std::vector<G4double> theWeightVector;// = new std::vector<G4double>;
+  std::vector<std::vector<G4double> > theExtraFloatsVector;// = new std::vector<std::vector<G4double> >;
+  std::vector<std::vector<G4long> > theExtraIntsVector;// = new std::vector<std::vector<G4long> >;
 
   // -------------------
   // COUNTERS AND FLAGS
   // -------------------
 
-  G4int theTotalParallelRuns;
-  // For parallel runs, number of fragments in which the PSF is divided into
+  // G4int theTotalParallelRuns;
+  // // For parallel runs, number of fragments in which the PSF is divided into
 
-  G4int theParallelRun;
-  // Sets the fragment of PSF where the particles must be read from
+  // G4int theParallelRun;
+  // // Sets the fragment of PSF where the particles must be read from
 
-  G4int theTimesRecycled;
+  G4int theTimesRecycled = 0;
   // Set the number of times that each particle is recycled (not repeated)
 
-  G4int theNStat;
-  // Decides how many events should pass before throwing a new particle
 
-  G4long theUsedOriginalParticles;
+  G4long theUsedOriginalParticles = 0;
   // Variable that stores the number of particles readed so far
 
-  G4long theCurrentParticle;
+  G4long theCurrentParticle = 0;
   // Number to store the current particle position in PSF
 
-  G4bool theEndOfFile;
+  G4bool theEndOfFile = false;
   // Flag active when the file has reached the end
 
-  G4bool theLastGenerated;
+  G4bool theLastGenerated = true; // MAC to make the file 'restart' in the first event.
   // Flag active only when the last particle has been simulated
 
   // ------------------------
@@ -286,18 +289,22 @@ class G4IAEAphspReader : public G4VPrimaryGenerator {
   G4ThreeVector theGlobalPhspTranslation;
   // Global translation performed to particles
 
-  G4int theRotationOrder;
+  G4int theRotationOrder =  123;
   // Variable to decide first, second and third rotations
   // For example, 132 means rotations using X, Z and Y global axis
 
-  G4double theAlpha, theBeta, theGamma;
+  G4double theAlpha = 0;
+  G4double theBeta = 0;
+  G4double theGamma = 0;
   // Angles of rotations around global axis
 
   G4ThreeVector theIsocenterPosition;
   // Position of the isocenter if needed
 
-  G4double theCollimatorAngle, theGantryAngle;
-  G4ThreeVector theCollimatorRotAxis, theGantryRotAxis;
+  G4double theCollimatorAngle = 0;
+  G4double theGantryAngle = 0;
+  G4ThreeVector theCollimatorRotAxis = G4ThreeVector(0.0, 0.0, 1.0);  // Z Axis
+  G4ThreeVector theGantryRotAxis = G4ThreeVector(0.0, 1.0, 0.0);      // Y Axis
   // Angles and axis of isocentric rotations in the machine
   // The collimator ALWAYS rotates first.
 };

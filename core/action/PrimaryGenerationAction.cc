@@ -226,4 +226,5 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       pparticle->SetUserInformation(pparticleInfo);
     }
   }
+  delete RotMat;
 }

@@ -281,7 +281,6 @@ void ControlPoint::FillScoringData(){
 
     }
 
-    G4int evtRunId; tree->SetBranchAddress("G4RunId",&evtRunId);
     G4int cIdx; tree->SetBranchAddress("CellIdX",&cIdx);
     G4int cIdy; tree->SetBranchAddress("CellIdY",&cIdy);
     G4int cIdz; tree->SetBranchAddress("CellIdZ",&cIdz);

@@ -44,6 +44,7 @@ class NTupleEventAnalisys {
         bool m_voxel_tree_structure = false;
         bool m_cell_in_voxel_tree_structure = false;
         bool m_tracks_analysis = false;
+        bool m_minimalistic_ttree = true;
         G4double m_global_time = 0.;
         G4int m_EvtPrimariesN = 0;
         // G4double m_totalDose = 0.;
@@ -75,6 +76,8 @@ class NTupleEventAnalisys {
         /// Single or many HitsCollections can be related to single tree,
         /// see NTupleEventAnalisys::DefineTTree definition
         std::vector<G4String> m_hc_names;
+        /// 
+        bool m_minimalistic = true;
     };
 
 

@@ -167,8 +167,8 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
-    x_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
-    y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+    x_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+    y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
         LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
@@ -348,9 +348,9 @@ void ControlPoint::FillScoringDataTagging(){
                         total_dose += iv->GetDose();
                         });
             if(weighted)
-                activityCentre = in_field_scoring_volume.size() > 0 ? sum / in_field_scoring_volume.size() : sum;
-            else
                 activityWCentre = total_dose == 0 ? sum : sum / total_dose;
+            else
+                activityCentre = in_field_scoring_volume.size() > 0 ? sum / in_field_scoring_volume.size() : sum;
         }
         return weighted ? activityWCentre : activityCentre;
     };

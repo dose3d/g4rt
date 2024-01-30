@@ -388,8 +388,8 @@ void NTupleEventAnalisys::FillNTupleEvent(){
               fillNtupleDColumn("CellPositionX",treeEvtColl.m_CellPositionX.at(i));
               fillNtupleDColumn("CellPositionY",treeEvtColl.m_CellPositionY.at(i));
               fillNtupleDColumn("CellPositionZ",treeEvtColl.m_CellPositionZ.at(i));
-              fillNtupleDColumn("CellDose",treeEvtColl.m_CellIDose.at(i));
             }
+            fillNtupleDColumn("CellDose",treeEvtColl.m_CellIDose.at(i));
           }
           fillNtupleIColumn("VoxelIdX",treeEvtColl.m_VoxelIdX.at(i));
           fillNtupleIColumn("VoxelIdY",treeEvtColl.m_VoxelIdY.at(i));

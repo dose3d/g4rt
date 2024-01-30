@@ -327,47 +327,42 @@ void ControlPoint::FillScoringData(){
 ///
 void ControlPoint::FillScoringDataTagging(){
     LOGSVC_INFO("Filling scoring tagging....");
-    auto getActivityGeoCentre = [&](Scoring::Type type, bool weighted){
-        static G4ThreeVector activityCentre{-1,-1,-1};
-        static G4ThreeVector activityWCentre{-1,-1,-1};
-        if(activityCentre==G4ThreeVector{-1,-1,-1} || activityWCentre==G4ThreeVector{-1,-1,-1}){
-            static std::vector<const VoxelHit*> in_field_scoring_volume;
-            const auto& data = m_hashed_scoring_map[type];
-            if(in_field_scoring_volume.empty()){
-                for(auto& scoring : data){
-                    if(IsInField(scoring.second.GetCentre()))
-                        in_field_scoring_volume.push_back(&scoring.second);
-                }
-            }
-            G4ThreeVector sum{0,0,0};
-            G4double total_dose{0};
-            std::for_each(  in_field_scoring_volume.begin(),
-                            in_field_scoring_volume.end(),
-                            [&](const VoxelHit* iv) {
-                        sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
-                        total_dose += iv->GetDose();
-                        });
-            if(weighted)
-                activityWCentre = total_dose == 0 ? sum : sum / total_dose;
-            else
-                activityCentre = in_field_scoring_volume.size() > 0 ? sum / in_field_scoring_volume.size() : sum;
-        }
-        return weighted ? activityWCentre : activityCentre;
+    std::vector<const VoxelHit*> in_field_scoring_volume;
+    
+    auto getActivityGeoCentre = [&](bool weighted){
+        G4ThreeVector activityCentre{-1,-1,-1};
+        G4ThreeVector sum{0,0,0};
+        G4double total_dose{0};
+        std::for_each(  in_field_scoring_volume.begin(),
+                        in_field_scoring_volume.end(),
+                        [&](const VoxelHit* iv) {
+                    sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
+                    total_dose += iv->GetDose();
+                    });
+        if(weighted)
+            return total_dose == 0 ? sum : sum / total_dose;
+        else
+            return in_field_scoring_volume.size() > 0 ? sum / in_field_scoring_volume.size() : sum;
     };
 
-    auto fillScoringVolumeTagging = [&](VoxelHit& hit, Scoring::Type type){
-        auto geo_centre = getActivityGeoCentre(type,false);
-        auto wgeo_centre = getActivityGeoCentre(type,true);
+    auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
         auto mask_tag = GetInFieldMaskTag(hit.GetCentre());
-        auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geo_centre));
-        auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeo_centre));
+        auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
+        auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
         hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
     };
 
     for(auto& scoring_type: m_scoring_types){
         auto& data = m_hashed_scoring_map[scoring_type];
-        for(auto& scoring : data){
-            fillScoringVolumeTagging(scoring.second,scoring_type);
+        in_field_scoring_volume.clear();
+        for(auto& hit : data){
+            if(IsInField(hit.second.GetCentre()))
+                in_field_scoring_volume.push_back(&hit.second);
+        }
+        auto geo_centre = getActivityGeoCentre(false);
+        auto wgeo_centre = getActivityGeoCentre(true);
+        for(auto& hit : data){
+            fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
         }
     }
 }

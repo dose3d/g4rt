@@ -328,9 +328,8 @@ void ControlPoint::FillScoringData(){
 void ControlPoint::FillScoringDataTagging(){
     LOGSVC_INFO("Filling scoring tagging....");
     std::vector<const VoxelHit*> in_field_scoring_volume;
-    
+
     auto getActivityGeoCentre = [&](bool weighted){
-        G4ThreeVector activityCentre{-1,-1,-1};
         G4ThreeVector sum{0,0,0};
         G4double total_dose{0};
         std::for_each(  in_field_scoring_volume.begin(),
@@ -339,10 +338,15 @@ void ControlPoint::FillScoringDataTagging(){
                     sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
                     total_dose += iv->GetDose();
                     });
-        if(weighted)
+        if(weighted){
+            LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
             return total_dose == 0 ? sum : sum / total_dose;
-        else
-            return in_field_scoring_volume.size() > 0 ? sum / in_field_scoring_volume.size() : sum;
+        }
+        else{
+            auto size = in_field_scoring_volume.size();
+            LOGSVC_INFO("getActivityGeoCentre: size: {}",size);
+            return size > 0 ? sum / size : sum;
+        }
     };
 
     auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
@@ -353,6 +357,7 @@ void ControlPoint::FillScoringDataTagging(){
     };
 
     for(auto& scoring_type: m_scoring_types){
+        LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
         auto& data = m_hashed_scoring_map[scoring_type];
         in_field_scoring_volume.clear();
         for(auto& hit : data){
@@ -360,7 +365,9 @@ void ControlPoint::FillScoringDataTagging(){
                 in_field_scoring_volume.push_back(&hit.second);
         }
         auto geo_centre = getActivityGeoCentre(false);
+        LOGSVC_INFO("Geocentre: {}",geo_centre);
         auto wgeo_centre = getActivityGeoCentre(true);
+        LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
         for(auto& hit : data){
             fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
         }

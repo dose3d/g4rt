@@ -1,0 +1,44 @@
+[RunSvc]
+JobName = "mlsr_4x4x4_10x10x10_Flsz-Rectangular_25x25mm_top0.0_1e4_phsp"
+BeamType = "IAEA"
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+
+PhspInputPosition = "s2"
+PrintProgressFrequency = 0.05
+NTupleAnalysis = true
+
+FieldShape = "Rectangular"
+# FieldShape = "Elipsoidal"
+FieldSizeA = 25 # mm
+FieldSizeB = 25 # mm
+
+[PatientGeometry]
+Type = "D3DDetector"
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = 50.0
+EnviromentSizeX = 100.0
+EnviromentSizeY = 100.0
+EnviromentSizeZ = 100.0
+EnviromentMedium = "G4_WATER"
+
+[D3DDetector_Detector]
+TopPositionInEnv = [0.0,0.0,-50.0] # In mm
+Voxelization = [4,4,4] # Number of cels in every direction
+
+[D3DDetector_Layer]
+MRowShift = false
+MLayerShift = false
+
+[D3DDetector_Cell]
+Medium = "PMMA"
+Voxelization = [10,10,10]
+TracksAnalysis = false
+WriteCellTTree = false
+WriteVoxelisedCellTTree = true
+
+[RunSvc_Plan]
+Control_Points_In_Treatment_Plan = 1
+Gantry_Angle_Per_Control_Point = [0.0]
+Particle_Counter_Per_Control_Point = [1e4]

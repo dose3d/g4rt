@@ -93,21 +93,8 @@ PrimaryGenerationAction::~PrimaryGenerationAction(void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
-  auto runSvc = Service<RunSvc>();
-  G4AutoLock lock(&PrimGenMutex);
-  auto evtID = anEvent->GetEventID();
-  m_primaryGenerator->GeneratePrimaryVertex(anEvent);
-  auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
-  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
-    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
-  G4ThreeVector NewCentre;
+void PrimaryGenerationAction::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
   G4ThreeVector CurrentCentre;
-  G4ThreeVector AxisOfRotation = G4ThreeVector(0.0,0.0,1.0);
-  G4RotationMatrix *RotMat = new G4RotationMatrix();
-  RotMat -> rotate(90.0 *deg, AxisOfRotation);
-  
-
   auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
   auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
 
@@ -131,9 +118,10 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
     cutFieldSize_a = (fa / ssd) * fieldSize_a / 2.;
     cutFieldSize_b = (fa / ssd) * fieldSize_b / 2.;
   }
+  auto nVrtx = p_vrtx.size();
 
   for(int i=0; i<nVrtx;++i){
-    auto vrtx = anEvent->GetPrimaryVertex(i);
+    auto vrtx = p_vrtx.at(i);
     auto model = Service<GeoSvc>()->GetMlcModel();
     CurrentCentre = vrtx->GetPosition();
     if(model == EMlcModel::Ghost){
@@ -144,78 +132,78 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
         // G4cout << "X: " << CurrentCentre.x() << "Y: " << CurrentCentre.y() << "Z: " << CurrentCentre.z() << G4endl;
         if (fieldshape == "Rectangular"){
           if (CurrentCentre.x()<-cutFieldSize_a || CurrentCentre.x() > cutFieldSize_a || CurrentCentre.y()<-cutFieldSize_b || CurrentCentre.y() > cutFieldSize_b ){
-              vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
+              // vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
+              delete vrtx;
+              p_vrtx.at(i) = nullptr;
           }
         }
         if (fieldshape == "Elipsoidal"){
           if ((pow(CurrentCentre.x(),2)/ pow(cutFieldSize_a,2) + pow(CurrentCentre.y(),2)/pow(cutFieldSize_b,2))> 1 ){
-              vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
+              // vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
+              delete vrtx;
+              p_vrtx.at(i) = nullptr;
           }
         }
       }
-      if(m_rotation_matrix){
-        NewCentre=(*m_rotation_matrix)*(vrtx->GetPosition());
-        NewCentre=(*RotMat)*(NewCentre);
-      }
-      vrtx->SetPosition(NewCentre.x(),NewCentre.y(),NewCentre.z());
+  }
+  // G4cout << "DEBUG:: PrimaryGenerationAction::FilterPrimaries BEFORE:: p_vrtx: " << p_vrtx.size() << G4endl;
+  p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
+  // G4cout << "DEBUG:: PrimaryGenerationAction::FilterPrimaries AFTER:: p_vrtx: " << p_vrtx.size() << G4endl;
 
-      auto momentum = (vrtx->GetPrimary()->GetMomentum());
-      if(m_rotation_matrix){
-        momentum = (*m_rotation_matrix)*(momentum);
-        momentum = (*RotMat)*(momentum);
-      }
-      vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
+}
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
+  auto runSvc = Service<RunSvc>();
+  G4AutoLock lock(&PrimGenMutex);
+  auto evtID = anEvent->GetEventID();
+  std::vector<G4PrimaryVertex*> primary_vrtx; 
+  const int min_p_vrtx_vec_size = 10;
+  if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) ){
+    auto p_gen = dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator);
+    while(primary_vrtx.empty() || primary_vrtx.size() < min_p_vrtx_vec_size ){
+        auto read_p_vrtx = p_gen->GeneratePrimaryVertexVector(anEvent);
+        FilterPrimaries(read_p_vrtx);
+        primary_vrtx.insert(primary_vrtx.end(),read_p_vrtx.begin(),read_p_vrtx.end());
+        // if(primary_vrtx.size() >= min_p_vrtx_vec_size){
+        //   G4cout << "DEBUG:: PrimaryGenerationAction::GeneratePrimaries:: PRIMARIES VEC SIZE: " << primary_vrtx.size() << G4endl;
+        // }
     }
-  // if (nVrtx>50){
-  //   evtID = anEvent->GetEventID();
-  //   G4EventManager::GetEventManager()->AbortCurrentEvent();
-  //   G4cout << "[DEBUG]:: Evt("<<evtID<< "): nVrtx ("<<nVrtx<<"): Aborting event.." << G4endl;
-  //   nVrtx = 0;
-  // }
+  } else {
+    m_primaryGenerator->GeneratePrimaryVertex(anEvent);
+    for(size_t i=0; i<anEvent->GetNumberOfPrimaryVertex(); ++i)
+      primary_vrtx.push_back(anEventGetPrimaryVertex(i));
+  }
 
-  // if(m_generatorType==PrimaryGeneratorType::PhspIAEA){
-    
-  //   if (vvrtx.size()>0){
-  //     //G4cout << "[DEBUG] Evt("<<evtID<<") generatePrimaries got " << vvrtx.size() << " vertices."<< G4endl;
-  //     for (const auto& vrtx : vvrtx){
-  //       anEvent->AddPrimaryVertex(vrtx);
-  //       auto pparticle = vrtx->GetPrimary();
-  //       auto energy = pparticle->GetTotalEnergy() / keV ;
-  //       if(energy<80 || energy > 90){
-  //           G4EventManager::GetEventManager()->AbortCurrentEvent();
-  //           break;
-  //       }
-  //       // if(energy>80 && energy < 90){
-  //         //G4cout << "[DEBUG] Evt("<<evtID<<") energy = " << energy << "[keV]"<< G4endl;
-  //         //G4cout << "[DEBUG] Evt("<<evtID<<") theta = " << pparticle->GetMomentumDirection().theta()*180/3.14<< G4endl;
-  //         // anEvent->AddPrimaryVertex(vrtx);
-  //         // filledEvt = true; // any vrtx in evt means that it has been filled
-  //       // }
-  //       // else {
-  //       //   anEvent->AbortCurrentEvent();
-  //       //   // delete vrtx;
-  //       //   // ++evtID;
-  //       // }
-  //     }
-  //   }
-  //   // }
-  // }
-  // anEvent->SetEventID(evtID);
-  // G4cout << "[DEBUG] Evt("<<evtID<<") nVrtx = " << nVrtx << G4endl;
+  // NOTE: An extra rotation is being performed aroud Z-axis 
+  // in order to match data with CT image:
+  G4RotationMatrix rotation;
+  // TODO:: rotation.rotate(90.0 *deg, G4ThreeVector(0.0,0.0,1.0));
+  // IDEA:: Implement Origin/Frame switch (See: IAEAPrimaryGenerator, l. 27-30)
+  G4ThreeVector new_centre;
 
-  G4bool filter_passed = true;
+  // PERFORM BEAM ROTATION ADD VTRXES TO CURRENT EVENT
+  for (const auto& vrtx : primary_vrtx){
+    if(m_rotation_matrix){
+      new_centre=(*m_rotation_matrix)*(vrtx->GetPosition());
+      new_centre=(rotation)*(new_centre);
+    }
+    vrtx->SetPosition(new_centre.x(),new_centre.y(),new_centre.z());
+
+    auto momentum = (vrtx->GetPrimary()->GetMomentum());
+    if(m_rotation_matrix){
+      momentum = (*m_rotation_matrix)*(momentum);
+      momentum = (rotation)*(momentum);
+    }
+    vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
+    anEvent->AddPrimaryVertex(vrtx);
+
+  }
+  // FILL PRIMARYPARTICLEINFO
+  auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
   for(int i =0; i<nVrtx; ++i ){
     auto pparticle = anEvent->GetPrimaryVertex(i)->GetPrimary();
-    
-    // Energy cut
-    auto energy = pparticle->GetTotalEnergy() / keV ;
-
-    //
-    if(!filter_passed)
-      G4EventManager::GetEventManager()->AbortCurrentEvent();
-
-    // Fill PrimaryParticleInfo
     auto pparticleInfo = pparticle->GetUserInformation();
     if(pparticleInfo){
       dynamic_cast<PrimaryParticleInfo*>(pparticleInfo)->FillInfo(pparticle);
@@ -226,5 +214,9 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       pparticle->SetUserInformation(pparticleInfo);
     }
   }
-  delete RotMat;
+
+  // FILL PRIMARY ANALYSIS
+  if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
+    PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
+  
 }

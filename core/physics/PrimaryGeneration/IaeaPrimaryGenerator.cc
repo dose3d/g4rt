@@ -49,3 +49,9 @@ void IaeaPrimaryGenerator::GeneratePrimaryVertex(G4Event *evt) {
   // the actual generation is defined in G4IAEAphspReader, so it's being delegated:
   m_iaeaFileReader->GeneratePrimaryVertex(evt);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::vector<G4PrimaryVertex*> IaeaPrimaryGenerator::GeneratePrimaryVertexVector(G4Event *evt) {
+  return m_iaeaFileReader->ReadThisEventPrimaryVertexVector(evt->GetEventID());
+}

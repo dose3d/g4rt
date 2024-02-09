@@ -173,7 +173,7 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   } else {
     m_primaryGenerator->GeneratePrimaryVertex(anEvent);
     for(size_t i=0; i<anEvent->GetNumberOfPrimaryVertex(); ++i)
-      primary_vrtx.push_back(anEventGetPrimaryVertex(i));
+      primary_vrtx.push_back(anEvent->GetPrimaryVertex(i));
   }
 
   // NOTE: An extra rotation is being performed aroud Z-axis 

@@ -153,7 +153,7 @@ bool WorldConstruction::Create() {
   //auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
   auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
   auto worldB = new G4Box("worldG", worldSize.getX(), worldSize.getY(), worldSize.getZ());
-  auto worldLV = new G4LogicalVolume(worldB, Air.get(), "worldL", 0, 0, 0);
+  auto worldLV = new G4LogicalVolume(worldB, Air.get(), "worldLV", 0, 0, 0);
   auto isocentre = thisConfig()->GetValue<G4ThreeVector>("Isocentre");
   SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
 

@@ -644,6 +644,45 @@ void GeoSvc::WriteWorldToTFile() {
   m_is_tfile_exported = true;
 }
 
+void GeoSvc::WriteCTLikeData(){
+  G4Navigator* g4Navigator = new G4Navigator();
+  g4Navigator->SetWorldVolume(World()->GetPhysicalVolume());
+
+
+  // Step size 
+  G4double startingX, startingY, startingZ;
+  G4double stepX, stepY, stepZ;
+  G4String materialName;
+  G4ThreeVector currentPos;
+
+  startingX = -20.0, startingY = -20.0, startingZ = 40.0;
+  // startingX = -200.07, startingY = -200.07 startingZ = -200.07;
+  // stepX = 0.78, stepY = 0.78, stepZ = 0.78;
+  stepX = 0.5, stepY = 0.5, stepZ = 0.5;
+  auto output_dir = GetOutputDir()+"/DikomlikeData";
+  IO::CreateDirIfNotExits(output_dir);
+
+  for( int x = 0; x < 80; x++ ){
+    auto file =  output_dir+"/AlmostDicomCt"+std::to_string(x)+".csv";
+    G4cout << "output filepath:  " << file << G4endl;
+    std::string header = "X [mm],Y [mm],Z [mm],Material";
+    std::ofstream c_outFile;
+    c_outFile.open(file.c_str(), std::ios::out);
+    c_outFile << header << std::endl;
+    for( int y = 0; y < 80; y++ ){
+      for( int z = 0; z < 80; z++ ){
+        currentPos.setX((startingX+stepX*x));
+        currentPos.setY((startingY+stepY*y));
+        currentPos.setZ((startingZ+stepZ*z));
+        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+        // materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
+      }
+    }
+    c_outFile.close();
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteWorldToGdml(){

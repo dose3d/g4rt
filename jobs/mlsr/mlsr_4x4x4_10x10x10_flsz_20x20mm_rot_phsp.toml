@@ -1,17 +1,18 @@
 [RunSvc]
-JobName = "mlsr_4x4x4_10x10x10_Flsz-Rectangular_25x25mm_top0.0_1e4_phsp"
+JobName = "mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_10deg_2e4_phsp"
 BeamType = "IAEA"
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+PhspEvtVrtxMultiplicityTreshold = 30
 PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
 NTupleAnalysis = true
 
-FieldShape = "Rectangular"
-# FieldShape = "Elipsoidal"
-FieldSizeA = 25 # mm
-FieldSizeB = 25 # mm
+# FieldShape = "Rectangular"
+FieldShape = "Elipsoidal"
+FieldSizeA = 20 # mm
+FieldSizeB = 20 # mm
 
 [PatientGeometry]
 Type = "D3DDetector"
@@ -40,5 +41,5 @@ WriteVoxelisedCellTTree = true
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 1
-Gantry_Angle_Per_Control_Point = [0.0]
-Particle_Counter_Per_Control_Point = [1e4]
+Gantry_Angle_Per_Control_Point = [30.0]
+Particle_Counter_Per_Control_Point = [1e5]

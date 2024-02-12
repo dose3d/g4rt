@@ -17,7 +17,7 @@
 class ControlPointConfig {
   public:
     ControlPointConfig() = default;
-    ControlPointConfig(int id, int nevts, int rot);
+    ControlPointConfig(int id, int nevts, double rot);
     double RotationInDeg = 0.;
     int NEvts = 0.;
     int Id = 0;

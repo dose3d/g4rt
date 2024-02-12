@@ -85,6 +85,7 @@ void RunSvc::Configure() {
   // PHASE SPACE
   DefineUnit<bool>("SavePhSp");
   DefineUnit<std::string>("PhspInputFileName");
+  DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
   DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
 
@@ -163,6 +164,10 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("FieldShape") == 0){
     m_config->SetTValue<std::string>(unit, std::string("Rectangular"));
+  }
+
+  if (unit.compare("PhspEvtVrtxMultiplicityTreshold") == 0){
+    m_config->SetTValue<int>(unit, int(1));
   }
 
   // Fixed value for BeamCollimation: 1.25 cm above secondary collimator
@@ -382,15 +387,16 @@ void RunSvc::ParseTomlConfig(){
     G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
   auto config = toml::parse_file(configFile);
-  G4double rotationInDegree = 0.*deg;
+  G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["Control_Points_In_Treatment_Plan"].value_or(0);
   if(numberOfCP>0){
     for( int i = 0; i < numberOfCP; i++ ){
-      rotationInDegree = (config[configObj]["Gantry_Angle_Per_Control_Point"][i].value_or(0.0))*deg;
+      rotationInDeg = (config[configObj]["Gantry_Angle_Per_Control_Point"][i].value_or(0.0));
+      G4cout << " DEBUG: RunSvc::ParseTomlConfig: rotationInDeg: " << rotationInDeg << G4endl;
       int nEvents = config[configObj]["Particle_Counter_Per_Control_Point"][i].value_or(-1);
       if(nEvents<0)
         nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
-      m_control_points_config.emplace_back(i,nEvents,rotationInDegree);
+      m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
     }
   }
   else{
@@ -447,9 +453,9 @@ void RunSvc::ParseDicomInputData(){
 ////////////////////////////////////////////////////////////////////////////////
 /// Define simply single Control Point
 void RunSvc::SetSimulationDefaultConfig(){
-  G4double rotationInDegree = 0.*deg;
+  G4double rotationInDeg = 0.;
   auto nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
-  m_control_points_config.emplace_back(0,nEvents,rotationInDegree);
+  m_control_points_config.emplace_back(0,nEvents,rotationInDeg);
 
 }
 

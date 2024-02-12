@@ -114,6 +114,7 @@ void UIManager::UserRunInitialization() {
   for(auto& cp : controPoints){
     runSvc->CurrentControlPoint(&cp);
     runSvc->G4RunManagerPtr()->SetRunIDCounter(cp.GetId());
+    G4cout << "DEBUG:: UIManager::UserRunInitialization:: rotation_matrix" << cp.GetRotation() << G4endl;
     PrimaryGenerationAction::SetRotation(cp.GetRotation());
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);

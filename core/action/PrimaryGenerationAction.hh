@@ -57,6 +57,9 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
 
     ///
     static G4RotationMatrix* m_rotation_matrix;
+
+    ///
+    int m_min_p_vrtx_vec_size = 1;
 };
 
 #endif // PRIMARYGENERATIONACTION_H

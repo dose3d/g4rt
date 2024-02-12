@@ -30,6 +30,7 @@ void PrimaryGenerationAction::SetPrimaryGenerator() {
   auto sourceType = configSvc->GetValue<std::string>("RunSvc", "BeamType");
   if (sourceType == "IAEA") {
     m_generatorType = PrimaryGeneratorType::PhspIAEA;
+    m_min_p_vrtx_vec_size = configSvc->GetValue<int>("RunSvc", "PhspEvtVrtxMultiplicityTreshold");
   } else if (sourceType == "gps") {
     m_generatorType = PrimaryGeneratorType::GPS;
   } else if (sourceType == "ion") {
@@ -108,18 +109,15 @@ void PrimaryGenerationAction::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_v
   double fa = 1000.;
   if (fieldSize_a>0){ // calc for SSD = 1000 mm
     double ssd = 1000;
-    // double fa = ssd - 745.4; // ssd - s1 z position
-    // double fa = 699.75;      // ssd - s2 z position
     if (fieldPossition == "s1")
       fa = ssd - 745.4;
     if (fieldPossition == "s2")
-      fa = 699.75; 
+      fa = ssd - 300.25; // by default it should be 699.75; 
 
     cutFieldSize_a = (fa / ssd) * fieldSize_a / 2.;
     cutFieldSize_b = (fa / ssd) * fieldSize_b / 2.;
   }
   auto nVrtx = p_vrtx.size();
-
   for(int i=0; i<nVrtx;++i){
     auto vrtx = p_vrtx.at(i);
     auto model = Service<GeoSvc>()->GetMlcModel();
@@ -129,26 +127,21 @@ void PrimaryGenerationAction::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_v
     }
       // Set arbitrary cut for field size:
       if(cutFieldSize_a>0){
-        // G4cout << "X: " << CurrentCentre.x() << "Y: " << CurrentCentre.y() << "Z: " << CurrentCentre.z() << G4endl;
         if (fieldshape == "Rectangular"){
           if (CurrentCentre.x()<-cutFieldSize_a || CurrentCentre.x() > cutFieldSize_a || CurrentCentre.y()<-cutFieldSize_b || CurrentCentre.y() > cutFieldSize_b ){
-              // vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
               delete vrtx;
               p_vrtx.at(i) = nullptr;
           }
         }
         if (fieldshape == "Elipsoidal"){
           if ((pow(CurrentCentre.x(),2)/ pow(cutFieldSize_a,2) + pow(CurrentCentre.y(),2)/pow(cutFieldSize_b,2))> 1 ){
-              // vrtx->GetPrimary()-> SetKineticEnergy(0.); // actually kill this particle
               delete vrtx;
               p_vrtx.at(i) = nullptr;
           }
         }
       }
   }
-  // G4cout << "DEBUG:: PrimaryGenerationAction::FilterPrimaries BEFORE:: p_vrtx: " << p_vrtx.size() << G4endl;
   p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
-  // G4cout << "DEBUG:: PrimaryGenerationAction::FilterPrimaries AFTER:: p_vrtx: " << p_vrtx.size() << G4endl;
 
 }
 
@@ -159,16 +152,19 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   G4AutoLock lock(&PrimGenMutex);
   auto evtID = anEvent->GetEventID();
   std::vector<G4PrimaryVertex*> primary_vrtx; 
-  const int min_p_vrtx_vec_size = 10;
   if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) ){
     auto p_gen = dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator);
-    while(primary_vrtx.empty() || primary_vrtx.size() < min_p_vrtx_vec_size ){
+    int n_reader_calls = 0;
+    while(primary_vrtx.empty() || primary_vrtx.size() < m_min_p_vrtx_vec_size ){
+        ++n_reader_calls;
         auto read_p_vrtx = p_gen->GeneratePrimaryVertexVector(anEvent);
         FilterPrimaries(read_p_vrtx);
         primary_vrtx.insert(primary_vrtx.end(),read_p_vrtx.begin(),read_p_vrtx.end());
-        // if(primary_vrtx.size() >= min_p_vrtx_vec_size){
-        //   G4cout << "DEBUG:: PrimaryGenerationAction::GeneratePrimaries:: PRIMARIES VEC SIZE: " << primary_vrtx.size() << G4endl;
-        // }
+        auto nVrtx = primary_vrtx.size();
+        if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 99){ // in order to avoid infinit loop
+          LOGSVC_WARN("Maximum number of reader calls to reach Evt Vtrx Multiplicity treshold reached!: #Vrtx({}/{}), #Calls:{}",nVrtx,m_min_p_vrtx_vec_size,n_reader_calls);
+          break;
+        }
     }
   } else {
     m_primaryGenerator->GeneratePrimaryVertex(anEvent);

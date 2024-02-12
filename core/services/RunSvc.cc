@@ -85,6 +85,7 @@ void RunSvc::Configure() {
   // PHASE SPACE
   DefineUnit<bool>("SavePhSp");
   DefineUnit<std::string>("PhspInputFileName");
+  DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
   DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
 
@@ -163,6 +164,10 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("FieldShape") == 0){
     m_config->SetTValue<std::string>(unit, std::string("Rectangular"));
+  }
+
+  if (unit.compare("PhspEvtVrtxMultiplicityTreshold") == 0){
+    m_config->SetTValue<int>(unit, int(1));
   }
 
   // Fixed value for BeamCollimation: 1.25 cm above secondary collimator

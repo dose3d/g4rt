@@ -15,7 +15,7 @@ typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 class CsvRunAnalysis {
     private:
         ///
-        CsvRunAnalysis();
+        CsvRunAnalysis() = default;
 
         ///
         ~CsvRunAnalysis() = default;
@@ -36,6 +36,10 @@ class CsvRunAnalysis {
         ///
         std::set<Scoring::Type> m_scoring_types = {Scoring::Type::Cell, Scoring::Type::Voxel};
 
+        ///
+        void FillEventCollection(const G4String& collection_name, const G4Event *evt, VoxelHitsCollection* hitsColl);
+
+
     public:
         ///
         static CsvRunAnalysis* GetInstance();
@@ -45,6 +49,9 @@ class CsvRunAnalysis {
 
         ///
         void BeginOfRun();
+
+        ///
+        void EndOfEvent(const G4Event *evt);
 };
 
 #endif //CSV_RUN_ANALYSIS_HH

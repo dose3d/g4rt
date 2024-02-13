@@ -45,7 +45,10 @@ void RunAnalysis::FillEvent(G4double totalEvEnergy) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from EventAction::EndOfEventAction
-void RunAnalysis::EndOfEventAction(const G4Event *evt){}
+void RunAnalysis::EndOfEventAction(const G4Event *evt){
+  if(m_csv_run_analysis)
+        m_csv_run_analysis->EndOfEvent(evt);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

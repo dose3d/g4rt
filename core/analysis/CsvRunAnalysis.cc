@@ -43,7 +43,7 @@ void CsvRunAnalysis::BeginOfRun(){
 void CsvRunAnalysis::EndOfEvent(const G4Event *evt){
     auto hCofThisEvent = evt->GetHCofThisEvent();
     for(const auto& run_collection: m_run_collection){
-        LOGSVC_DEBUG("RunCol {}",run_collection.first);
+        // LOGSVC_DEBUG("CsvRunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){
             // Related SensitiveDetector collection ID (Geant4 architecture)
             // collID==-1 the collection is not found
@@ -74,10 +74,40 @@ void CsvRunAnalysis::FillEventCollection(const G4String& collection_name, const 
     for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
         for(const auto& scoring_type: m_scoring_types){
-            auto current_scoring_collection = scoring_collection[scoring_type];
+            auto& current_scoring_collection = scoring_collection[scoring_type];
+            switch (scoring_type){
+                case Scoring::Type::Cell:
+                    LOGSVC_DEBUG("HC: {} / nHits: {}",hc_name, nHits);
+                    FillCellEventCollection(current_scoring_collection,hit);
+                    break;
+                case Scoring::Type::Voxel:
+                    FillVoxelEventCollection(current_scoring_collection,hit);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void CsvRunAnalysis::FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
+    auto hash_str = std::to_string(hit->GetGlobalID(0))
+                    +std::to_string(hit->GetGlobalID(1))
+                    +std::to_string(hit->GetGlobalID(2));
+    auto hash_key_c = std::hash<std::string>{}(hash_str);
+    auto& cell_hit = scoring_collection.at(hash_key_c);
+    LOGSVC_DEBUG("Cell Dose BEFORE {}", cell_hit.GetDose());
+    cell_hit.SetDose(cell_hit.GetDose()+hit->GetDose());
+    LOGSVC_DEBUG("Cell Dose AFTER {}", cell_hit.GetDose());
 
+    //TODO:: cell_hit+=hit;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void CsvRunAnalysis::FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
+    
+}
 

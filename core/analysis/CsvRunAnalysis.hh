@@ -39,6 +39,10 @@ class CsvRunAnalysis {
         ///
         void FillEventCollection(const G4String& collection_name, const G4Event *evt, VoxelHitsCollection* hitsColl);
 
+        ///
+        void FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit);
+        void FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit);
+
 
     public:
         ///

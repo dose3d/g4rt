@@ -8,6 +8,9 @@
 #include "globals.hh"
 #include "Types.hh"
 #include "VoxelHit.hh"
+#include "G4Cache.hh"
+
+typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
 class CsvRunAnalysis {
     private:
@@ -22,9 +25,13 @@ class CsvRunAnalysis {
         CsvRunAnalysis &operator=(const CsvRunAnalysis &) = delete;
         CsvRunAnalysis(CsvRunAnalysis &&) = delete;
         CsvRunAnalysis &operator=(CsvRunAnalysis &&) = delete;
+        
+        /// Many HitsCollections can be associated to given collection name 
+        // (e.g. many sensitive detectors constituting a single detection unit)
+        static std::map<G4String,std::vector<G4String>> m_run_collection;
 
         ///
-        std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map;
+        G4MapCache<G4String,ScoringMap> m_run_scoring_collection;
 
         ///
         std::set<Scoring::Type> m_scoring_types = {Scoring::Type::Cell, Scoring::Type::Voxel};
@@ -32,6 +39,12 @@ class CsvRunAnalysis {
     public:
         ///
         static CsvRunAnalysis* GetInstance();
+
+        /// Many HitsCollections can be associated to given run collection
+        static void AddRunCollection(const G4String& collection_name, const G4String& hc_name);
+
+        ///
+        void BeginOfRun();
 };
 
 #endif //CSV_RUN_ANALYSIS_HH

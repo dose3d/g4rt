@@ -11,50 +11,52 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Cache.hh"
 
+class CsvRunAnalysis;
 class G4Event;
 class G4Run;
 
 class RunAnalysis {
 
   private:
-  ///
-  RunAnalysis() = default;
+    ///
+    RunAnalysis();
 
-  ///
-  ~RunAnalysis() = default;
+    ///
+    ~RunAnalysis() = default;
 
-  /// Delete the copy and move constructors
-  RunAnalysis(const RunAnalysis &) = delete;
+    /// Delete the copy and move constructors
+    RunAnalysis(const RunAnalysis &) = delete;
+    RunAnalysis &operator=(const RunAnalysis &) = delete;
+    RunAnalysis(RunAnalysis &&) = delete;
+    RunAnalysis &operator=(RunAnalysis &&) = delete;
 
-  RunAnalysis &operator=(const RunAnalysis &) = delete;
+    ///
+    static CsvRunAnalysis* m_csv_run_analysis;
 
-  RunAnalysis(RunAnalysis &&) = delete;
-
-  RunAnalysis &operator=(RunAnalysis &&) = delete;
-
-  // TODO
-  // zdefiniować histogram do ktorego bede ustawial wartosci poprzez SetBinContent()
-  //G4VectorCache<G4double> m_voxelTotalDoseZProfile; // suma po wszystkich eventa (nie robic .Clear())
-  //G4Cache<G4int> m_pddHistId;
+    ///
+    bool m_is_initialized = false;
 
   public:
-  ///
-  static RunAnalysis* GetInstance();
+    ///
+    static RunAnalysis* GetInstance();
 
-  ///
-  void FillEvent(G4double totalEvEnergy);
+    ///
+    void FillEvent(G4double totalEvEnergy);
 
-  ///
-  void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
+    ///
+    void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
 
-  ///
-  void EndOfRun();
+    ///
+    void EndOfRun();
 
-  ///
-  void EndOfEventAction(const G4Event *evt);
+    ///
+    void EndOfEventAction(const G4Event *evt);
 
-  ///
-  void ClearEventData();
+    ///
+    void ClearEventData();
+
+    /// Many HitsCollections can be associated to given run collection
+    static void AddRunCollection(const G4String& collection_name, const G4String& hc_name);
 
 };
 #endif //RUN_ANALYSIS_HH

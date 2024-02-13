@@ -9,6 +9,7 @@
 #include "ConfigSvc.hh"
 #include "G4UserLimits.hh"
 #include "NTupleEventAnalisys.hh"
+#include "RunAnalysis.hh"
 #include "colors.hh"
 #include <vector>
 #include "Services.hh"
@@ -172,6 +173,8 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));  // size and position extracted from pv
       NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3DVoxelised",m_tracks_analysis);
+      RunAnalysis::AddRunCollection("Dose3DVoxelised",hcName);
+
     }
     // ________________________________________________________________________
     VPatient::SetSensitiveDetector(label+"LV", patientSD); // this call G4SDManager::GetSDMpointer()->AddNewDetector(aSD);

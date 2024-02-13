@@ -647,7 +647,8 @@ void GeoSvc::WriteWorldToTFile() {
 void GeoSvc::WriteCTLikeData(){
   G4Navigator* g4Navigator = new G4Navigator();
   g4Navigator->SetWorldVolume(World()->GetPhysicalVolume());
-
+  auto output_dir = GetOutputDir()+"/DikomlikeData";
+  IO::CreateDirIfNotExits(output_dir);
 
   // Step size 
   G4double startingX, startingY, startingZ;
@@ -655,22 +656,54 @@ void GeoSvc::WriteCTLikeData(){
   G4String materialName;
   G4ThreeVector currentPos;
 
-  startingX = -20.0, startingY = -20.0, startingZ = 40.0;
-  // startingX = -200.07, startingY = -200.07 startingZ = -200.07;
-  // stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  stepX = 0.5, stepY = 0.5, stepZ = 0.5;
-  auto output_dir = GetOutputDir()+"/DikomlikeData";
-  IO::CreateDirIfNotExits(output_dir);
+  auto patientEnvXPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
+  auto patientEnvYPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
+  auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  for( int x = 0; x < 80; x++ ){
+  // auto patientPositionInEnv = configSvc()->GetValue<double>("Detector", "NotCurrentlySetInConfigSvc");
+
+  // FOR CT expoty - set izocentre as patient world centre
+  // FOR CT expoty - set patient world size as 400.14,400.14,400.14
+
+  startingX = -200.07 + patientEnvXPos, startingY = -200.07 + patientEnvYPos, startingZ = -200.07 + patientEnvZPos;
+  stepX = 0.78, stepY = 0.78, stepZ = 0.78;
+
+
+  // DUMP METADATA TO FILE 
+  auto meta =  output_dir+"/series_metadata.csv";
+  std::ofstream metadata_file;
+  metadata_file.open(meta.c_str(), std::ios::out);
+
+  metadata_file << "x_min," << startingX  << std::endl;
+  metadata_file << "y_min," << startingY  << std::endl;
+  metadata_file << "z_min," << startingZ  << std::endl;
+
+  metadata_file << "x_max," << startingX+400.14 << std::endl;
+  metadata_file << "y_max," << startingY+400.14 << std::endl;
+  metadata_file << "z_max," << startingZ+400.14 << std::endl;
+
+  metadata_file << "x_size," << 400.14 << std::endl;
+  metadata_file << "y_size," << 400.14 << std::endl;
+  metadata_file << "z_size," << 400.14 << std::endl;
+
+  metadata_file << "x_step," << 0.78 << std::endl;
+  metadata_file << "y_step," << 0.78 << std::endl;
+  metadata_file << "z_step," << 0.78 << std::endl;
+
+  // metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv << std::endl;
+
+
+
+
+  for( int x = 0; x < 512; x++ ){
     auto file =  output_dir+"/AlmostDicomCt"+std::to_string(x)+".csv";
     G4cout << "output filepath:  " << file << G4endl;
     std::string header = "X [mm],Y [mm],Z [mm],Material";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
-    for( int y = 0; y < 80; y++ ){
-      for( int z = 0; z < 80; z++ ){
+    for( int y = 0; y < 512; y++ ){
+      for( int z = 0; z < 512; z++ ){
         currentPos.setX((startingX+stepX*x));
         currentPos.setY((startingY+stepY*y));
         currentPos.setZ((startingZ+stepZ*z));

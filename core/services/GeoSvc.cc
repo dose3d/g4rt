@@ -660,7 +660,7 @@ void GeoSvc::WriteCTLikeData(){
   auto patientEnvYPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  // auto patientPositionInEnv = configSvc()->GetValue<double>("Detector", "NotCurrentlySetInConfigSvc");
+  auto patientPositionInEnv = Patient()->GetSurfacePositioning();
 
   // FOR CT expoty - set izocentre as patient world centre
   // FOR CT expoty - set patient world size as 400.14,400.14,400.14
@@ -690,9 +690,7 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "y_step," << 0.78 << std::endl;
   metadata_file << "z_step," << 0.78 << std::endl;
 
-  // metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv << std::endl;
-
-
+  metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv.getZ() << std::endl;
 
 
   for( int x = 0; x < 512; x++ ){

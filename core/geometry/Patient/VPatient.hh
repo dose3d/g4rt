@@ -20,6 +20,9 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     bool m_tracks_analysis = false;
 
     ///
+    G4ThreeVector m_patient_surface_positioning;
+
+    ///
     void SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr);
 
     ///
@@ -44,6 +47,9 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
 
     ///
     void SetTracksAnalysis(bool flag) {m_tracks_analysis = flag; }
+
+    ///
+    G4ThreeVector GetSurfacePositioning() {return m_patient_surface_positioning; }
 
     /// TO BE DELETED
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const {

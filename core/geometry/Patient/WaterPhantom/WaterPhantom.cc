@@ -58,6 +58,9 @@ void WaterPhantom::ParseTomlConfig(){
   detectorMediumName = config[configObjDetector]["Medium"].value_or("");
 
   ///
+  m_patient_surface_positioning = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ + m_sizeZ);
+  
+  ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);
   m_farmerScoring = config[configObjScoring]["FarmerDoseCalibration"].value_or(false);
 

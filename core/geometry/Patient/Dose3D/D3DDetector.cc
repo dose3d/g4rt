@@ -79,6 +79,7 @@ void D3DDetector::ParseTomlConfig(){
   m_top_position_in_env.setX(config[configObjDetector]["TopPositionInEnv"][0].value_or(0.0));
   m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
   m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
+  m_patient_surface_positioning = m_top_position_in_env;
 
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)

@@ -70,7 +70,7 @@ class RunAnalysis {
     void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
 
     ///
-    void EndOfRun();
+    void EndOfRun(const G4Run* runPtr);
 
     ///
     void EndOfEventAction(const G4Event *evt);

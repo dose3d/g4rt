@@ -27,7 +27,7 @@ class RunAction : public G4UserRunAction {
   G4Run* GenerateRun() override;
 
   private:
-  G4Timer MyTime;
+  G4Timer m_timer;
 };
 
 #endif // Dose3D_RUNACTION_HH

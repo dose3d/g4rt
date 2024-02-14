@@ -213,6 +213,14 @@ void ControlPoint::FillPlanFieldMaskFromRTPlan(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void ControlPoint::SetCumulatedData(std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* data){
+    m_hashed_scoring_map_ptr = data;
+    m_is_scoring_data_filled = true;
+    FillScoringDataTagging();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void ControlPoint::FillScoringData(){
     if(m_is_scoring_data_filled) 
         return;
@@ -359,9 +367,11 @@ void ControlPoint::FillScoringDataTagging(){
         hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
     };
 
+    auto& hashed_scoring_map = m_hashed_scoring_map_ptr ? *m_hashed_scoring_map_ptr : m_hashed_scoring_map;
+
     for(auto& scoring_type: m_scoring_types){
         LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
-        auto& data = m_hashed_scoring_map[scoring_type];
+        auto& data = hashed_scoring_map[scoring_type];
         in_field_scoring_volume.clear();
         for(auto& hit : data){
             if(IsInField(hit.second.GetCentre()))

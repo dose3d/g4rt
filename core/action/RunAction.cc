@@ -100,14 +100,14 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
     world->WriteInfo();
   }
 
-  MyTime.Start();
+  m_timer.Start();
 }
 
 /////////////////////////////////////////////////////////////////////////////
 ///
-void RunAction::EndOfRunAction(const G4Run *) {
-  MyTime.Stop();
-  G4double loopRealElapsedTime = MyTime.GetRealElapsed();
+void RunAction::EndOfRunAction(const G4Run* aRun) {
+  m_timer.Stop();
+  G4double loopRealElapsedTime = m_timer.GetRealElapsed();
   if (IsMaster()) {
     G4cout << "Global-loop elapsed time [s] : " << loopRealElapsedTime << G4endl;
   }
@@ -118,6 +118,11 @@ void RunAction::EndOfRunAction(const G4Run *) {
   auto analysisManager = G4AnalysisManager::Instance();
   analysisManager->Write();
   analysisManager->CloseFile();
+
+  //___________________________________________________________________________
+  auto configSvc = Service<ConfigSvc>();
+  if(configSvc->GetValue<bool>("RunSvc", "RunAnalysis") && IsMaster())
+    RunAnalysis::GetInstance()->EndOfRun(aRun);
 
   // Service<RunSvc>()->EndOfRun();
 }

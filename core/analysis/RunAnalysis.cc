@@ -84,11 +84,11 @@ void RunAnalysis::ClearEventData(){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunAnalysis::EndOfRun(){
-//  auto analysisManager = G4AnalysisManager::Instance();
-//  auto hist = analysisManager->GetH1(m_pddHistId.Get());
-//  for(int i =0; i<200; ++i)
-//    hist->set_bin_content(i,m_voxelTotalDoseZProfile[i]);
+void RunAnalysis::EndOfRun(const G4Run* runPtr){
+  LOGSVC_DEBUG("RunAnalysis::EndOfRun:: ID {}", runPtr->GetRunID());
+  auto control_point = Service<RunSvc>()->CurrentControlPoint();
+  // TODO:: PERFORM MERGING HERE
+  //control_point->SetCumulatedData(&m_run_scoring_collection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4E
             auto& current_scoring_collection = scoring_collection[scoring_type];
             switch (scoring_type){
                 case Scoring::Type::Cell:
-                    LOGSVC_DEBUG("HC: {} / nHits: {}",hc_name, nHits);
+                    // LOGSVC_DEBUG("HC: {} / nHits: {}",hc_name, nHits);
                     FillCellEventCollection(current_scoring_collection,hit);
                     break;
                 case Scoring::Type::Voxel:

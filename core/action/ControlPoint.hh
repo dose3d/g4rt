@@ -81,6 +81,7 @@ class ControlPoint {
     G4VectorCache<G4ThreeVector> m_sim_mask_points;
 
     std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map;
+    std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* m_hashed_scoring_map_ptr = nullptr;
     bool m_is_scoring_data_filled = false;
 
     static double FIELD_MASK_POINTS_DISTANCE;
@@ -92,6 +93,8 @@ class ControlPoint {
     void FillScoringData();
     void FillScoringDataTagging();
     std::string GetOutputFileName() const;
+
+    void SetCumulatedData(std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* data);
 };
 
 #endif //Dose3D_ControlPoint_H

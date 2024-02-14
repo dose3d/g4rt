@@ -12,16 +12,6 @@
 #include "G4UserRunAction.hh"
 #include "globals.hh"
 #include "G4AnalysisManager.hh"
-#include "G4Run.hh"
-
-class CPRun : public G4Run {
-  public:
-    CPRun() = default;
-    ~CPRun(){
-      G4cout << "DESTRUCOTOR OF CPRUN..." << G4endl;
-    };
-    void Merge(const G4Run* aRun) override;
-};
 
 ///
 class RunAction : public G4UserRunAction {

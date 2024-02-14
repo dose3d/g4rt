@@ -13,6 +13,7 @@
 #include "TFile.h"
 #include "G4Cache.hh"
 #include "VPatient.hh"
+#include "G4Run.hh"
 
 class ControlPointConfig {
   public:
@@ -24,8 +25,16 @@ class ControlPointConfig {
     std::string RTPlanFile = std::string();
 };
 
-class ControlPointRun {
+class ControlPointRun : public G4Run {
+  public:
+    ControlPointRun() = default;
 
+    ~ControlPointRun(){
+      G4cout << "DESTRUCOTOR OF ControlPointRun..." << G4endl;
+    };
+
+    ///
+    void Merge(const G4Run* aRun) override;
 };
 
 class ControlPoint {
@@ -69,6 +78,8 @@ class ControlPoint {
     static void IntegrateAndWriteTotalDoseToCsv();
 
     static std::string GetOutputDir();
+
+    G4Run* GenerateRun();
 
   private:
     ControlPointConfig m_config;

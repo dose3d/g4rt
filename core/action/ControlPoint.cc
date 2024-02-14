@@ -9,9 +9,17 @@
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
+////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::Merge(const G4Run* aRun){
+    G4cout << "### Run " << aRun->GetRunID() << " merging..." << G4endl;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -45,10 +53,14 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::~ControlPoint() {
-    if (m_rotation) 
-        delete m_rotation;
-    m_rotation = nullptr;
+    if (m_rotation) delete m_rotation; m_rotation = nullptr;
 };
+
+G4Run* ControlPoint::GenerateRun() {
+    /// TODO: Lock and store every new generated run
+    /// It seems Kernel desn't cleanup memory!!!
+    return new ControlPointRun();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

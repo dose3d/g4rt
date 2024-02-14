@@ -13,10 +13,6 @@
 #include<fstream>
 #include<iostream>
 
-void CPRun::Merge(const G4Run* aRun){
-    G4cout << "### Run " << aRun->GetRunID() << " merging..." << G4endl;
-}
-
 // NOTE:
 // It is recommended, but not necessary, to create the analysis manager in the user
 // run action constructor and delete it in its destructor. This guarantees correct
@@ -42,17 +38,15 @@ RunAction::~RunAction(){
 /////////////////////////////////////////////////////////////////////////////
 ///
 G4Run* RunAction::GenerateRun(){
+  auto control_point = Service<RunSvc>()->CurrentControlPoint();
   if (IsMaster()){
-    auto runSvc = Service<RunSvc>();
-    auto control_point = runSvc->CurrentControlPoint();
     G4cout << FGRN("[INFO]")<<":: " << FBLU("GENERATING NEW RUN... ") << G4endl;
     G4cout << FGRN("[INFO]")<<":: NEvents: " << control_point->GetNEvts() << G4endl;
     auto rot = control_point->GetRotation();
     if(rot)
       G4cout << FGRN("[INFO]")<<":: Rotation: " << *control_point->GetRotation() << G4endl;
   }
-
-  return new CPRun();
+  return control_point->GenerateRun(); // TODO: HANDLING OF THIS PTR ??? Does kernel do the job?
 }
 
 

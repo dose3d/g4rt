@@ -133,9 +133,9 @@ void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4E
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
-    auto& cell_hit = scoring_collection.at(hit->GetHashedStrId());
+    auto& cell_hit = scoring_collection.at(hit->GetGlobalHashedStrId());
     LOGSVC_DEBUG("Cell Dose BEFORE {}", cell_hit.GetDose());
-    cell_hit.SetDose(cell_hit.GetDose()+hit->GetDose());
+    cell_hit.Cumulate(*hit,false); // check global alignement only
     LOGSVC_DEBUG("Cell Dose AFTER {}", cell_hit.GetDose());
 
     //TODO:: cell_hit+=hit;

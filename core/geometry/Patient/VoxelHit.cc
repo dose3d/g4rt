@@ -195,11 +195,17 @@ G4int VoxelHit::GetGlobalID(G4int axisId) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void VoxelHit::Print() {
-  G4cout << "Edep: " << std::setw(7) << G4BestUnit(m_Voxel.m_Edep, "Energy")
-         << " Voxel ID ( " << m_Voxel.m_idx_x << "," << m_Voxel.m_idx_y << "," << m_Voxel.m_idx_z << ")"<< G4endl;
+void VoxelHit::Print() const {
+  const_cast<VoxelHit*>(this)->Print();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void VoxelHit::Print(){
+  LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{})"
+  ,m_Voxel.m_global_idx_x,m_Voxel.m_global_idx_y,m_Voxel.m_global_idx_z
+  ,m_Voxel.m_idx_x,m_Voxel.m_idx_y,m_Voxel.m_idx_z);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -298,8 +304,64 @@ void VoxelHit::FillTagging(double mask_tag, double geo_tag, double wgeo_tag){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::size_t VoxelHit::GetHashedStrId() const {
+std::size_t VoxelHit::GetGlobalHashedStrId() const {
   return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
                                   +std::to_string(m_Voxel.m_global_idx_y)
                                   +std::to_string(m_Voxel.m_global_idx_z) );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::size_t VoxelHit::GetHashedStrId() const {
+  return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
+                                  +std::to_string(m_Voxel.m_global_idx_y)
+                                  +std::to_string(m_Voxel.m_global_idx_z) 
+                                  +std::to_string(m_Voxel.m_idx_x) 
+                                  +std::to_string(m_Voxel.m_idx_y) 
+                                  +std::to_string(m_Voxel.m_idx_z));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+bool VoxelHit::operator==(const VoxelHit& other) const {
+  return  m_Voxel.m_global_idx_x == other.m_Voxel.m_global_idx_x &&
+          m_Voxel.m_global_idx_y == other.m_Voxel.m_global_idx_y &&
+          m_Voxel.m_global_idx_z == other.m_Voxel.m_global_idx_z &&
+          m_Voxel.m_idx_x == other.m_Voxel.m_idx_x &&
+          m_Voxel.m_idx_y == other.m_Voxel.m_idx_y &&
+          m_Voxel.m_idx_z == other.m_Voxel.m_idx_z;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
+  if(global_and_local){
+    return *this == other;
+  }
+  // only global
+  return  m_Voxel.m_global_idx_x == other.m_Voxel.m_global_idx_x &&
+          m_Voxel.m_global_idx_y == other.m_Voxel.m_global_idx_y &&
+          m_Voxel.m_global_idx_z == other.m_Voxel.m_global_idx_z;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check){
+  if(IsAligned(other,global_and_local_allignemnt_check)){
+    return *this+=other;
+  } else {
+    LOGSVC_WARN("Trying to cumulate differently misaligned VoxelHits...");
+    Print();
+    LOGSVC_WARN("+");
+    other.Print();
+  }
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+VoxelHit& VoxelHit::operator+=(const VoxelHit& other){
+  m_Voxel.m_Dose+=other.GetDose();
+  return *this;
+}
+

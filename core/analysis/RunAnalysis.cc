@@ -133,11 +133,7 @@ void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4E
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
-    auto hash_str = std::to_string(hit->GetGlobalID(0))
-                    +std::to_string(hit->GetGlobalID(1))
-                    +std::to_string(hit->GetGlobalID(2));
-    auto hash_key_c = std::hash<std::string>{}(hash_str);
-    auto& cell_hit = scoring_collection.at(hash_key_c);
+    auto& cell_hit = scoring_collection.at(hit->GetHashedStrId());
     LOGSVC_DEBUG("Cell Dose BEFORE {}", cell_hit.GetDose());
     cell_hit.SetDose(cell_hit.GetDose()+hit->GetDose());
     LOGSVC_DEBUG("Cell Dose AFTER {}", cell_hit.GetDose());

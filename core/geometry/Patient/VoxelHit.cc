@@ -295,3 +295,11 @@ void VoxelHit::FillTagging(double mask_tag, double geo_tag, double wgeo_tag){
   m_geo_tag = geo_tag;    // 1./sqrt(GetCentre().diff2(geo_reference));
   m_wgeo_tag = wgeo_tag;  // 1./sqrt(GetCentre().diff2(wgeo_reference));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::size_t VoxelHit::GetHashedStrId() const {
+  return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
+                                  +std::to_string(m_Voxel.m_global_idx_y)
+                                  +std::to_string(m_Voxel.m_global_idx_z) );
+}

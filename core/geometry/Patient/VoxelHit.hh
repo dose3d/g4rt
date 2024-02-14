@@ -227,6 +227,9 @@ class VoxelHit final : public G4VHit {
   G4double GetWeigthedGeoTag() const { return m_wgeo_tag; }
   G4double GetMaskTag() const { return m_mask_tag; }
 
+  ///
+  std::size_t GetHashedStrId() const;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

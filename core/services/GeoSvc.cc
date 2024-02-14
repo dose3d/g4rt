@@ -647,7 +647,7 @@ void GeoSvc::WriteWorldToTFile() {
 void GeoSvc::WriteCTLikeData(){
   G4Navigator* g4Navigator = new G4Navigator();
   g4Navigator->SetWorldVolume(World()->GetPhysicalVolume());
-  auto output_dir = GetOutputDir()+"/DikomlikeData";
+  auto output_dir = GetOutputDir()+"/DikomlikeData/Images";
   IO::CreateDirIfNotExits(output_dir);
 
   // Step size 
@@ -666,13 +666,14 @@ void GeoSvc::WriteCTLikeData(){
   // FOR CT expoty - set izocentre as patient world centre
   // FOR CT expoty - set patient world size as 400.14,400.14,400.14
 
-  startingX = -200.07 + patientEnvXPos, startingY = -200.07 + patientEnvYPos, startingZ = -200.07 + patientEnvZPos;
+  startingX = (-200.07 + patientEnvXPos)/4., startingY = (-200.07 + patientEnvYPos)/4., startingZ = (-200.07 + patientEnvZPos)/4.;
   stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  xResolution = 512, yResolution = 512, zResolution = 512;
+  // xResolution = 512, yResolution = 512, zResolution = 512;
+  xResolution = 128, yResolution = 128, zResolution = 128;
 
 
   // DUMP METADATA TO FILE 
-  auto meta =  output_dir+"/series_metadata.csv";
+  auto meta =  output_dir+"/../series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
 
@@ -695,8 +696,12 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv.getZ() << std::endl;
 
 
+
   for( int x = 0; x < xResolution; x++ ){
-    auto file =  output_dir+"/AlmostDicomCt"+std::to_string(x)+".csv";
+    std::ostringstream ss;
+    ss << std::setw(4) << std::setfill('0') << x+1 ;
+    std::string s2(ss.str());
+    auto file =  output_dir+"/img"+s2+".csv";
     G4cout << "output filepath:  " << file << G4endl;
     std::string header = "X [mm],Y [mm],Z [mm],Material";
     std::ofstream c_outFile;

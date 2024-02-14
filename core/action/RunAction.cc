@@ -13,6 +13,10 @@
 #include<fstream>
 #include<iostream>
 
+void CPRun::Merge(const G4Run* aRun){
+    G4cout << "### Run " << aRun->GetRunID() << " merging..." << G4endl;
+}
+
 // NOTE:
 // It is recommended, but not necessary, to create the analysis manager in the user
 // run action constructor and delete it in its destructor. This guarantees correct
@@ -48,7 +52,7 @@ G4Run* RunAction::GenerateRun(){
       G4cout << FGRN("[INFO]")<<":: Rotation: " << *control_point->GetRotation() << G4endl;
   }
 
-  return new G4Run();
+  return new CPRun();
 }
 
 

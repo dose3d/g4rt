@@ -10,7 +10,9 @@
 #include "G4AnalysisManager.hh"
 #include "CsvRunAnalysis.hh"
 #include "Services.hh"
-
+#ifdef G4MULTITHREADED
+  #include "G4MTRunManager.hh"
+#endif
 std::map<G4String,std::vector<G4String>> RunAnalysis::m_run_collection = std::map<G4String,std::vector<G4String>>();
 
 RunAnalysis::RunAnalysis(){
@@ -89,6 +91,10 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
   auto control_point = Service<RunSvc>()->CurrentControlPoint();
   // TODO:: PERFORM MERGING HERE
   //control_point->SetCumulatedData(&m_run_scoring_collection);
+  auto runManager = dynamic_cast<G4MTRunManager*>(Service<RunSvc>()->G4RunManagerPtr());
+  auto nThreads = runManager->GetNumberOfThreads();
+  LOGSVC_DEBUG("RunAnalysis::NThreads:: {}", nThreads);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

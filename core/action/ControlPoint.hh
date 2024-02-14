@@ -24,6 +24,10 @@ class ControlPointConfig {
     std::string RTPlanFile = std::string();
 };
 
+class ControlPointRun {
+
+};
+
 class ControlPoint {
   public:
     ControlPoint(const ControlPointConfig& config);

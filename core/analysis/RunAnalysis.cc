@@ -134,15 +134,16 @@ void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4E
 ///
 void RunAnalysis::FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
     auto& cell_hit = scoring_collection.at(hit->GetGlobalHashedStrId());
-    LOGSVC_DEBUG("Cell Dose BEFORE {}", cell_hit.GetDose());
+    // LOGSVC_DEBUG("Cell Dose BEFORE {}", cell_hit.GetDose());
     cell_hit.Cumulate(*hit,false); // check global alignement only
-    LOGSVC_DEBUG("Cell Dose AFTER {}", cell_hit.GetDose());
-
-    //TODO:: cell_hit+=hit;
+    // LOGSVC_DEBUG("Cell Dose AFTER {}", cell_hit.GetDose());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit){
-    
+    auto& voxel_hit = scoring_collection.at(hit->GetHashedStrId());
+    // LOGSVC_DEBUG("Voxel Dose BEFORE {}", voxel_hit.GetDose());
+    voxel_hit.Cumulate(*hit,true); // check global and local alignement
+    // LOGSVC_DEBUG("Voxel Dose AFTER {}", voxel_hit.GetDose());
 }

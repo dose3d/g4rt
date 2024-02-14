@@ -653,6 +653,7 @@ void GeoSvc::WriteCTLikeData(){
   // Step size 
   G4double startingX, startingY, startingZ;
   G4double stepX, stepY, stepZ;
+  G4int xResolution,yResolution,zResolution;
   G4String materialName;
   G4ThreeVector currentPos;
 
@@ -667,6 +668,7 @@ void GeoSvc::WriteCTLikeData(){
 
   startingX = -200.07 + patientEnvXPos, startingY = -200.07 + patientEnvYPos, startingZ = -200.07 + patientEnvZPos;
   stepX = 0.78, stepY = 0.78, stepZ = 0.78;
+  xResolution = 512, yResolution = 512, zResolution = 512;
 
 
   // DUMP METADATA TO FILE 
@@ -682,9 +684,9 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "y_max," << startingY+400.14 << std::endl;
   metadata_file << "z_max," << startingZ+400.14 << std::endl;
 
-  metadata_file << "x_size," << 400.14 << std::endl;
-  metadata_file << "y_size," << 400.14 << std::endl;
-  metadata_file << "z_size," << 400.14 << std::endl;
+  metadata_file << "x_resolution," << xResolution << std::endl;
+  metadata_file << "y_resolution," << yResolution << std::endl;
+  metadata_file << "z_resolution," << zResolution << std::endl;
 
   metadata_file << "x_step," << 0.78 << std::endl;
   metadata_file << "y_step," << 0.78 << std::endl;
@@ -693,15 +695,15 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv.getZ() << std::endl;
 
 
-  for( int x = 0; x < 512; x++ ){
+  for( int x = 0; x < xResolution; x++ ){
     auto file =  output_dir+"/AlmostDicomCt"+std::to_string(x)+".csv";
     G4cout << "output filepath:  " << file << G4endl;
     std::string header = "X [mm],Y [mm],Z [mm],Material";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
-    for( int y = 0; y < 512; y++ ){
-      for( int z = 0; z < 512; z++ ){
+    for( int y = 0; y < yResolution; y++ ){
+      for( int z = 0; z < zResolution; z++ ){
         currentPos.setX((startingX+stepX*x));
         currentPos.setY((startingY+stepY*y));
         currentPos.setZ((startingZ+stepZ*z));

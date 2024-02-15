@@ -14,6 +14,10 @@
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
+namespace {
+    G4Mutex CPMutex = G4MUTEX_INITIALIZER;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
@@ -59,6 +63,9 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 ///
 ControlPoint::~ControlPoint() {
     if (m_rotation) delete m_rotation; m_rotation = nullptr;
+    for(auto run : m_mt_run)
+        delete run;
+    m_mt_run.clear();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,19 +80,15 @@ bool ControlPoint::InitializeRunScoringCollection(const G4String& scoring_name) 
         auto& scoring_collection = m_mt_hashed_scoring_map.Get(scoring_name);
         scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
     }
-    //m_run_initialized = true;
     return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Multi-thread safe method
 G4Run* ControlPoint::GenerateRun(bool scoring){
-    /// TODO: Lock and store every new generated run
-    /// It seems Kernel desn't cleanup memory!!!
-    //if(m_run_initialized & scoring){
-        //return new ControlPointRun(&m_mt_hashed_scoring_map.Get());
-    //}
-    return new ControlPointRun();
+    G4AutoLock lock(&CPMutex);
+    m_mt_run.push_back(new ControlPointRun(scoring ? this : nullptr));
+    return m_mt_run.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

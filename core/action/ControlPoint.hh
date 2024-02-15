@@ -17,6 +17,7 @@
 
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
+class ControlPoint;
 
 class ControlPointConfig {
   public:
@@ -30,11 +31,11 @@ class ControlPointConfig {
 
 class ControlPointRun : public G4Run {
   private:
-    ScoringMap* m_hashed_scoring_map = nullptr;
+    ControlPoint* m_owner = nullptr;
   public:
     ControlPointRun() = default;
-    ControlPointRun(ScoringMap* scoring_map) {
-      m_hashed_scoring_map = scoring_map;
+    ControlPointRun(ControlPoint* cp) {
+      m_owner = cp;
     }
 
     ~ControlPointRun(){
@@ -109,6 +110,9 @@ class ControlPoint {
 
     std::vector<G4ThreeVector> m_plan_mask_points;
     G4VectorCache<G4ThreeVector> m_sim_mask_points;
+
+    ///
+    std::vector<ControlPointRun*> m_mt_run;
 
     bool m_run_initialized = false;
 

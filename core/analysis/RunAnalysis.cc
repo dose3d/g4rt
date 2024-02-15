@@ -29,8 +29,8 @@ RunAnalysis::RunAnalysis(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 RunAnalysis *RunAnalysis::GetInstance() {
-  static RunAnalysis instance = RunAnalysis();
-  return &instance;
+    static RunAnalysis instance = RunAnalysis();
+    return &instance;
 }
 
 
@@ -40,10 +40,10 @@ void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     LOGSVC_INFO("RUN ANALYSIS :: BEGIN OF RUN: {}",runPtr->GetRunID());
     if(isMaster)
         m_current_cp = Service<RunSvc>()->CurrentControlPoint();
-    for(const auto& run_collection: m_run_collection){
-        LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
-        m_current_cp->InitializeRunScoringCollection(run_collection.first);
-    }
+    // for(const auto& run_collection: m_run_collection){
+    //     LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
+    //     m_current_cp->InitializeRunScoringCollection(run_collection.first);
+    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4E
     if(nHits==0){
         return; // no hits in this event
     }
-    auto& scoring_collection = m_current_cp->GetScoringCollection(collection_name);
+    auto& scoring_collection = m_current_cp->GetRun()->GetScoringCollection(collection_name);
     for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
         for(const auto& scoring_type: m_scoring_types){

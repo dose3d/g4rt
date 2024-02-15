@@ -85,5 +85,7 @@ class RunAnalysis {
     /// Many HitsCollections can be associated to given run collection
     static void AddRunCollection(const G4String& collection_name, const G4String& hc_name);
 
+    static std::map<G4String,std::vector<G4String>> GetRunCollection() { return m_run_collection; }
+
 };
 #endif //RUN_ANALYSIS_HH

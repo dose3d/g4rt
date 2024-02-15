@@ -1,6 +1,7 @@
 #include "ControlPoint.hh"
 #include "Services.hh"
 #include "NTupleEventAnalisys.hh"
+#include "RunAnalysis.hh"
 #include "IO.hh"
 #include "TFile.h"
 #include "TTree.h"
@@ -25,8 +26,27 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPointRun::Merge(const G4Run* aRun){
-    G4cout << "### Run " << aRun->GetRunID() << " merging..." << G4endl;
+void ControlPointRun::InitializeScoringCollection(){
+    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
+    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} NODE",worker);
+    auto run_collection = RunAnalysis::GetRunCollection();
+    for(const auto& scoring_name : run_collection){
+        for(const auto& scoring_type: m_owner->m_scoring_types){
+            LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
+            if(m_hashed_scoring_map.find(scoring_name.first)==m_hashed_scoring_map.end())
+                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name.first,ScoringMap()));
+            auto& scoring_collection = m_hashed_scoring_map.at(scoring_name.first);
+            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
+        }
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::Merge(const G4Run* worker_run){
+    G4cout << "### Run " << worker_run->GetRunID() << " merging..." << G4endl;
+    //m_owner->MergeMTScoringMapCollection(worker_run);
 }
 
 
@@ -88,6 +108,7 @@ bool ControlPoint::InitializeRunScoringCollection(const G4String& scoring_name) 
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
     m_mt_run.push_back(new ControlPointRun(scoring ? this : nullptr));
+    m_cp_run.Put(m_mt_run.back());
     return m_mt_run.back();
 }
 
@@ -682,6 +703,27 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
         return 1. / (closest_dist/FIELD_MASK_POINTS_DISTANCE);
     }
     return 1.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::MergeMTScoringMapCollection(const G4Run* worker_run){
+    auto run_collection = RunAnalysis::GetRunCollection();
+    for(const auto& run : run_collection){
+        LOGSVC_INFO("Collection: {}",run.first);
+        dynamic_cast<const ControlPointRun*>(worker_run)->m_owner->m_mt_hashed_scoring_map.Get(run.first);
+        
+    }
+    LOGSVC_INFO("MergeMTScoringMapCollection - done");
+    // Clear cache - it's not needed anymore
+    int count(0);
+    // auto data = m_mt_hashed_scoring_map.Size();
+    // for (auto it = m_mt_hashed_scoring_map.Begin(); it != m_mt_hashed_scoring_map.End(); ++it) {
+    //     // it.first;
+        // LOGSVC_INFO("SIZE {}",data);
+        
+    //     // m_mt_hashed_scoring_map.Erase(it->first);
+    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

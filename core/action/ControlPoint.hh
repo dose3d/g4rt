@@ -32,9 +32,16 @@ class ControlPointConfig {
 class ControlPointRun : public G4Run {
   private:
     ControlPoint* m_owner = nullptr;
+
+    std::map<G4String,ScoringMap> m_hashed_scoring_map;
+
+    friend class ControlPoint;
   public:
-    ControlPointRun() = default;
+    ControlPointRun() {
+      InitializeScoringCollection();
+    };
     ControlPointRun(ControlPoint* cp) {
+      InitializeScoringCollection();
       m_owner = cp;
     }
 
@@ -42,8 +49,15 @@ class ControlPointRun : public G4Run {
       G4cout << "DESTRUCOTOR OF ControlPointRun..." << G4endl;
     };
 
+    void InitializeScoringCollection();
+
     ///
     void Merge(const G4Run* aRun) override;
+
+    ///
+    ScoringMap& GetScoringCollection(const G4String& name){
+      return m_hashed_scoring_map.at(name);
+    }
 };
 
 class ControlPoint {
@@ -95,9 +109,14 @@ class ControlPoint {
       return m_mt_hashed_scoring_map.Get(name);
     }
 
+    void MergeMTScoringMapCollection(const G4Run* worker_run);
+
     void WriteAndClearMTCache();
 
+    ControlPointRun* GetRun() {return m_cp_run.Get();}
+
   private:
+    friend class ControlPointRun;
     ControlPointConfig m_config;
     static std::string m_sim_dir;
     std::vector<std::string> m_data_types={"Plan", "Sim"};
@@ -113,6 +132,7 @@ class ControlPoint {
 
     ///
     std::vector<ControlPointRun*> m_mt_run;
+    G4Cache<ControlPointRun*> m_cp_run;
 
     bool m_run_initialized = false;
 

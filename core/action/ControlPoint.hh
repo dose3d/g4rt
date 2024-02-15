@@ -90,6 +90,10 @@ class ControlPoint {
     bool InitializeRunScoringCollection(const G4String& scoring_name); // this should be call from master thread!
     G4Run* GenerateRun(bool scoring=false);
 
+    ScoringMap& GetScoringCollection(const G4String& name){
+      return m_mt_hashed_scoring_map.Get(name);
+    }
+
     void WriteAndClearMTCache();
 
   private:

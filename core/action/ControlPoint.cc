@@ -62,23 +62,19 @@ ControlPoint::~ControlPoint() {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// Multi-thread safe method
 bool ControlPoint::InitializeRunScoringCollection(const G4String& scoring_name) {
-    LOGSVC_INFO("RUN SCORING INITIALIZATION...");
-    if(!G4Threading::IsWorkerThread ()){
-        for(const auto& scoring_type: m_scoring_types){
-            LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
-            if(!m_mt_hashed_scoring_map.Has(scoring_name))
-                m_mt_hashed_scoring_map.Insert(scoring_name,ScoringMap());
-            auto& scoring_collection = m_mt_hashed_scoring_map.Get(scoring_name);
-            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
-        }
-    } else {
-        LOGSVC_CRITICAL("Control Point Run Initialization should be done only from master thread!");
-        return false;
+    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
+    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} NODE",worker);
+    for(const auto& scoring_type: m_scoring_types){
+        LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
+        if(!m_mt_hashed_scoring_map.Has(scoring_name))
+            m_mt_hashed_scoring_map.Insert(scoring_name,ScoringMap());
+        auto& scoring_collection = m_mt_hashed_scoring_map.Get(scoring_name);
+        scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
     }
-    m_run_initialized = true;
-    return m_run_initialized;
+    //m_run_initialized = true;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

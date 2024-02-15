@@ -13,6 +13,7 @@
 #include "VoxelHit.hh"
 #include "Types.hh"
 
+class ControlPoint;
 class CsvRunAnalysis;
 class G4Event;
 class G4Run;
@@ -58,6 +59,9 @@ class RunAnalysis {
 
     ///
     bool m_is_initialized = false;
+
+    ///
+    ControlPoint* m_current_cp = nullptr;
 
   public:
     ///

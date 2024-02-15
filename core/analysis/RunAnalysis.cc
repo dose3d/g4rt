@@ -38,13 +38,11 @@ RunAnalysis *RunAnalysis::GetInstance() {
 ///
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     LOGSVC_INFO("RUN ANALYSIS :: BEGIN OF RUN: {}",runPtr->GetRunID());
-    if(isMaster){
-        auto control_point = Service<RunSvc>()->CurrentControlPoint();
-        // control_point->InitializeRun();
-        for(const auto& run_collection: m_run_collection){
-            LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
-            control_point->InitializeRunScoringCollection(run_collection.first);
-        }
+    if(isMaster)
+        m_current_cp = Service<RunSvc>()->CurrentControlPoint();
+    for(const auto& run_collection: m_run_collection){
+        LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
+        m_current_cp->InitializeRunScoringCollection(run_collection.first);
     }
 }
 
@@ -55,25 +53,24 @@ void RunAnalysis::FillEvent(G4double totalEvEnergy) {}
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from EventAction::EndOfEventAction
 void RunAnalysis::EndOfEventAction(const G4Event *evt){
-    // auto hCofThisEvent = evt->GetHCofThisEvent();
-    // for(const auto& run_collection: m_run_collection){
-    //     // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
-    //     for(const auto& hc: run_collection.second){
-    //         // Related SensitiveDetector collection ID (Geant4 architecture)
-    //         // collID==-1 the collection is not found
-    //         // collID==-2 the collection name is ambiguous
-    //         auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
-    //         if(collection_id<0){
-    //             LOGSVC_DEBUG("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
-    //         }
-    //         else {
-    //             auto thisHitsCollPtr = hCofThisEvent->GetHC(collection_id);
-    //             if(thisHitsCollPtr) // The particular collection is stored at the current event.
-    //                 FillEventCollection(run_collection.first,evt,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
-    //         }
-    //     }
-    // }
-    auto control_point = Service<RunSvc>()->CurrentControlPoint();
+    auto hCofThisEvent = evt->GetHCofThisEvent();
+    for(const auto& run_collection: m_run_collection){
+        // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
+        for(const auto& hc: run_collection.second){
+            // Related SensitiveDetector collection ID (Geant4 architecture)
+            // collID==-1 the collection is not found
+            // collID==-2 the collection name is ambiguous
+            auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
+            if(collection_id<0){
+                LOGSVC_DEBUG("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
+            }
+            else {
+                auto thisHitsCollPtr = hCofThisEvent->GetHC(collection_id);
+                if(thisHitsCollPtr) // The particular collection is stored at the current event.
+                    FillEventCollection(run_collection.first,evt,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+            }
+        }
+    }
 
 }
 
@@ -99,8 +96,6 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::AddRunCollection(const G4String& collection_name, const G4String& hc_name){
-  RunAnalysis::GetInstance(); // This is static method. Initialize (if needed) the whole factory
-  // LOGSVC_DEBUG("CsvRunAnalysis AddRunCollection: {} / {}",collection_name, hc_name);
   if(m_run_collection.find( collection_name ) == m_run_collection.end())
       m_run_collection[collection_name] = std::vector<G4String>();
   m_run_collection.at(collection_name).emplace_back(hc_name);
@@ -111,18 +106,16 @@ void RunAnalysis::AddRunCollection(const G4String& collection_name, const G4Stri
 void RunAnalysis::FillEventCollection(const G4String& collection_name, const G4Event *evt, VoxelHitsCollection* hitsColl){
     int nHits = hitsColl->entries();
     auto hc_name = hitsColl->GetName();
-    //LOGSVC_DEBUG("HC: {} / nHits: {}",hc_name, nHits);
     if(nHits==0){
         return; // no hits in this event
     }
-    auto& scoring_collection = m_run_scoring_collection.Get(collection_name);
+    auto& scoring_collection = m_current_cp->GetScoringCollection(collection_name);
     for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
         for(const auto& scoring_type: m_scoring_types){
             auto& current_scoring_collection = scoring_collection[scoring_type];
             switch (scoring_type){
                 case Scoring::Type::Cell:
-                    // LOGSVC_DEBUG("HC: {} / nHits: {}",hc_name, nHits);
                     FillCellEventCollection(current_scoring_collection,hit);
                     break;
                 case Scoring::Type::Voxel:

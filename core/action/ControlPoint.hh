@@ -15,6 +15,9 @@
 #include "VPatient.hh"
 #include "G4Run.hh"
 
+typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
+
+
 class ControlPointConfig {
   public:
     ControlPointConfig() = default;
@@ -26,8 +29,13 @@ class ControlPointConfig {
 };
 
 class ControlPointRun : public G4Run {
+  private:
+    ScoringMap* m_hashed_scoring_map = nullptr;
   public:
     ControlPointRun() = default;
+    ControlPointRun(ScoringMap* scoring_map) {
+      m_hashed_scoring_map = scoring_map;
+    }
 
     ~ControlPointRun(){
       G4cout << "DESTRUCOTOR OF ControlPointRun..." << G4endl;
@@ -79,7 +87,10 @@ class ControlPoint {
 
     static std::string GetOutputDir();
 
-    G4Run* GenerateRun();
+    bool InitializeRunScoringCollection(const G4String& scoring_name); // this should be call from master thread!
+    G4Run* GenerateRun(bool scoring=false);
+
+    void WriteAndClearMTCache();
 
   private:
     ControlPointConfig m_config;
@@ -95,8 +106,16 @@ class ControlPoint {
     std::vector<G4ThreeVector> m_plan_mask_points;
     G4VectorCache<G4ThreeVector> m_sim_mask_points;
 
-    std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map;
-    std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* m_hashed_scoring_map_ptr = nullptr;
+    bool m_run_initialized = false;
+
+    ScoringMap m_hashed_scoring_map;
+    // G4Cache<std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>> m_mt_hashed_scoring_map;
+
+    // Given ScoringMap is mapped with the custom scoring definition,
+    // witch which the number of HitsCollections are being associated
+    // see: RunAnalysis::AddRunCollection
+    G4MapCache<G4String,ScoringMap> m_mt_hashed_scoring_map;
+
     bool m_is_scoring_data_filled = false;
 
     static double FIELD_MASK_POINTS_DISTANCE;
@@ -106,10 +125,9 @@ class ControlPoint {
     void FillPlanFieldMaskForRegularShapes(const std::string& shape);
     void FillPlanFieldMaskFromRTPlan();
     void FillScoringData();
-    void FillScoringDataTagging();
+    void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
     std::string GetOutputFileName() const;
 
-    void SetCumulatedData(std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* data);
 };
 
 #endif //Dose3D_ControlPoint_H

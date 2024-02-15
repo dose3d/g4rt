@@ -40,13 +40,14 @@ RunAction::~RunAction(){
 G4Run* RunAction::GenerateRun(){
   auto control_point = Service<RunSvc>()->CurrentControlPoint();
   if (IsMaster()){
+    // control_point->InitializeRun();
     G4cout << FGRN("[INFO]")<<":: " << FBLU("GENERATING NEW RUN... ") << G4endl;
     G4cout << FGRN("[INFO]")<<":: NEvents: " << control_point->GetNEvts() << G4endl;
     auto rot = control_point->GetRotation();
     if(rot)
       G4cout << FGRN("[INFO]")<<":: Rotation: " << *control_point->GetRotation() << G4endl;
   }
-  return control_point->GenerateRun(); // TODO: HANDLING OF THIS PTR ??? Does kernel do the job?
+  return control_point->GenerateRun(m_run_scoring);
 }
 
 
@@ -75,8 +76,10 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   }
 
   //___________________________________________________________________________
-  if (configSvc->GetValue<bool>("RunSvc", "RunAnalysis"))
+  if (configSvc->GetValue<bool>("RunSvc", "RunAnalysis")){
+    m_run_scoring = true;
     RunAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());
+  }
 
   if (configSvc->GetValue<bool>("RunSvc", "PrimariesAnalysis"))
     PrimariesAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());

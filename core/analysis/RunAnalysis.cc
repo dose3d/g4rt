@@ -37,20 +37,15 @@ RunAnalysis *RunAnalysis::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
-  LOGSVC_INFO("RUN ANALYSIS :: BEGIN OF RUN: {}",runPtr->GetRunID());
-  LOGSVC_INFO("RunAnalysis::BeginOfRun");
-  LOGSVC_DEBUG("RunAnalysis #RunCollections: {}",m_run_collection.size());
-  for(const auto& run_collection: m_run_collection){
-      LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
-      for(const auto& scoring_type: m_scoring_types){
-          auto scoring_str = Scoring::to_string(scoring_type);
-          LOGSVC_INFO("Adding new map for {} / {} scoring",run_collection.first, scoring_str);
-          if(!m_run_scoring_collection.Has(run_collection.first))
-              m_run_scoring_collection.Insert(run_collection.first,ScoringMap());
-          auto& scoring_collection = m_run_scoring_collection.Get(run_collection.first);
-          scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
-      }
-  }
+    LOGSVC_INFO("RUN ANALYSIS :: BEGIN OF RUN: {}",runPtr->GetRunID());
+    if(isMaster){
+        auto control_point = Service<RunSvc>()->CurrentControlPoint();
+        // control_point->InitializeRun();
+        for(const auto& run_collection: m_run_collection){
+            LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
+            control_point->InitializeRunScoringCollection(run_collection.first);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,24 +55,26 @@ void RunAnalysis::FillEvent(G4double totalEvEnergy) {}
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from EventAction::EndOfEventAction
 void RunAnalysis::EndOfEventAction(const G4Event *evt){
-  auto hCofThisEvent = evt->GetHCofThisEvent();
-  for(const auto& run_collection: m_run_collection){
-      // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
-      for(const auto& hc: run_collection.second){
-          // Related SensitiveDetector collection ID (Geant4 architecture)
-          // collID==-1 the collection is not found
-          // collID==-2 the collection name is ambiguous
-          auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
-          if(collection_id<0){
-              LOGSVC_DEBUG("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
-          }
-          else {
-              auto thisHitsCollPtr = hCofThisEvent->GetHC(collection_id);
-              if(thisHitsCollPtr) // The particular collection is stored at the current event.
-                  FillEventCollection(run_collection.first,evt,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
-          }
-      }
-  }
+    // auto hCofThisEvent = evt->GetHCofThisEvent();
+    // for(const auto& run_collection: m_run_collection){
+    //     // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
+    //     for(const auto& hc: run_collection.second){
+    //         // Related SensitiveDetector collection ID (Geant4 architecture)
+    //         // collID==-1 the collection is not found
+    //         // collID==-2 the collection name is ambiguous
+    //         auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
+    //         if(collection_id<0){
+    //             LOGSVC_DEBUG("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
+    //         }
+    //         else {
+    //             auto thisHitsCollPtr = hCofThisEvent->GetHC(collection_id);
+    //             if(thisHitsCollPtr) // The particular collection is stored at the current event.
+    //                 FillEventCollection(run_collection.first,evt,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+    //         }
+    //     }
+    // }
+    auto control_point = Service<RunSvc>()->CurrentControlPoint();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,13 +84,15 @@ void RunAnalysis::ClearEventData(){}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
-  LOGSVC_DEBUG("RunAnalysis::EndOfRun:: ID {}", runPtr->GetRunID());
-  auto control_point = Service<RunSvc>()->CurrentControlPoint();
-  // TODO:: PERFORM MERGING HERE
-  //control_point->SetCumulatedData(&m_run_scoring_collection);
-  auto runManager = dynamic_cast<G4MTRunManager*>(Service<RunSvc>()->G4RunManagerPtr());
-  auto nThreads = runManager->GetNumberOfThreads();
-  LOGSVC_DEBUG("RunAnalysis::NThreads:: {}", nThreads);
+    LOGSVC_DEBUG("RunAnalysis::EndOfRun:: ID {}", runPtr->GetRunID());
+    // Multithreading merging is being performed before...
+
+    auto control_point = Service<RunSvc>()->CurrentControlPoint();
+    control_point->WriteAndClearMTCache();
+
+    // auto runManager = dynamic_cast<G4MTRunManager*>(Service<RunSvc>()->G4RunManagerPtr());
+    // auto nThreads = runManager->GetNumberOfThreads();
+    // LOGSVC_DEBUG("RunAnalysis::NThreads:: {}", nThreads);
 
 }
 

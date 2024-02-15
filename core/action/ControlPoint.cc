@@ -6,6 +6,11 @@
 #include "TTree.h"
 #include "TChain.h"
 
+#ifdef G4MULTITHREADED
+    #include "G4Threading.hh"
+    #include "G4MTRunManager.hh"
+#endif
+
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
@@ -56,9 +61,34 @@ ControlPoint::~ControlPoint() {
     if (m_rotation) delete m_rotation; m_rotation = nullptr;
 };
 
-G4Run* ControlPoint::GenerateRun() {
+////////////////////////////////////////////////////////////////////////////////
+///
+bool ControlPoint::InitializeRunScoringCollection(const G4String& scoring_name) {
+    LOGSVC_INFO("RUN SCORING INITIALIZATION...");
+    if(!G4Threading::IsWorkerThread ()){
+        for(const auto& scoring_type: m_scoring_types){
+            LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
+            if(!m_mt_hashed_scoring_map.Has(scoring_name))
+                m_mt_hashed_scoring_map.Insert(scoring_name,ScoringMap());
+            auto& scoring_collection = m_mt_hashed_scoring_map.Get(scoring_name);
+            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
+        }
+    } else {
+        LOGSVC_CRITICAL("Control Point Run Initialization should be done only from master thread!");
+        return false;
+    }
+    m_run_initialized = true;
+    return m_run_initialized;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4Run* ControlPoint::GenerateRun(bool scoring){
     /// TODO: Lock and store every new generated run
     /// It seems Kernel desn't cleanup memory!!!
+    //if(m_run_initialized & scoring){
+        //return new ControlPointRun(&m_mt_hashed_scoring_map.Get());
+    //}
     return new ControlPointRun();
 }
 
@@ -225,14 +255,6 @@ void ControlPoint::FillPlanFieldMaskFromRTPlan(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::SetCumulatedData(std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>* data){
-    m_hashed_scoring_map_ptr = data;
-    m_is_scoring_data_filled = true;
-    FillScoringDataTagging();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void ControlPoint::FillScoringData(){
     if(m_is_scoring_data_filled) 
         return;
@@ -348,8 +370,11 @@ void ControlPoint::FillScoringData(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillScoringDataTagging(){
+void ControlPoint::FillScoringDataTagging(ScoringMap* scoring_data){
     LOGSVC_INFO("Filling scoring tagging....");
+
+    auto& hashed_scoring_map = scoring_data ? *scoring_data : m_hashed_scoring_map;
+
     std::vector<const VoxelHit*> in_field_scoring_volume;
 
     auto getActivityGeoCentre = [&](bool weighted){
@@ -361,6 +386,9 @@ void ControlPoint::FillScoringDataTagging(){
                     sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
                     total_dose += iv->GetDose();
                     });
+        if(total_dose<1e-30){
+            LOGSVC_WARN("No activity found!");
+        }
         if(weighted){
             LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
             return total_dose == 0 ? sum : sum / total_dose;
@@ -378,8 +406,6 @@ void ControlPoint::FillScoringDataTagging(){
         auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
         hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
     };
-
-    auto& hashed_scoring_map = m_hashed_scoring_map_ptr ? *m_hashed_scoring_map_ptr : m_hashed_scoring_map;
 
     for(auto& scoring_type: m_scoring_types){
         LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
@@ -658,6 +684,15 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     }
     return 1.;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::WriteAndClearMTCache(){
+    //FillScoringDataTagging(&m_mt_hashed_scoring_map.Get());
+    // Clear cache:
+    // m_mt_hashed_scoring_map
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

@@ -347,6 +347,7 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check){
+  // Print(); LOGSVC_INFO("+"); other.Print();
   if(IsAligned(other,global_and_local_allignemnt_check)){
     return *this+=other;
   } else {

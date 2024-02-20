@@ -28,15 +28,17 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 ///
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
-    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} NODE",worker);
+    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} THREAD",worker);
+    auto scoring_types = Service<RunSvc>()->GetScoringTypes();
     auto run_collection = RunAnalysis::GetRunCollection();
     for(const auto& scoring_name : run_collection){
-        for(const auto& scoring_type: m_owner->m_scoring_types){
+        for(const auto& scoring_type: scoring_types){
             LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
             if(m_hashed_scoring_map.find(scoring_name.first)==m_hashed_scoring_map.end())
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name.first,ScoringMap()));
             auto& scoring_collection = m_hashed_scoring_map.at(scoring_name.first);
             scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
+            LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
         }
     }
 }
@@ -46,7 +48,30 @@ void ControlPointRun::InitializeScoringCollection(){
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
     G4cout << "### Run " << worker_run->GetRunID() << " merging..." << G4endl;
-    //m_owner->MergeMTScoringMapCollection(worker_run);
+    auto merge = [](ScoringMap& left, const ScoringMap& right){
+        G4double total_dose(0);
+        for(auto& scoring : left){
+            auto& type = scoring.first;
+            LOGSVC_INFO("Merging scoring type: {}",Scoring::to_string(type));
+            auto& hashed_scoring_left = scoring.second;
+            const auto& hashed_scoring_right = right.at(type);
+            for(auto& hashed_voxel : hashed_scoring_left){
+                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first)); // VoxelHit+=VoxelHit
+                total_dose += hashed_voxel.second.GetDose();
+            }
+            LOGSVC_INFO("Total dose: {}",total_dose);
+        } 
+    };
+
+    for(auto& scoring : m_hashed_scoring_map){
+        auto scoring_name = scoring.first;
+        LOGSVC_INFO("Merging: {}",scoring_name);
+        auto& master_scoring = scoring.second;
+        // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
+        const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
+        // LOGSVC_DEBUG("Worker scoring #types: {}",worker_scoring.size());
+        merge(master_scoring,worker_scoring);
+    }
 }
 
 
@@ -54,6 +79,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
+    m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
     FillPlanFieldMask();
 }
@@ -62,6 +88,7 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
 ///
 ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
     m_rotation = new G4RotationMatrix(*cp.m_rotation);
+    m_scoring_types = cp.m_scoring_types;
     m_plan_mask_points = cp.m_plan_mask_points;
     m_sim_mask_points = cp.m_sim_mask_points;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
@@ -71,6 +98,7 @@ ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
+    m_scoring_types = cp.m_scoring_types;
     m_rotation = cp.m_rotation;
     cp.m_rotation = nullptr;
     m_plan_mask_points = cp.m_plan_mask_points;

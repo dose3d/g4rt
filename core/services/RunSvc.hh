@@ -66,6 +66,7 @@ class RunSvc : public TomlConfigurable, Logable {
   bool m_isUsrG4Initialized = false;
 
   ///
+  std::set<Scoring::Type> m_scoring_types={Scoring::Type::Cell, Scoring::Type::Voxel};
   std::vector<ControlPointConfig> m_control_points_config;
   std::vector<ControlPoint> m_control_points;
 
@@ -151,6 +152,9 @@ class RunSvc : public TomlConfigurable, Logable {
   ///
   void WriteGeometryData() const;
   void WriteControlPointData();
+
+  ///
+  const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }
 
 };
 

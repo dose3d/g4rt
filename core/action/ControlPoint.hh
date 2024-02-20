@@ -120,7 +120,7 @@ class ControlPoint {
     ControlPointConfig m_config;
     static std::string m_sim_dir;
     std::vector<std::string> m_data_types={"Plan", "Sim"};
-    std::set<Scoring::Type> m_scoring_types={Scoring::Type::Cell, Scoring::Type::Voxel};
+    std::set<Scoring::Type> m_scoring_types;
 
     G4RotationMatrix* m_rotation = nullptr;
 

@@ -118,21 +118,6 @@ ControlPoint::~ControlPoint() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multi-thread safe method
-bool ControlPoint::InitializeRunScoringCollection(const G4String& scoring_name) {
-    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
-    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} NODE",worker);
-    for(const auto& scoring_type: m_scoring_types){
-        LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
-        if(!m_mt_hashed_scoring_map.Has(scoring_name))
-            m_mt_hashed_scoring_map.Insert(scoring_name,ScoringMap());
-        auto& scoring_collection = m_mt_hashed_scoring_map.Get(scoring_name);
-        scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
-    }
-    return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Multi-thread safe method
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
     m_mt_run.push_back(new ControlPointRun(scoring ? this : nullptr));
@@ -731,27 +716,6 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
         return 1. / (closest_dist/FIELD_MASK_POINTS_DISTANCE);
     }
     return 1.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::MergeMTScoringMapCollection(const G4Run* worker_run){
-    auto run_collection = RunAnalysis::GetRunCollection();
-    for(const auto& run : run_collection){
-        LOGSVC_INFO("Collection: {}",run.first);
-        dynamic_cast<const ControlPointRun*>(worker_run)->m_owner->m_mt_hashed_scoring_map.Get(run.first);
-        
-    }
-    LOGSVC_INFO("MergeMTScoringMapCollection - done");
-    // Clear cache - it's not needed anymore
-    int count(0);
-    // auto data = m_mt_hashed_scoring_map.Size();
-    // for (auto it = m_mt_hashed_scoring_map.Begin(); it != m_mt_hashed_scoring_map.End(); ++it) {
-    //     // it.first;
-        // LOGSVC_INFO("SIZE {}",data);
-        
-    //     // m_mt_hashed_scoring_map.Erase(it->first);
-    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -102,14 +102,7 @@ class ControlPoint {
 
     static std::string GetOutputDir();
 
-    bool InitializeRunScoringCollection(const G4String& scoring_name); // this should be call from master thread!
     G4Run* GenerateRun(bool scoring=false);
-
-    ScoringMap& GetScoringCollection(const G4String& name){
-      return m_mt_hashed_scoring_map.Get(name);
-    }
-
-    void MergeMTScoringMapCollection(const G4Run* worker_run);
 
     void WriteAndClearMTCache();
 
@@ -130,14 +123,14 @@ class ControlPoint {
     std::vector<G4ThreeVector> m_plan_mask_points;
     G4VectorCache<G4ThreeVector> m_sim_mask_points;
 
-    ///
+    /// Store to kepp raw pointers from ControlPoint::GenerateRun
     std::vector<ControlPointRun*> m_mt_run;
+
+    ///
     G4Cache<ControlPointRun*> m_cp_run;
 
-    bool m_run_initialized = false;
-
+    // TODO: obsolete functionality, to be deleted
     ScoringMap m_hashed_scoring_map;
-    // G4Cache<std::map<Scoring::Type, std::map<std::size_t, VoxelHit>>> m_mt_hashed_scoring_map;
 
     // Given ScoringMap is mapped with the custom scoring definition,
     // witch which the number of HitsCollections are being associated

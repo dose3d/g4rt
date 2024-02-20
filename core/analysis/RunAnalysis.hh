@@ -36,16 +36,16 @@ class RunAnalysis {
     RunAnalysis &operator=(RunAnalysis &&) = delete;
 
     /// Many HitsCollections can be associated to given collection name 
-    // (e.g. many sensitive detectors constituting a single detection unit)
+    // (e.g. when many sensitive detectors constituting a single detection unit)
     static std::map<G4String,std::vector<G4String>> m_run_collection;
 
     /// The actual data store for given run. 
     /// Mapping is being performed by the names inserted to the m_run_collection as a keys
     /// See RunAnalysis::BeginOfRun
-    G4MapCache<G4String,ScoringMap> m_run_scoring_collection;
+    // G4MapCache<G4String,ScoringMap> m_run_scoring_collection;
 
     ///
-    std::set<Scoring::Type> m_scoring_types = {Scoring::Type::Cell, Scoring::Type::Voxel};
+    std::set<Scoring::Type> m_scoring_types;
 
     ///
     void FillEventCollection(const G4String& collection_name, const G4Event *evt, VoxelHitsCollection* hitsColl);

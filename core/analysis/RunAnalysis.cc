@@ -17,6 +17,7 @@ std::map<G4String,std::vector<G4String>> RunAnalysis::m_run_collection = std::ma
 
 RunAnalysis::RunAnalysis(){
   if(!m_is_initialized){
+    m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     if(!m_csv_run_analysis) // TODO: && RUN_CSV_ANALYSIS
         m_csv_run_analysis = CsvRunAnalysis::GetInstance();
     // TODO: RUN_NTUPLE_ANALYSIS

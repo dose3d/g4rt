@@ -31,25 +31,20 @@ class ControlPointConfig {
 
 class ControlPointRun : public G4Run {
   private:
-    ControlPoint* m_owner = nullptr;
-
+    ///
     std::map<G4String,ScoringMap> m_hashed_scoring_map;
+    
+    ///
+    void InitializeScoringCollection();
 
-    friend class ControlPoint;
   public:
     ControlPointRun() {
       InitializeScoringCollection();
     };
-    ControlPointRun(ControlPoint* cp) {
-      InitializeScoringCollection();
-      m_owner = cp;
-    }
 
     ~ControlPointRun(){
       G4cout << "DESTRUCOTOR OF ControlPointRun..." << G4endl;
     };
-
-    void InitializeScoringCollection();
 
     ///
     void Merge(const G4Run* aRun) override;
@@ -126,7 +121,7 @@ class ControlPoint {
     /// Store to kepp raw pointers from ControlPoint::GenerateRun
     std::vector<ControlPointRun*> m_mt_run;
 
-    ///
+    /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
 
     // TODO: obsolete functionality, to be deleted

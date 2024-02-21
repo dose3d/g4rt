@@ -120,7 +120,7 @@ ControlPoint::~ControlPoint() {
 /// Multi-thread safe method
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
-    m_mt_run.push_back(new ControlPointRun(scoring ? this : nullptr));
+    m_mt_run.push_back(new ControlPointRun());
     m_cp_run.Put(m_mt_run.back());
     return m_mt_run.back();
 }

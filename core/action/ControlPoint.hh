@@ -32,7 +32,7 @@ class ControlPointConfig {
 class ControlPointRun : public G4Run {
   private:
     ///
-    std::map<G4String,ScoringMap> m_hashed_scoring_map;
+    mutable std::map<G4String,ScoringMap> m_hashed_scoring_map;
     
     ///
     void InitializeScoringCollection();
@@ -50,9 +50,7 @@ class ControlPointRun : public G4Run {
     void Merge(const G4Run* aRun) override;
 
     ///
-    ScoringMap& GetScoringCollection(const G4String& name){
-      return m_hashed_scoring_map.at(name);
-    }
+    ScoringMap& GetScoringCollection(const G4String& name);
 };
 
 class ControlPoint {

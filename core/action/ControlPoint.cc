@@ -72,8 +72,19 @@ void ControlPointRun::Merge(const G4Run* worker_run){
         // LOGSVC_DEBUG("Worker scoring #types: {}",worker_scoring.size());
         merge(master_scoring,worker_scoring);
     }
+
+    // Realease memory after merging... we don't need this anymore.
+    dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.clear();
+
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
+    if (m_hashed_scoring_map.find(name) == m_hashed_scoring_map.end())
+        LOGSVC_ERROR("Couldn't find scoring collection in current run: {}",name)
+    return m_hashed_scoring_map.at(name);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

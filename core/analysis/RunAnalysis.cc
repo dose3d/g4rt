@@ -38,18 +38,11 @@ RunAnalysis *RunAnalysis::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
-    LOGSVC_INFO("RUN ANALYSIS :: BEGIN OF RUN: {}",runPtr->GetRunID());
-    if(isMaster)
-        m_current_cp = Service<RunSvc>()->CurrentControlPoint();
-    // for(const auto& run_collection: m_run_collection){
-    //     LOGSVC_DEBUG("RunAnalysis RunCollection: {} / #HitsCollections {}",run_collection.first, run_collection.second.size());
-    //     m_current_cp->InitializeRunScoringCollection(run_collection.first);
-    // }
+    m_current_cp = Service<RunSvc>()->CurrentControlPoint();
+    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
+    LOGSVC_DEBUG("RunAnalysis:: begin of run at {} thread.",worker);
+    // Note: Everything is being care by ControlPointRun::InitializeScoringCollection
 }
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunAnalysis::FillEvent(G4double totalEvEnergy) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from EventAction::EndOfEventAction
@@ -63,7 +56,7 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
             // collID==-2 the collection name is ambiguous
             auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
             if(collection_id<0){
-                LOGSVC_DEBUG("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
+                LOGSVC_INFO("RunAnalysis::EndOfEvent: HC: {} / G4SDManager Err: {}", hc, collection_id);
             }
             else {
                 auto thisHitsCollPtr = hCofThisEvent->GetHC(collection_id);
@@ -72,12 +65,7 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
             }
         }
     }
-
 }
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunAnalysis::ClearEventData(){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -85,18 +73,13 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
     LOGSVC_DEBUG("RunAnalysis::EndOfRun:: ID {}", runPtr->GetRunID());
     // Multithreading merging is being performed before...
 
-    auto control_point = Service<RunSvc>()->CurrentControlPoint();
-    control_point->WriteAndClearMTCache();
-
-    // auto runManager = dynamic_cast<G4MTRunManager*>(Service<RunSvc>()->G4RunManagerPtr());
-    // auto nThreads = runManager->GetNumberOfThreads();
-    // LOGSVC_DEBUG("RunAnalysis::NThreads:: {}", nThreads);
+    // auto control_point = Service<RunSvc>()->CurrentControlPoint();
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunAnalysis::AddRunCollection(const G4String& collection_name, const G4String& hc_name){
+void RunAnalysis::AddRunHCollection(const G4String& collection_name, const G4String& hc_name){
   if(m_run_collection.find( collection_name ) == m_run_collection.end())
       m_run_collection[collection_name] = std::vector<G4String>();
   m_run_collection.at(collection_name).emplace_back(hc_name);

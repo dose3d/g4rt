@@ -173,7 +173,7 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));  // size and position extracted from pv
       NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3DVoxelised",m_tracks_analysis);
-      RunAnalysis::AddRunCollection("Dose3DVoxelised",hcName);
+      RunAnalysis::AddRunHCollection("Dose3DVoxelised",hcName);
 
     }
     // ________________________________________________________________________

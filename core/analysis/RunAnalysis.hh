@@ -39,11 +39,6 @@ class RunAnalysis {
     // (e.g. when many sensitive detectors constituting a single detection unit)
     static std::map<G4String,std::vector<G4String>> m_run_collection;
 
-    /// The actual data store for given run. 
-    /// Mapping is being performed by the names inserted to the m_run_collection as a keys
-    /// See RunAnalysis::BeginOfRun
-    // G4MapCache<G4String,ScoringMap> m_run_scoring_collection;
-
     ///
     std::set<Scoring::Type> m_scoring_types;
 
@@ -68,9 +63,6 @@ class RunAnalysis {
     static RunAnalysis* GetInstance();
 
     ///
-    void FillEvent(G4double totalEvEnergy);
-
-    ///
     void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
 
     ///
@@ -79,12 +71,9 @@ class RunAnalysis {
     ///
     void EndOfEventAction(const G4Event *evt);
 
-    ///
-    void ClearEventData();
 
     /// Many HitsCollections can be associated to given run collection
-    static void AddRunCollection(const G4String& collection_name, const G4String& hc_name);
-
+    static void AddRunHCollection(const G4String& collection_name, const G4String& hc_name);
     static std::map<G4String,std::vector<G4String>> GetRunCollection() { return m_run_collection; }
 
 };

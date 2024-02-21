@@ -27,6 +27,8 @@ RunAction::RunAction():G4UserRunAction(){
     analysisManager->SetNtupleMerging(false); // TODO somehow its use thread-shared objects?
   analysisManager->SetVerboseLevel(0);
   //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "RunAnalysis"))
+    m_run_scoring = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,10 +78,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   }
 
   //___________________________________________________________________________
-  if (configSvc->GetValue<bool>("RunSvc", "RunAnalysis")){
-    m_run_scoring = true;
+  if (configSvc->GetValue<bool>("RunSvc", "RunAnalysis"))
     RunAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());
-  }
 
   if (configSvc->GetValue<bool>("RunSvc", "PrimariesAnalysis"))
     PrimariesAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());

@@ -43,7 +43,6 @@ void ControlPointRun::InitializeScoringCollection(){
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
@@ -131,7 +130,7 @@ ControlPoint::~ControlPoint() {
 /// Multi-thread safe method
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
-    m_mt_run.push_back(new ControlPointRun());
+    m_mt_run.push_back(new ControlPointRun(scoring));
     m_cp_run.Put(m_mt_run.back());
     return m_mt_run.back();
 }
@@ -727,14 +726,6 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
         return 1. / (closest_dist/FIELD_MASK_POINTS_DISTANCE);
     }
     return 1.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteAndClearMTCache(){
-    //FillScoringDataTagging(&m_mt_hashed_scoring_map.Get());
-    // Clear cache:
-    // m_mt_hashed_scoring_map
 }
 
 

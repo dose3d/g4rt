@@ -38,8 +38,9 @@ class ControlPointRun : public G4Run {
     void InitializeScoringCollection();
 
   public:
-    ControlPointRun() {
-      InitializeScoringCollection();
+    ControlPointRun(bool scoring=false) {
+      if(scoring)
+        InitializeScoringCollection();
     };
 
     ~ControlPointRun(){
@@ -97,8 +98,6 @@ class ControlPoint {
 
     G4Run* GenerateRun(bool scoring=false);
 
-    void WriteAndClearMTCache();
-
     ControlPointRun* GetRun() {return m_cp_run.Get();}
 
   private:
@@ -127,7 +126,7 @@ class ControlPoint {
 
     // Given ScoringMap is mapped with the custom scoring definition,
     // witch which the number of HitsCollections are being associated
-    // see: RunAnalysis::AddRunCollection
+    // see: RunAnalysis::AddRunHCollection
     G4MapCache<G4String,ScoringMap> m_mt_hashed_scoring_map;
 
     bool m_is_scoring_data_filled = false;

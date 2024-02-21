@@ -194,9 +194,10 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 ///
 ControlPoint::~ControlPoint() {
     if (m_rotation) delete m_rotation; m_rotation = nullptr;
-    for(auto run : m_mt_run)
-        delete run;
-    m_mt_run.clear();
+    // for(auto run : m_mt_run){
+    //     delete run;
+    //     //TODO m_mt_run.erase(run);
+    // }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

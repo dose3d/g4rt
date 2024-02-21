@@ -57,6 +57,9 @@ class ControlPointRun : public G4Run {
     ScoringMap& GetScoringCollection(const G4String& name);
 
     ///
+    const std::map<G4String,ScoringMap>& GetScoringCollections() const {return m_hashed_scoring_map;}
+
+    ///
     void EndOfRun();
 };
 
@@ -108,6 +111,8 @@ class ControlPoint {
 
     void EndOfRunAction();
 
+    std::string GetOutputFileName() const;
+
   private:
     friend class ControlPointRun;
     ControlPointConfig m_config;
@@ -147,7 +152,6 @@ class ControlPoint {
     void FillPlanFieldMaskFromRTPlan();
     void FillScoringData();
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
-    std::string GetOutputFileName() const;
 
 };
 

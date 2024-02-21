@@ -323,7 +323,7 @@ void RunSvc::Finalize() {
   WriteGeometryData();
 
   // Perform physics outcome exports
-  // WriteControlPointData();
+  WriteControlPointData();
 
   //
   MergeOutput(false);

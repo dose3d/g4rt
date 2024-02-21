@@ -37,6 +37,9 @@ class ControlPointRun : public G4Run {
     ///
     void InitializeScoringCollection();
 
+    ///
+    void FillDataTagging();
+
   public:
     ControlPointRun(bool scoring=false) {
       if(scoring)

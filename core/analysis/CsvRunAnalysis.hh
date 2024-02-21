@@ -7,6 +7,8 @@
 
 #include "globals.hh"
 
+class G4Run;
+
 class CsvRunAnalysis {
     private:
         ///
@@ -24,6 +26,9 @@ class CsvRunAnalysis {
     public:
         ///
         static CsvRunAnalysis* GetInstance();
+
+        ///
+        void WriteDoseToCsv(const G4Run* runPtr);
 };
 
 #endif //CSV_RUN_ANALYSIS_HH

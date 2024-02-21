@@ -564,8 +564,8 @@ void RunSvc::WriteControlPointData(){
     // Release memory alocated for scoring:
     cp.ClearCachedData(); 
   }
-  ControlPoint::IntegrateAndWriteTotalDoseToTFile();
-  ControlPoint::IntegrateAndWriteTotalDoseToCsv();
+  //ControlPoint::IntegrateAndWriteTotalDoseToTFile();
+  //ControlPoint::IntegrateAndWriteTotalDoseToCsv();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

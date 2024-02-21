@@ -52,6 +52,9 @@ class ControlPointRun : public G4Run {
 
     ///
     ScoringMap& GetScoringCollection(const G4String& name);
+
+    ///
+    void EndOfRun();
 };
 
 class ControlPoint {
@@ -99,6 +102,8 @@ class ControlPoint {
     G4Run* GenerateRun(bool scoring=false);
 
     ControlPointRun* GetRun() {return m_cp_run.Get();}
+
+    void EndOfRunAction();
 
   private:
     friend class ControlPointRun;

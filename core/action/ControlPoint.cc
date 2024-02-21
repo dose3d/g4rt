@@ -87,6 +87,18 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void ControlPointRun::EndOfRun(){
+    if(m_hashed_scoring_map.size()>0){
+        LOGSVC_INFO("ControlPointRun::EndOfRun...");
+    }
+    else {
+        LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
+        return;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
@@ -728,6 +740,13 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     return 1.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::EndOfRunAction(){
+    if(G4Threading::IsWorkerThread())
+        return;
+    m_cp_run.Get()->EndOfRun();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

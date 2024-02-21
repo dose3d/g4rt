@@ -69,20 +69,10 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunAnalysis::EndOfRun(const G4Run* runPtr){
-    LOGSVC_DEBUG("RunAnalysis::EndOfRun:: ID {}", runPtr->GetRunID());
-    // Multithreading merging is being performed before...
-
-    // auto control_point = Service<RunSvc>()->CurrentControlPoint();
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void RunAnalysis::AddRunHCollection(const G4String& collection_name, const G4String& hc_name){
-  if(m_run_collection.find( collection_name ) == m_run_collection.end())
-      m_run_collection[collection_name] = std::vector<G4String>();
-  m_run_collection.at(collection_name).emplace_back(hc_name);
+    if(m_run_collection.find( collection_name ) == m_run_collection.end())
+        m_run_collection[collection_name] = std::vector<G4String>();
+    m_run_collection.at(collection_name).emplace_back(hc_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,4 +118,14 @@ void RunAnalysis::FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scor
     // LOGSVC_DEBUG("Voxel Dose BEFORE {}", voxel_hit.GetDose());
     voxel_hit.Cumulate(*hit,true); // check global and local alignement
     // LOGSVC_DEBUG("Voxel Dose AFTER {}", voxel_hit.GetDose());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void RunAnalysis::EndOfRun(const G4Run* runPtr){
+    LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
+    // Note: Multithreading merging is being performed before...
+    // m_current_cp->EndOfRun
+    
+    //m_csv_run_analysis
 }

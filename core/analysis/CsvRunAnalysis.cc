@@ -12,8 +12,6 @@ CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
-    LOGSVC_INFO("CsvRunAnalysis::WriteDoseToCsv...");
-    
     auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
         auto cxId = hit.GetGlobalID(0);
         auto cyId = hit.GetGlobalID(1);
@@ -37,6 +35,8 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
 
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
+    LOGSVC_INFO("CsvRunAnalysis::WriteDoseToCsv #{} collections:",scoring_maps.size());
+
     for(auto& scoring_map: scoring_maps){
         LOGSVC_INFO("CsvRunAnalysis::WriteDoseToCsv for {} run collection:",scoring_map.first);
         for(auto& scoring: scoring_map.second){

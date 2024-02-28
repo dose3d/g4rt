@@ -100,10 +100,10 @@ void D3DDetector::ParseTomlConfig(){
 
   m_tracks_analysis = config[configObjCell]["TracksAnalysis"].value_or(false);
 
-  G4bool write_cell_ttree = config[configObjCell]["WriteCellTTree"].value_or(true);
-  D3DCell::WriteCellTtree(write_cell_ttree);
-  G4bool write_voxcell_ttree = config[configObjCell]["WriteVoxelisedCellTTree"].value_or(true);
-  D3DCell::WriteVoxelisedCellTtree(write_voxcell_ttree);
+  G4bool cell_scorer = config[configObjCell]["CellScorer"].value_or(true);
+  D3DCell::CellScorer(cell_scorer);
+  G4bool voxcell_scorer = config[configObjCell]["CellVoxelisedScorer"].value_or(true);
+  D3DCell::CellVoxelisedScorer(voxcell_scorer);
   }
 
 

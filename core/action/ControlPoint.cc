@@ -27,11 +27,11 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::InitializeScoringCollection(){
-    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
-    LOGSVC_INFO("RUN SCORING INITIALIZATION ON {} THREAD",worker);
+    std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes();
-    auto run_collection = RunAnalysis::GetRunCollection();
-    for(const auto& scoring_name : run_collection){
+    auto run_collections = RunAnalysis::GetRunCollection();
+    LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
+    for(const auto& scoring_name : run_collections){
         for(const auto& scoring_type: scoring_types){
             LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
             if(m_hashed_scoring_map.find(scoring_name.first)==m_hashed_scoring_map.end())
@@ -46,12 +46,12 @@ void ControlPointRun::InitializeScoringCollection(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
-    G4cout << "### Run " << worker_run->GetRunID() << " merging..." << G4endl;
+    LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
     auto merge = [](ScoringMap& left, const ScoringMap& right){
         G4double total_dose(0);
         for(auto& scoring : left){
             auto& type = scoring.first;
-            LOGSVC_INFO("Merging scoring type: {}",Scoring::to_string(type));
+            LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
             for(auto& hashed_voxel : hashed_scoring_left){
@@ -64,7 +64,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 
     for(auto& scoring : m_hashed_scoring_map){
         auto scoring_name = scoring.first;
-        LOGSVC_INFO("Merging: {}",scoring_name);
+        LOGSVC_INFO("Merging collection: {}",scoring_name);
         auto& master_scoring = scoring.second;
         // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
         const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);

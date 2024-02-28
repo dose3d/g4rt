@@ -43,8 +43,9 @@ void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
+    LOGSVC_INFO("NTupleRunAnalysis::WriteDoseToTFile #{} collections:",scoring_maps.size());
     for(auto& scoring_map: scoring_maps){
-        LOGSVC_INFO("NTupleRunAnalysis::WriteDoseToTFile for {} run collection:",scoring_map.first);
+        LOGSVC_INFO("NTupleRunAnalysis::WriteDoseToTFile::Processing {} run collection:",scoring_map.first);
         for(auto& scoring: scoring_map.second){
             auto scoring_type = scoring.first;
             auto& data = scoring.second;

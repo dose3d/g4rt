@@ -19,8 +19,24 @@ G4double D3DCell::SIZE = 10.4 * mm;
 // G4double D3DCell::SIZE = 2 * cm;
 
 
-G4bool D3DCell::m_write_cell_ttree = true;
-G4bool D3DCell::m_write_voxelised_cell_ttree = true;
+G4bool D3DCell::m_set_cell_scorer = true;
+G4bool D3DCell::m_set_cell_voxelised_scorer = true;
+////////////////////////////////////////////////////////////////////////////////
+/// static
+void D3DCell::CellScorer(G4bool val) { 
+  m_set_cell_scorer = val; 
+  if(!val){ // by default it's set to true
+    Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Cell);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+/// static
+void D3DCell::CellVoxelisedScorer(G4bool val) { 
+  m_set_cell_voxelised_scorer = val; 
+  if(!val){ // by default it's set to true
+    Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Voxel);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -153,7 +169,7 @@ void D3DCell::DefineSensitiveDetector(){
     G4String hcName;
     // Scoring in the centre of the cell
     // ________________________________________________________________________
-    if (D3DCell::m_write_cell_ttree){
+    if (D3DCell::m_set_cell_scorer){
       hcName = label+"_CellCentre";
       LOGSVC_DEBUG("Current cell hcName {}", hcName);
       patientSD->AddHitsCollection(hcName);
@@ -161,11 +177,12 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
       NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
+      RunAnalysis::AddRunHCollection("Dose3D",hcName);
     }
 
     // Scoring in the voxelised cell
     // ________________________________________________________________________
-    if (D3DCell::m_write_voxelised_cell_ttree){
+    if (D3DCell::m_set_cell_voxelised_scorer){
       hcName = label+"_VoxelisedCell";
       LOGSVC_DEBUG("Hits Collection Name: {}",hcName);
       patientSD->AddHitsCollection(hcName);

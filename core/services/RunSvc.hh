@@ -154,6 +154,7 @@ class RunSvc : public TomlConfigurable, Logable {
 
   ///
   const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }
+  std::set<Scoring::Type>& GetScoringTypes() { return m_scoring_types; }
 
 };
 

@@ -54,10 +54,6 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             c_outFile.open(file.c_str(), std::ios::out);
             c_outFile << header << std::endl;
             for(auto& scoring : data){
-                if(scoring_type==Scoring::Type::Cell){
-                    scoring.second.Print();
-                    LOGSVC_INFO("Cell dose: {}",scoring.second.GetDose());
-                }
                 writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);
             }
             c_outFile.close();

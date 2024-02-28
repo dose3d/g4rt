@@ -251,7 +251,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
       evtColl.m_CellPositionZ.push_back(cell_centre.z());
     }
 
-    auto voxelDose = hit->GetDose();// / gray;
+    auto voxelDose = hit->GetDose(); // note: it's in gray already;
     auto size = D3DCell::SIZE;
     double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;

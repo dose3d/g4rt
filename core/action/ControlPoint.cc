@@ -663,10 +663,6 @@ void ControlPoint::WriteVolumeDoseAndTaggingToCsv(){
         c_outFile.open(file.c_str(), std::ios::out);
         c_outFile << header << std::endl;
         for(auto& scoring : data){
-            if(scoring_type==Scoring::Type::Cell){
-                scoring.second.Print();
-                LOGSVC_INFO("NT Cell dose: {}",scoring.second.GetDose());
-            }
             writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);
             // auto pos = scoring.second.GetCentre();
             // auto trans_pos = TransformToMaskPosition(pos);

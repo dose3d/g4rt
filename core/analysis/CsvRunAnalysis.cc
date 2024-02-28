@@ -46,6 +46,7 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             auto coll_str = svc::tolower(scoring_map.first);
             auto file = cp->GetOutputFileName()+"_"+coll_str+"_"+type_str+".csv";
             std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
+
             if(scoring_type==Scoring::Type::Voxel)
                 header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
 
@@ -53,6 +54,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             c_outFile.open(file.c_str(), std::ios::out);
             c_outFile << header << std::endl;
             for(auto& scoring : data){
+                if(scoring_type==Scoring::Type::Cell){
+                    scoring.second.Print();
+                    LOGSVC_INFO("Cell dose: {}",scoring.second.GetDose());
+                }
                 writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);
             }
             c_outFile.close();

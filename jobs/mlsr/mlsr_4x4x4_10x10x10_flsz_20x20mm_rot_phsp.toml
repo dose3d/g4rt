@@ -1,10 +1,11 @@
 [RunSvc]
 JobName = "mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_10deg_2e4_phsp"
 BeamType = "IAEA"
+PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
-PhspEvtVrtxMultiplicityTreshold = 30
+PhspEvtVrtxMultiplicityTreshold = 5
 PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
 NTupleAnalysis = true
@@ -35,12 +36,12 @@ MLayerShift = false
 
 [D3DDetector_Cell]
 Medium = "PMMA"
-Voxelization = [10,10,10]
+Voxelization = [5,5,5]
 TracksAnalysis = false
 WriteCellTTree = false
 WriteVoxelisedCellTTree = true
 
 [RunSvc_Plan]
-Control_Points_In_Treatment_Plan = 2
-Gantry_Angle_Per_Control_Point = [15,30.0]
-Particle_Counter_Per_Control_Point = [1e2,1e2]
+Control_Points_In_Treatment_Plan = 1
+Gantry_Angle_Per_Control_Point = [0.0,30.0]
+Particle_Counter_Per_Control_Point = [2e3,1e2]

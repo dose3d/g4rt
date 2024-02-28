@@ -37,7 +37,7 @@ void VoxelHit::Fill(G4Step* aStep){
     if (edep>0){ // don't increase the vector size with zeros
       m_Voxel.m_stepsEdep.emplace_back(edep);
       if(m_Voxel.m_Mass!=0.)
-      m_Voxel.m_Dose = m_Voxel.m_Edep / m_Voxel.m_Mass;
+      m_Voxel.m_Dose = (m_Voxel.m_Edep / m_Voxel.m_Mass) / gray;
       else {
         G4cout << "[WARNING]::VoxelHit::GetDose() The voxel mass is not set!" << G4endl;
       }
@@ -69,7 +69,7 @@ void VoxelHit::Update(G4Step* aStep){
   if (edep>0){ // don't increase the vector size with zeros
       m_Voxel.m_stepsEdep.emplace_back(edep);
       if(m_Voxel.m_Mass!=0.)
-        m_Voxel.m_Dose = m_Voxel.m_Edep / m_Voxel.m_Mass;
+        m_Voxel.m_Dose = (m_Voxel.m_Edep / m_Voxel.m_Mass) / gray;
       else {
         G4cout << "[WARNING]::VoxelHit::GetDose() The voxel mass is not set!" << G4endl;
       }
@@ -351,7 +351,7 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
   if(IsAligned(other,global_and_local_allignemnt_check)){
     return *this+=other;
   } else {
-    LOGSVC_WARN("Trying to cumulate differently misaligned VoxelHits...");
+    LOGSVC_WARN("Trying to cumulate misaligned VoxelHits...");
     Print();
     LOGSVC_WARN("+");
     other.Print();

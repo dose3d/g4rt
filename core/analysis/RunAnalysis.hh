@@ -15,6 +15,7 @@
 
 class ControlPoint;
 class CsvRunAnalysis;
+class NTupleRunAnalysis;
 class G4Event;
 class G4Run;
 
@@ -51,6 +52,7 @@ class RunAnalysis {
 
     ///
     CsvRunAnalysis* m_csv_run_analysis = nullptr;
+    NTupleRunAnalysis* m_ntuple_run_analysis = nullptr;
 
     ///
     bool m_is_initialized = false;

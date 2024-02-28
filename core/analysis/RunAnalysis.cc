@@ -9,6 +9,7 @@
 #include "VoxelHit.hh"
 #include "G4AnalysisManager.hh"
 #include "CsvRunAnalysis.hh"
+#include "NTupleRunAnalysis.hh"
 #include "Services.hh"
 #ifdef G4MULTITHREADED
   #include "G4MTRunManager.hh"
@@ -20,7 +21,8 @@ RunAnalysis::RunAnalysis(){
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     if(!m_csv_run_analysis) // TODO: && RUN_CSV_ANALYSIS
         m_csv_run_analysis = CsvRunAnalysis::GetInstance();
-    // TODO: RUN_NTUPLE_ANALYSIS
+    if(!m_ntuple_run_analysis) // TODO: && RUN_NTUPLE_ANALYSIS
+        m_ntuple_run_analysis = NTupleRunAnalysis::GetInstance();
     // TODO: RUN_HDF5_ANALYSIS
   }
   m_is_initialized = true;
@@ -128,4 +130,7 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
     
     m_csv_run_analysis->WriteDoseToCsv(runPtr);
     m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
+
+    m_ntuple_run_analysis->WriteDoseToTFile(runPtr);
+    m_ntuple_run_analysis->WriteFieldMaskToTFile(runPtr);
 }

@@ -556,9 +556,9 @@ void RunSvc::WriteControlPointData(){
   for (auto& cp : m_control_points){
     LOGSVC_DEBUG("Writing Control Point Data (CP-{})",cp.GetId());
     // Field mask, integrated dose and tags export:
-    cp.WriteFieldMaskToCsv();
+    // cp.WriteFieldMaskToCsv();
     cp.WriteFieldMaskToTFile();
-    cp.WriteVolumeDoseAndTaggingToCsv();
+    // cp.WriteVolumeDoseAndTaggingToCsv();
     cp.WriteVolumeDoseAndTaggingToTFile();
 
     // Release memory alocated for scoring:

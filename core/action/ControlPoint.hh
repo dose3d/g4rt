@@ -113,6 +113,8 @@ class ControlPoint {
 
     std::string GetOutputFileName() const;
 
+    const std::vector<std::string>& DataTypes() const { return m_data_types; }
+
   private:
     friend class ControlPointRun;
     ControlPointConfig m_config;

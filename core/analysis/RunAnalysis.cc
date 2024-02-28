@@ -127,4 +127,5 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
     // Note: Multithreading merging is being performed before...
     
     m_csv_run_analysis->WriteDoseToCsv(runPtr);
+    m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
 }

@@ -29,6 +29,7 @@ class CsvRunAnalysis {
 
         ///
         void WriteDoseToCsv(const G4Run* runPtr);
+        void WriteFieldMaskToCsv(const G4Run* runPtr);
 };
 
 #endif //CSV_RUN_ANALYSIS_HH

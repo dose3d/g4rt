@@ -63,4 +63,26 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
+    auto cp = Service<RunSvc>()->CurrentControlPoint();
+    auto data_types = cp->DataTypes();
+    for(const auto& type : data_types){
+        LOGSVC_INFO("Writing field mask (type={}) to CSV...",type);
+        auto field_mask = cp->GetFieldMask(type);
+        if(field_mask.size()>0){
+            auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
+            std::string header = "X [mm],Y [mm],Z [mm]";
+            std::ofstream c_outFile;
+            c_outFile.open(file.c_str(), std::ios::out);
+            c_outFile << header << std::endl;
+            for(auto& mp : field_mask)
+                c_outFile << mp.getX() << "," << mp.getY() << "," << mp.getZ() << std::endl;
+            c_outFile.close();
+            LOGSVC_INFO("Writing Field Mask to file {} - done!",file);
+        }
+    }
+}
+
 

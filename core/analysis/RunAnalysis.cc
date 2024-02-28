@@ -127,10 +127,14 @@ void RunAnalysis::FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scor
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
     LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
     // Note: Multithreading merging is being performed before...
-    
-    m_csv_run_analysis->WriteDoseToCsv(runPtr);
-    m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
+   
+    if(m_csv_run_analysis){
+        m_csv_run_analysis->WriteDoseToCsv(runPtr);
+        m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
+    }
 
-    m_ntuple_run_analysis->WriteDoseToTFile(runPtr);
-    m_ntuple_run_analysis->WriteFieldMaskToTFile(runPtr);
+    if(m_ntuple_run_analysis){
+        m_ntuple_run_analysis->WriteDoseToTFile(runPtr);
+        m_ntuple_run_analysis->WriteFieldMaskToTFile(runPtr);
+    }
 }

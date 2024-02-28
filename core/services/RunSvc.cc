@@ -322,11 +322,8 @@ void RunSvc::Finalize() {
   // Perform geometry exports
   WriteGeometryData();
 
-  // Perform physics outcome exports
-  WriteControlPointData();
-
   //
-  MergeOutput(false);
+  MergeOutput(true);
 
   //
   auto runWorld = Service<GeoSvc>()->World();
@@ -548,24 +545,6 @@ void RunSvc::WriteGeometryData() const {
   geoSvc->WriteWorldToTFile();
   geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
   geoSvc->WriteScoringComponentsPositioningToCsv();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunSvc::WriteControlPointData(){
-  for (auto& cp : m_control_points){
-    LOGSVC_DEBUG("Writing Control Point Data (CP-{})",cp.GetId());
-    // Field mask, integrated dose and tags export:
-    // cp.WriteFieldMaskToCsv();
-    // cp.WriteFieldMaskToTFile();
-    // cp.WriteVolumeDoseAndTaggingToCsv();
-    // cp.WriteVolumeDoseAndTaggingToTFile();
-
-    // Release memory alocated for scoring:
-    // cp.ClearCachedData(); 
-  }
-  //ControlPoint::IntegrateAndWriteTotalDoseToTFile();
-  //ControlPoint::IntegrateAndWriteTotalDoseToCsv();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,7 @@ PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Pr
 PhspEvtVrtxMultiplicityTreshold = 5
 PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
-NTupleAnalysis = true
+NTupleAnalysis = false
 RunAnalysis = true
 
 # FieldShape = "Rectangular"

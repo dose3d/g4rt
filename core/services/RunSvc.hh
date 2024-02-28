@@ -151,7 +151,6 @@ class RunSvc : public TomlConfigurable, Logable {
 
   ///
   void WriteGeometryData() const;
-  void WriteControlPointData();
 
   ///
   const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }

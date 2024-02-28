@@ -28,6 +28,8 @@ NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& treeDescription,const G4String& scoringVolumeName){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") )
+    return;
 
   if(scoringVolumeName.empty()){
     LOGSVC_INFO("Creating tree: {}",treeName);
@@ -65,6 +67,8 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") )
+    return;
   for(auto& tree : m_ttree_collection){
     if (tree.m_name==treeName){
       //G4cout<< "[INFO]:: NTupleEventAnalisys:: Set Tracks Analysis for " << treeName << " to:" << flag << G4endl;
@@ -76,6 +80,8 @@ void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") )
+    return;
   // Book Voxel data Ntuple for all HitsColletions
   //------------------------------------------
   m_runId = runPtr->GetRunID();

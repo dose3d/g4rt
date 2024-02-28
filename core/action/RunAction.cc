@@ -111,7 +111,6 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
   G4double loopRealElapsedTime = m_timer.GetRealElapsed();
   if (IsMaster()) {
     G4cout << "Global-loop elapsed time [s] : " << loopRealElapsedTime << G4endl;
-    Service<RunSvc>()->CurrentControlPoint()->EndOfRunAction();
   }
   else
     G4cout << "Local-loop elapsed time [s] : " << loopRealElapsedTime << G4endl;

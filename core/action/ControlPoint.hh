@@ -83,33 +83,14 @@ class ControlPoint {
 
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan") const;
     
-    // G4ThreeVector GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data)
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
     std::string GetSimOutputTFileName(bool workerMT = false) const;
-    void WriteIntegratedDoseToFile(bool tfile=true, bool csv=true) const;
-
-    // Type of the FieldMask export: 
-    // Plan = export points distribution based on the plan/beam shape data
-    // Sim  = export points distribution based on simulated particles
-    //void WriteFieldMaskToFile(std::string type="Plan", bool tfile=true, bool csv=true) const;
-    void WriteFieldMaskToTFile() const;
-    void WriteFieldMaskToCsv() const;
-
-    void WriteVolumeDoseAndTaggingToTFile();
-    void WriteVolumeDoseAndTaggingToCsv();
-
-    void ClearCachedData();
-
-    static void IntegrateAndWriteTotalDoseToTFile();
-    static void IntegrateAndWriteTotalDoseToCsv();
 
     static std::string GetOutputDir();
 
     G4Run* GenerateRun(bool scoring=false);
 
     ControlPointRun* GetRun() {return m_cp_run.Get();}
-
-    void EndOfRunAction();
 
     std::string GetOutputFileName() const;
 
@@ -120,12 +101,13 @@ class ControlPoint {
     ControlPointConfig m_config;
     static std::string m_sim_dir;
     std::vector<std::string> m_data_types={"Plan", "Sim"};
-    std::set<Scoring::Type> m_scoring_types;
 
     G4RotationMatrix* m_rotation = nullptr;
 
     std::vector<double> m_mlc_a_positioning;
     std::vector<double> m_mlc_b_positioning;
+
+    std::set<Scoring::Type> m_scoring_types;
 
     std::vector<G4ThreeVector> m_plan_mask_points;
     G4VectorCache<G4ThreeVector> m_sim_mask_points;
@@ -136,23 +118,12 @@ class ControlPoint {
     /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
 
-    // TODO: obsolete functionality, to be deleted
-    ScoringMap m_hashed_scoring_map;
-
-    // Given ScoringMap is mapped with the custom scoring definition,
-    // witch which the number of HitsCollections are being associated
-    // see: RunAnalysis::AddRunHCollection
-    G4MapCache<G4String,ScoringMap> m_mt_hashed_scoring_map;
-
-    bool m_is_scoring_data_filled = false;
-
     static double FIELD_MASK_POINTS_DISTANCE;
 
     G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMask();
     void FillPlanFieldMaskForRegularShapes(const std::string& shape);
     void FillPlanFieldMaskFromRTPlan();
-    void FillScoringData();
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
 
 };

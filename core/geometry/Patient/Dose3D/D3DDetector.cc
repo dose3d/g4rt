@@ -481,6 +481,12 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
       hashedCellString+=std::to_string(cIdZ);
 
       if(IsAnyCellVoxelised(mLayer) && type==Scoring::Type::Voxel ){
+
+
+        // Tutaj pobieranie nvoxels jest zle!
+        // trzeba stowarzyszc voxelizacje ze scoringiem
+        // wyciagnac to z VPatientSD::SetScoringParameterization
+
         auto nvx = cell->GetNXVoxels();
         double pix_size_x = size / nvx;
         auto nvy = cell->GetNYVoxels();

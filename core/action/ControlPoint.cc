@@ -6,6 +6,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
+#include "D3DCell.hh"
 
 #ifdef G4MULTITHREADED
     #include "G4Threading.hh"
@@ -48,15 +49,32 @@ void ControlPointRun::InitializeScoringCollection(){
 void ControlPointRun::Merge(const G4Run* worker_run){
     LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
     auto merge = [](ScoringMap& left, const ScoringMap& right){
-        G4double total_dose(0);
         for(auto& scoring : left){
+            G4double total_dose(0);
             auto& type = scoring.first;
             LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
             for(auto& hashed_voxel : hashed_scoring_left){
-                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first)); // VoxelHit+=VoxelHit
-                total_dose += hashed_voxel.second.GetDose();
+                bool isVoxel = type == Scoring::Type::Voxel ? true : false;
+                
+                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
+                if(isVoxel){ // dziwny jest przydadek gdy Cell == Voxel
+                    auto s = D3DCell::SIZE;
+                    total_dose += hashed_voxel.second.GetDose()*hashed_voxel.second.GetVolume()/(s*s*s);
+                } else {
+                    total_dose += hashed_voxel.second.GetDose();
+                }
+
+                // if(isVoxel){
+                //     G4cout<<G4endl;
+                //     // hashed_voxel.second.Print();
+                //     // G4cout<<G4endl;
+                //     // hashed_scoring_right.at(hashed_voxel.first).Print();
+                //     G4cout<< "Dose: " <<hashed_scoring_right.at(hashed_voxel.first).GetDose() << G4endl;
+                //     G4cout<< "Total: " << total_dose << G4endl;
+                //     G4cout<<G4endl;
+                // }
             }
             LOGSVC_INFO("Total dose: {}",total_dose);
         } 

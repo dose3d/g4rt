@@ -351,8 +351,16 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
   // if(!global_and_local_allignemnt_check)
   //   Print(); LOGSVC_INFO("+"); other.Print();
   if(IsAligned(other,global_and_local_allignemnt_check)){
-    if(global_and_local_allignemnt_check){ // cell/voxel
+    if(!global_and_local_allignemnt_check){ // cell/voxel
+      // G4cout << "[INFO]::VoxelHit::Cumulate m_Voxel.m_Dose pre summ "<<m_Voxel.m_Dose << G4endl;
+      // G4cout << "[INFO]::VoxelHit::Cumulate other.GetVolume() "<<other.GetVolume() << G4endl;
+      // G4cout << "[INFO]::VoxelHit::Cumulate GetVolume(); "<<GetVolume() << G4endl;
+
+
       m_Voxel.m_Dose += other.GetDose()*other.GetVolume() / GetVolume();
+      
+      // G4cout << "[INFO]::VoxelHit::Cumulate m_Voxel.m_Dose post summ "<<m_Voxel.m_Dose << G4endl;
+
     } else {
       return *this+=other;
     }

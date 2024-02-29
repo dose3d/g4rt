@@ -681,9 +681,9 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "y_min," << startingY  << std::endl;
   metadata_file << "z_min," << startingZ  << std::endl;
 
-  metadata_file << "x_max," << startingX+400.14 << std::endl;
-  metadata_file << "y_max," << startingY+400.14 << std::endl;
-  metadata_file << "z_max," << startingZ+400.14 << std::endl;
+  metadata_file << "x_max," << startingX+(xResolution/2.)+400.14 << std::endl;
+  metadata_file << "y_max," << startingY+(yResolution/2.)+400.14 << std::endl;
+  metadata_file << "z_max," << startingZ+(zResolution/2.)+400.14 << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;

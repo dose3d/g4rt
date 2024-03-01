@@ -469,6 +469,7 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type type) const {
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
   for(const auto& mLayer: m_d3d_layers){
     for(const auto& cell: mLayer->GetCells()){
       auto centre = cell->GetGlobalCentre();
@@ -502,6 +503,8 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
               hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
+              hashed_map_scoring[voxelHash].SetVolume( size*size*size/(nvx*nvy*nvz) );
+              hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
             }
           }
         }
@@ -511,6 +514,9 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
         hashed_map_scoring[cellHash].SetCentre(centre);
         hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
         hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
+        hashed_map_scoring[cellHash].SetVolume( size*size*size );
+        hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
+        // hashed_map_scoring[cellHash].Print();
       }
     }
   }
@@ -559,6 +565,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const std::stri
               hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
+              hashed_map_scoring[voxelHash].SetVolume( size*size*size/(nvx*nvy*nvz) );
             }
           }
         }
@@ -567,6 +574,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const std::stri
         hashed_map_scoring[cellHash] = VoxelHit();
         hashed_map_scoring[cellHash].SetCentre(centre);
         hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ);
+        hashed_map_scoring[cellHash].SetVolume( size*size*size );
       }
     }
   }

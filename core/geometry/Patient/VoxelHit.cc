@@ -202,9 +202,10 @@ void VoxelHit::Print() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void VoxelHit::Print(){
-  LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{})"
+  LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{}) \nMass {}, Volume {}"
   ,m_Voxel.m_global_idx_x,m_Voxel.m_global_idx_y,m_Voxel.m_global_idx_z
-  ,m_Voxel.m_idx_x,m_Voxel.m_idx_y,m_Voxel.m_idx_z);
+  ,m_Voxel.m_idx_x,m_Voxel.m_idx_y,m_Voxel.m_idx_z
+  ,m_Voxel.m_Mass,m_Voxel.m_Volume);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,9 +348,14 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check){
-  // Print(); LOGSVC_INFO("+"); other.Print();
+  // if(!global_and_local_allignemnt_check)
+  //   Print(); LOGSVC_INFO("+"); other.Print();
   if(IsAligned(other,global_and_local_allignemnt_check)){
-    return *this+=other;
+    if(global_and_local_allignemnt_check){ // cell/voxel
+      m_Voxel.m_Dose += other.GetDose()*other.GetVolume() / GetVolume();
+    } else {
+      return *this+=other;
+    }
   } else {
     LOGSVC_WARN("Trying to cumulate misaligned VoxelHits...");
     Print();

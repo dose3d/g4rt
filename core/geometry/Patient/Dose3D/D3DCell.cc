@@ -25,9 +25,9 @@ G4bool D3DCell::m_set_cell_voxelised_scorer = true;
 /// static
 void D3DCell::CellScorer(G4bool val) { 
   m_set_cell_scorer = val; 
-  if(!val){ // by default it's set to true
-    Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Cell);
-  }
+  // if(!val){ // by default it's set to true
+  //   Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Cell);
+  // }
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// static

@@ -150,6 +150,9 @@ class VoxelHit final : public G4VHit {
   G4double GetVolume() const {return m_Voxel.m_Volume; }
 
   ///
+  void SetMass(G4double mass) {m_Voxel.m_Mass=mass; }
+
+  ///
   G4ThreeVector GetGravCentre() const { return m_Voxel.m_GravitationalCentre; }
 
   ///

@@ -7,7 +7,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "D3DCell.hh"
-
+#include "G4SDManager.hh"
 #ifdef G4MULTITHREADED
     #include "G4Threading.hh"
     #include "G4MTRunManager.hh"
@@ -26,11 +26,16 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// TODO:: Jesli komorka nie jest voxelised nie ma sensu dodawac Scoring::Voxel
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes();
-    auto run_collections = RunAnalysis::GetRunCollection();
+    ///
+    /// !!!! TODO:: tobe removed by store only in control Point!!
+    /// RunAnalysis::GetRunCollection() jest to nadmiarowe!!!
+    /// Albo taki storage powinien byc tutaj prywatny!!!
+    ///
+    auto run_collections = RunAnalysis::GetRunCollection(); 
     LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& scoring : run_collections){
         auto scoring_name = scoring.first;
@@ -40,7 +45,12 @@ void ControlPointRun::InitializeScoringCollection(){
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name,ScoringMap()));
             auto& scoring_collection = m_hashed_scoring_map.at(scoring_name);
             scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_name,scoring_type);
-            LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
+            if(scoring_collection[scoring_type].empty()){
+                LOGSVC_INFO("Erasing {}",Scoring::to_string(scoring_type));
+                scoring_collection.erase(scoring_type);
+            }
+            else
+                LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
         }
     }
 }
@@ -478,6 +488,53 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     }
     return 1.;
 }
+
+void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
+    auto run_collections = RunAnalysis::GetRunCollection(); 
+    for(const auto& run_collection: run_collections){
+        // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
+        for(const auto& hc: run_collection.second){
+            // Related SensitiveDetector collection ID (Geant4 architecture)
+            auto collID = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
+            // collID==-1 the collection is not found
+            // collID==-2 the collection name is ambiguous
+            if(collID<0){
+                LOGSVC_INFO("ControlPoint::FillEventCollections: HC: {} / G4SDManager Err: {}", hc, collID);
+            }
+            else {
+                auto thisHitsCollPtr = evtHC->GetHC(collID);
+                if(thisHitsCollPtr) // The particular collection is stored at the current event.
+                    FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+            }
+        }
+    }
+}
+
+void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl){
+    int nHits = hitsColl->entries();
+    auto hc_name = hitsColl->GetName();
+    if(nHits==0){
+        return; // no hits in this event
+    }
+    auto& scoring_collection = GetRun()->GetScoringCollection(run_collection);
+    for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
+        auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
+        for(const auto& scoring_type: m_scoring_types){
+            auto& current_scoring_collection = scoring_collection[scoring_type];
+            switch (scoring_type){
+                case Scoring::Type::Cell:
+                    //TODO FillCellEventCollection(current_scoring_collection,hit);
+                    break;
+                case Scoring::Type::Voxel:
+                    //TODO FillVoxelEventCollection(current_scoring_collection,hit);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

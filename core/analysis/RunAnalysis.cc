@@ -50,6 +50,7 @@ void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 /// This member is called at the end of every event from EventAction::EndOfEventAction
 void RunAnalysis::EndOfEventAction(const G4Event *evt){
     auto hCofThisEvent = evt->GetHCofThisEvent();
+    m_current_cp->FillEventCollections(hCofThisEvent);
     for(const auto& run_collection: m_run_collection){
         // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){

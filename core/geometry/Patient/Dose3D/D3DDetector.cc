@@ -483,7 +483,10 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashedCellString+=std::to_string(cIdY);
       hashedCellString+=std::to_string(cIdZ);
 
-      if(IsAnyCellVoxelised(mLayer) && type==Scoring::Type::Voxel ){
+      if(type==Scoring::Type::Voxel ){ 
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! By now IsAnyCellVoxelised(mLayer,run_collection) && causes 
+        // std::out_of_range, wołamy o mape której nie ma...
         auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection);
         auto nvx = cell_sv->m_nVoxelsX;
         auto nvy = cell_sv->m_nVoxelsY;
@@ -531,6 +534,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO https://jira.plgrid.pl/jira/browse/TNSIM-291
 void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
+  // TODO: Once this method is still valid it should iterate trough all Scoring::Types
   LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
 
     auto global_cell_id = [&](int idX, int idY, int idZ) -> int {
@@ -577,7 +581,7 @@ void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
       // _______________________________________
       // Create TH2Poly for each "layer" within cell
       // Note: However, this cell level histograms defines common set for all the cells within MLayer!
-      if(IsAnyCellVoxelised(mLayer)){
+      if(IsAnyCellVoxelised(mLayer,"Dose3D")){
         if(vox_dir==nullptr){ // Hide these histograms into layer level directory
           auto cell_layer = layer+"_CellVoxelisation";
           vox_dir = cell_dir->mkdir(cell_layer.c_str());
@@ -640,21 +644,21 @@ void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DDetector::IsAnyCellVoxelised(D3DMLayer* layer) const {
+bool D3DDetector::IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const {
   if(layer){
     for(const auto& cell: layer->GetCells()){
-      if( cell->IsVoxelised() )
-        return true;
+      if( cell->IsRunCollectionScoringVolumeVoxelised(run_collection) )
+        return true; // Any cell in layer is voxelised
     }
   }
   return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DDetector::IsAnyCellVoxelised(int idx) const {
+bool D3DDetector::IsAnyCellVoxelised(int idx, const G4String& run_collection) const {
   if (m_d3d_layers.size()>=idx)
     return false;
-  return IsAnyCellVoxelised(m_d3d_layers.at(idx));
+  return IsAnyCellVoxelised(m_d3d_layers.at(idx),run_collection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

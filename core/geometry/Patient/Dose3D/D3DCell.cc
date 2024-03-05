@@ -144,10 +144,10 @@ G4bool D3DCell::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DCell::IsVoxelised() const {
-  if(m_cell_voxelization_x>1 || m_cell_voxelization_y>1 || m_cell_voxelization_z>1)
-    return true;
-  return false;
+bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const {
+  auto rcsv = GetSD()->GetRunCollectionReferenceScoringVolume(run_collection);
+  // Note: Once the run_collection coudn't be found, the exception is being trown...
+  return rcsv->IsVoxelised();
 }
 
 

@@ -573,3 +573,10 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
                   voxelId,maxId,position,voxelIdX,voxelIdY,voxelIdZ);
     }
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+bool VPatientSD::ScoringVolume::IsVoxelised() const{
+  // return true;
+  // G4cout << "m_nVoxelsX " << m_nVoxelsX << "   m_nVoxelsY " << m_nVoxelsY << "   m_nVoxelsZ " << m_nVoxelsZ << G4endl;
+  return m_nVoxelsX > 1 || m_nVoxelsY > 1 || m_nVoxelsZ > 1;
+}

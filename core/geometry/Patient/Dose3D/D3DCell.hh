@@ -65,7 +65,7 @@ class D3DCell : public VPatient {
     void ParseTomlConfig() override {}
 
     ///
-    bool IsVoxelised() const;
+    bool IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const;
 
     ///
     int GetNXVoxels() const { return m_cell_voxelization_x; }

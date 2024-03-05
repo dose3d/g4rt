@@ -88,6 +88,9 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
           G4bool IsOnBorder(const G4ThreeVector& position) const;
 
           bool operator == (const ScoringVolume& other);
+
+          ///
+          bool IsVoxelised() const;
       };
 
       ///

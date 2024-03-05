@@ -14,6 +14,7 @@
 #include "G4Cache.hh"
 #include "VPatient.hh"
 #include "G4Run.hh"
+#include "VoxelHit.hh"
 
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
@@ -96,6 +97,8 @@ class ControlPoint {
 
     const std::vector<std::string>& DataTypes() const { return m_data_types; }
 
+    void FillEventCollections(G4HCofThisEvent* evtHC);
+
   private:
     friend class ControlPointRun;
     ControlPointConfig m_config;
@@ -125,6 +128,7 @@ class ControlPoint {
     void FillPlanFieldMaskForRegularShapes(const std::string& shape);
     void FillPlanFieldMaskFromRTPlan();
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
+    void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
 
 };
 

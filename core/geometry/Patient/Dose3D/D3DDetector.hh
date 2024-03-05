@@ -46,8 +46,8 @@ class D3DDetector : public VPatient, public GeoComponet{
     std::string SetGeometrySource();
     
     ///
-    bool IsAnyCellVoxelised(int idx) const;
-    bool IsAnyCellVoxelised(D3DMLayer* layer) const;
+    bool IsAnyCellVoxelised(int idx, const G4String& run_collection) const;
+    bool IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const;
 
     ///
     void ExportCellPositioningToCsv(const std::string& path_to_output_dir) const override;

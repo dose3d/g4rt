@@ -49,11 +49,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ///
     VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
-    /// TO BE DELETED
-    virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const {
-      return std::map<std::size_t, VoxelHit>();
-    }
-
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {
       LOGSVC_WARN("Returning empty scoring hashed map!");
       return std::map<std::size_t, VoxelHit>();

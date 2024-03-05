@@ -468,8 +468,8 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& scoring_name, Scoring::Type type) const {
-  G4cout<<"\n\nGetScoringHashedMap for " << scoring_name << " / " <<Scoring::to_string(type)<<G4endl;
+std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
+  G4cout<<"\n\nGetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
@@ -484,7 +484,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashedCellString+=std::to_string(cIdZ);
 
       if(IsAnyCellVoxelised(mLayer) && type==Scoring::Type::Voxel ){
-        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name);
+        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection);
         auto nvx = cell_sv->m_nVoxelsX;
         auto nvy = cell_sv->m_nVoxelsY;
         auto nvz = cell_sv->m_nVoxelsZ;
@@ -525,66 +525,6 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       }
     }
   }
-  return hashed_map_scoring;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TO BE DELETED
-std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const std::string& name, bool voxelised) const {
-  LOGSVC_INFO("GetScoringHashedMap for {}",name);
-  if (m_hashed_scoring_map_template.find(name) != m_hashed_scoring_map_template.end()) {
-    return D3DDetector::m_hashed_scoring_map_template.at(name);
-}
-
-  std::map<std::size_t, VoxelHit> hashed_map_scoring;
-  auto size = D3DCell::SIZE;
-  for(const auto& mLayer: m_d3d_layers){
-    for(const auto& cell: mLayer->GetCells()){
-      auto centre = cell->GetGlobalCentre();
-      auto cIdX = cell->GetIdX();
-      auto cIdY = cell->GetIdY();
-      auto cIdZ = cell->GetIdZ();
-      auto hashedCellString = std::to_string(cIdX);
-      hashedCellString.append(std::to_string(cIdY));
-      hashedCellString.append(std::to_string(cIdZ));
-
-      if(IsAnyCellVoxelised(mLayer) && voxelised ){
-        auto nvx = cell->GetNXVoxels();
-        double pix_size_x = size / nvx;
-        auto nvy = cell->GetNYVoxels();
-        double pix_size_y = size / nvy;
-        auto nvz = cell->GetNZVoxels();
-        double pix_size_z = size / nvz;
-
-        for(int ix=0; ix<nvx; ix++ ){
-          for(int iy=0; iy<nvy; iy++ ){
-            for(int iz=0; iz<nvz; iz++ ){
-              auto hashedVoxelString = hashedCellString;
-              hashedVoxelString.append(std::to_string(ix));
-              hashedVoxelString.append(std::to_string(iy));
-              hashedVoxelString.append(std::to_string(iz));
-              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
-              hashed_map_scoring[voxelHash] = VoxelHit();
-              auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
-              auto y_centre = centre.getY() - size/2 + (iy) * pix_size_y + pix_size_y/2.;  
-              auto z_centre = centre.getZ() - size/2 + (iz) * pix_size_z + pix_size_z/2.; 
-              hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
-              hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
-              hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
-              hashed_map_scoring[voxelHash].SetVolume( size*size*size/(nvx*nvy*nvz) );
-            }
-          }
-        }
-      } else {
-        auto cellHash = std::hash<std::string>{}(hashedCellString);
-        hashed_map_scoring[cellHash] = VoxelHit();
-        hashed_map_scoring[cellHash].SetCentre(centre);
-        hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ);
-        hashed_map_scoring[cellHash].SetVolume( size*size*size );
-      }
-    }
-  }
-  D3DDetector::m_hashed_scoring_map_template[name] = hashed_map_scoring;
   return hashed_map_scoring;
 }
 

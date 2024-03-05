@@ -57,7 +57,6 @@ class D3DDetector : public VPatient, public GeoComponet{
     void ExportLayerPads(const std::string& path_to_output_dir) const;
 
     //
-    std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const override;
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
   private:

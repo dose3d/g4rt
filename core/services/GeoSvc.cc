@@ -666,7 +666,9 @@ void GeoSvc::WriteCTLikeData(){
   // FOR CT expoty - set izocentre as patient world centre
   // FOR CT expoty - set patient world size as 400.14,400.14,400.14
 
-  startingX = (-198.12 + patientEnvXPos), startingY = (-198.12 + patientEnvYPos), startingZ = (-198.12 + patientEnvZPos);
+  startingX = svc::round_with_prec((-198.12 + patientEnvXPos),4);
+  startingY = svc::round_with_prec((-198.12 + patientEnvYPos),4);
+  startingZ = svc::round_with_prec((-198.12 + patientEnvZPos),4);
   stepX = 0.78, stepY = 0.78, stepZ = 0.78;
   xResolution = 512, yResolution = 512, zResolution = 512;
   // xResolution = 256, yResolution = 256, zResolution = 256;
@@ -681,25 +683,25 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "y_min," << startingY  << std::endl;
   metadata_file << "z_min," << startingZ  << std::endl;
 
-  metadata_file << "x_max," << startingX+396.24 << std::endl;
-  metadata_file << "y_max," << startingY+396.24 << std::endl;
-  metadata_file << "z_max," << startingZ+396.24 << std::endl;
+  metadata_file << "x_max," << svc::round_with_prec((startingX+396.24),4) << std::endl;
+  metadata_file << "y_max," << svc::round_with_prec((startingY+396.24),4) << std::endl;
+  metadata_file << "z_max," << svc::round_with_prec((startingZ+396.24),4) << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;
   metadata_file << "z_resolution," << zResolution << std::endl;
 
-  metadata_file << "x_step," << 0.78 << std::endl;
-  metadata_file << "y_step," << 0.78 << std::endl;
-  metadata_file << "z_step," << 0.78 << std::endl;
+  metadata_file << "x_step," << stepX << std::endl;
+  metadata_file << "y_step," << stepY << std::endl;
+  metadata_file << "z_step," << stepZ << std::endl;
 
-  metadata_file << "SSD," << 1000 + patientEnvZPos + patientPositionInEnv.getZ() << std::endl;
+  metadata_file << "SSD," << svc::round_with_prec((1000 + patientEnvZPos + patientPositionInEnv.getZ()),4) << std::endl;
 
 
 
-  for( int x = 0; x < xResolution; x++ ){
+  for( int y = 0; y < yResolution; y++ ){
     std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << x+1 ;
+    ss << std::setw(4) << std::setfill('0') << y+1 ;
     std::string s2(ss.str());
     auto file =  output_dir+"/img"+s2+".csv";
     G4cout << "output filepath:  " << file << G4endl;
@@ -707,7 +709,7 @@ void GeoSvc::WriteCTLikeData(){
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
-    for( int y = 0; y < yResolution; y++ ){
+    for( int x = 0; x < xResolution; x++ ){
       for( int z = 0; z < zResolution; z++ ){
         currentPos.setX((startingX+stepX*x));
         currentPos.setY((startingY+stepY*y));

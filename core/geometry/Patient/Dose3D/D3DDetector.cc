@@ -156,6 +156,8 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
     SetPhysicalVolume(new G4PVPlacement(nullptr, m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
+    // auto pv = GetPhysicalVolume();
+
 
     //
     int i_layer = 0;

@@ -14,6 +14,8 @@
 #include <vector>
 #include <array>
 #include "IO.hh"
+#include "VPatientSD.hh"
+
 
 std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_scoring_map_template = std::map<std::string, std::map<std::size_t, VoxelHit>>();
 
@@ -293,7 +295,7 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
     std::vector<double> linearized_positioning;
     std::vector<int> linearized_id_global;
     std::vector<int> linearized_id;
-    auto hashed_scoring_map = GetScoringHashedMap(type);
+    auto hashed_scoring_map = GetScoringHashedMap("Dose3D",type);
     for(auto& scoring_volume : hashed_scoring_map){
       auto& hit = scoring_volume.second;
       auto volume_centre = hit.GetCentre();
@@ -338,7 +340,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
   outFile <<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<<sep;
   outFile <<"VoxelPosX[mm]"<<sep<<"VoxelPosY[mm]"<<sep<<"VoxelPosZ[mm]"<< std::endl; // data header
 
-  auto hashed_scoring_map = GetScoringHashedMap(Scoring::Type::Voxel);
+  auto hashed_scoring_map = GetScoringHashedMap("Dose3D",Scoring::Type::Voxel);
   for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all voxels in geometry layout
     auto& hit = scoring_volume.second;
     auto hit_centre_global = hit.GetGlobalCentre();
@@ -402,7 +404,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
   outFile.open(file.c_str(), std::ios::out);
   outFile << "CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep<<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<< std::endl; // data header
   
-  auto hashed_scoring_map = GetScoringHashedMap(Scoring::Type::Cell);
+  auto hashed_scoring_map = GetScoringHashedMap("Dose3D",Scoring::Type::Cell);
   for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all cells in geometry layout
     auto& hit = scoring_volume.second;
     auto hit_centre = hit.GetCentre();
@@ -466,7 +468,8 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type type) const {
+std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& scoring_name, Scoring::Type type) const {
+  G4cout<<"\n\nGetScoringHashedMap for " << scoring_name << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
@@ -481,17 +484,13 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
       hashedCellString+=std::to_string(cIdZ);
 
       if(IsAnyCellVoxelised(mLayer) && type==Scoring::Type::Voxel ){
+        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name);
+        auto nvx = cell_sv->m_nVoxelsX;
+        auto nvy = cell_sv->m_nVoxelsY;
+        auto nvz = cell_sv->m_nVoxelsZ;
 
-
-        // Tutaj pobieranie nvoxels jest zle!
-        // trzeba stowarzyszc voxelizacje ze scoringiem
-        // wyciagnac to z VPatientSD::SetScoringParameterization
-
-        auto nvx = cell->GetNXVoxels();
         double pix_size_x = size / nvx;
-        auto nvy = cell->GetNYVoxels();
         double pix_size_y = size / nvy;
-        auto nvz = cell->GetNZVoxels();
         double pix_size_z = size / nvz;
 
         for(int ix=0; ix<nvx; ix++ ){
@@ -509,7 +508,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
               hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
-              hashed_map_scoring[voxelHash].SetVolume( size*size*size/(nvx*nvy*nvz) );
+              hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
               hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
             }
           }
@@ -532,6 +531,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
 ////////////////////////////////////////////////////////////////////////////////
 /// TO BE DELETED
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const std::string& name, bool voxelised) const {
+  LOGSVC_INFO("GetScoringHashedMap for {}",name);
   if (m_hashed_scoring_map_template.find(name) != m_hashed_scoring_map_template.end()) {
     return D3DDetector::m_hashed_scoring_map_template.at(name);
 }

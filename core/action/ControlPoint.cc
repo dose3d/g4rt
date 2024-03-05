@@ -32,13 +32,14 @@ void ControlPointRun::InitializeScoringCollection(){
     auto scoring_types = Service<RunSvc>()->GetScoringTypes();
     auto run_collections = RunAnalysis::GetRunCollection();
     LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
-    for(const auto& scoring_name : run_collections){
+    for(const auto& scoring : run_collections){
+        auto scoring_name = scoring.first;
         for(const auto& scoring_type: scoring_types){
-            LOGSVC_INFO("Adding new scoring map: {}/{}",scoring_name.first,Scoring::to_string(scoring_type));
-            if(m_hashed_scoring_map.find(scoring_name.first)==m_hashed_scoring_map.end())
-                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name.first,ScoringMap()));
-            auto& scoring_collection = m_hashed_scoring_map.at(scoring_name.first);
-            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
+            LOGSVC_INFO("Adding new scoring map: {}/{}",scoring_name,Scoring::to_string(scoring_type));
+            if(m_hashed_scoring_map.find(scoring_name)==m_hashed_scoring_map.end())
+                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name,ScoringMap()));
+            auto& scoring_collection = m_hashed_scoring_map.at(scoring_name);
+            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_name,scoring_type);
             LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
         }
     }
@@ -48,20 +49,24 @@ void ControlPointRun::InitializeScoringCollection(){
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
     LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
-    auto merge = [](ScoringMap& left, const ScoringMap& right){
+    auto cell_size = D3DCell::SIZE;
+    auto cell_volume = cell_size*cell_size*cell_size;
+    auto merge = [&](ScoringMap& left, const ScoringMap& right){
         for(auto& scoring : left){
             G4double total_dose(0);
             auto& type = scoring.first;
+            bool isVoxel = type == Scoring::Type::Voxel ? true : false;
             LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
             for(auto& hashed_voxel : hashed_scoring_left){
-                bool isVoxel = type == Scoring::Type::Voxel ? true : false;
                 
                 hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
-                if(isVoxel){ // dziwny jest przydadek gdy Cell == Voxel
-                    auto s = D3DCell::SIZE;
-                    total_dose += hashed_voxel.second.GetDose()*hashed_voxel.second.GetVolume()/(s*s*s);
+                auto voxel_volume = hashed_voxel.second.GetVolume();
+                    
+                if(isVoxel && voxel_volume < cell_volume){
+                    //LOGSVC_INFO("Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
+                    total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
                 } else {
                     total_dose += hashed_voxel.second.GetDose();
                 }

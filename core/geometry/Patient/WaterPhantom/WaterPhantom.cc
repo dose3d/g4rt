@@ -177,7 +177,7 @@ void WaterPhantom::ConstructFullVolumeScoring(const G4String& name){
   if(m_patientSD.Get()==0)
     ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
-  patientSD->AddHitsCollection(name);
+  patientSD->AddHitsCollection("WaterPhantom",name);
   patientSD->SetScoringParameterization(name,
                                     m_detectorVoxelizationX,
                                     m_detectorVoxelizationY,
@@ -192,7 +192,7 @@ void WaterPhantom::ConstructFarmerVolumeScoring(const G4String& name){
   if(m_patientSD.Get()==0)
     ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
-  patientSD->AddHitsCollection(name);
+  patientSD->AddHitsCollection("Farmer30013",name);
   auto farmerBox = G4Box(name+"Box",2.65*mm,2.65*mm,20*cm); 
   patientSD->SetScoringParameterization(name,1,1,200);
   patientSD->SetScoringVolume(name,farmerBox,G4ThreeVector(0., 0., 0.));

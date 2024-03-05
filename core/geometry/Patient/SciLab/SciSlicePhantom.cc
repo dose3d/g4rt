@@ -77,7 +77,7 @@ void SciSlicePhantom::DefineSensitiveDetector(){
 
     // ________________________________________________________________________
     G4String hcName = "SciSlicePhantom";
-    patientSD->AddHitsCollection(hcName);
+    patientSD->AddHitsCollection(hcName,hcName);
     patientSD->SetScoringVolume(hcName,pv);  // size and position extracted from pv
     patientSD->SetScoringParameterization(hcName,20,4,4); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
 

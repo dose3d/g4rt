@@ -202,7 +202,7 @@ void VoxelHit::Print() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void VoxelHit::Print(){
-  LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{}) \nMass {}, Volume {}"
+  LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Volume {}"
   ,m_Voxel.m_global_idx_x,m_Voxel.m_global_idx_y,m_Voxel.m_global_idx_z
   ,m_Voxel.m_idx_x,m_Voxel.m_idx_y,m_Voxel.m_idx_z
   ,m_Voxel.m_Mass,m_Voxel.m_Volume);

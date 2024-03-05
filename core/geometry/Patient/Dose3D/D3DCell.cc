@@ -172,7 +172,7 @@ void D3DCell::DefineSensitiveDetector(){
     if (D3DCell::m_set_cell_scorer){
       hcName = label+"_CellCentre";
       LOGSVC_DEBUG("Current cell hcName {}", hcName);
-      patientSD->AddHitsCollection(hcName);
+      patientSD->AddHitsCollection("Dose3D",hcName);
       patientSD->SetScoringParameterization(hcName,1,1,1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
       NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
@@ -185,7 +185,7 @@ void D3DCell::DefineSensitiveDetector(){
     if (D3DCell::m_set_cell_voxelised_scorer){
       hcName = label+"_VoxelisedCell";
       LOGSVC_DEBUG("Hits Collection Name: {}",hcName);
-      patientSD->AddHitsCollection(hcName);
+      patientSD->AddHitsCollection("Dose3DVoxelised",hcName);
       patientSD->SetScoringParameterization(hcName,m_cell_voxelization_x,m_cell_voxelization_y,m_cell_voxelization_z); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));  // size and position extracted from pv
       NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);

@@ -16,17 +16,22 @@ VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
   :G4VSensitiveDetector(sdName),m_centre_in_global_coordinates(centre),Logable("GeoAndScoring"){}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Note that a SD can declare more than one hits collection!
+/// Note that a SD can declare more than one hits collection being groupped by runCollName!
 /// Bartek's note: Typically the adding HC call is being placed inside SD constructor, 
 /// within this application framework I've exposed this to the level of UserDecectorClass::DefineSensitiveDetector()
 /// method but before the G4SDManager::GetSDMpointer()->AddNewDetector(aSD) is being called
-void VPatientSD::AddHitsCollection(const G4String& hitsCollName){
-
-  auto is_added = IsHitsCollectionExist(hitsCollName);
-  if(! is_added ){
+void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName){
+  if(! IsHitsCollectionExist(hitsCollName) ){
     VPatient::HitsCollections.insert(hitsCollName); // add to global container
     collectionName.insert(hitsCollName);            // add to G4VSensitiveDetector container
     m_scoring_volumes.emplace_back(std::make_pair(hitsCollName,std::make_unique<ScoringVolume>()));
+    m_scoring_volumes.back().second->m_run_collection = runCollName;
+    // All hits collections are groupped by runCollName thus it has to be verified the new one
+    // if it is compatible with the previously added ones!
+    AcknowledgeHitsCollection(runCollName,m_scoring_volumes.back());
+    // if(runCollName=="Dose3DVoxelised"){
+    //   G4cout << "added RC"<< m_scoring_volumes.back().second->m_run_collection << G4endl;
+    // }
   }
   else {
     G4String msg =  "AddHitsCollection::The '"+hitsCollName+"' already added!";
@@ -34,6 +39,66 @@ void VPatientSD::AddHitsCollection(const G4String& hitsCollName){
     G4Exception("VPatientSD", msg, FatalException,"Verify the specified hits collection name");
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// 
+void VPatientSD::AcknowledgeHitsCollection(const G4String&runCollName,const std::pair<G4String,std::unique_ptr<ScoringVolume>>& scoring_volume){
+  bool is_ok = false;
+  G4String compatibility_reference_obj = "?";
+  G4int n_sv_of_current_run_coll = m_scoring_volumes.size();
+  if (IsHitsCollectionExist(scoring_volume.first) ){
+    if(n_sv_of_current_run_coll < 2)
+      return; // this is the very first HC added, no need to check compatibility
+    const auto& current_sv = scoring_volume.second;
+    // We have to count the number of SV of the current run collection
+    // once the different run collections can be added
+    n_sv_of_current_run_coll = 0;
+    for(const auto& sv : m_scoring_volumes){
+      if(sv.second->m_run_collection==current_sv->m_run_collection)
+        ++n_sv_of_current_run_coll;
+        if(n_sv_of_current_run_coll>2)
+          break; // no need to continue
+    }
+    if(n_sv_of_current_run_coll<2)
+          return; // this is the very first HC added of this run collection, no need to check compatibility
+
+    // The actual comparing
+    for(const auto& sv : m_scoring_volumes){
+      const auto& existing_sv = sv.second;
+      if(sv.first!=scoring_volume.first && existing_sv->m_run_collection==current_sv->m_run_collection){
+        // The first matching instance is found, compare and break
+        // - it has to ok, otherwise the new one is not compatible!
+        is_ok = current_sv == existing_sv;
+        compatibility_reference_obj = sv.first;
+        break;
+      }
+    }
+  }
+  if(!is_ok){
+    G4String msg =  "AcknowledgeHitsCollection::The '"+scoring_volume.first+"'";
+    msg+=" being added to the run collection '"+runCollName+"' is not compatible with the previous added ones!";
+    msg+=" Compatibility check performed by comparison to '"+compatibility_reference_obj+"'";
+    LOGSVC_CRITICAL("{} Verify the specified run collection name",msg);
+    G4Exception("VPatientSD", msg, FatalException,"Verify the specified run collection name");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+bool VPatientSD::ScoringVolume::operator == (const ScoringVolume& other){
+  bool is_voxelisation_eq =  m_nVoxelsX == other.m_nVoxelsX 
+                          && m_nVoxelsY == other.m_nVoxelsY 
+                          && m_nVoxelsZ == other.m_nVoxelsZ;
+  bool is_volume_eq = GetVolume() == other.GetVolume();
+  bool is_voxel_volume_eq = GetVoxelVolume() == other.GetVoxelVolume();
+  bool is_run_collection_eq = m_run_collection == other.m_run_collection;
+  
+  return   is_voxelisation_eq
+        && is_volume_eq
+        && is_voxel_volume_eq
+        && is_run_collection_eq;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is being called at beginning of event
@@ -75,7 +140,7 @@ void VPatientSD::SetScoringParameterization(const G4String& hitsCollName, int nX
   auto scoring_sd = GetScoringVolumePtr(hitsCollName); // this verify if this name exists, otherwise FatalExeption
   scoring_sd->m_nVoxelsX = nX;
   scoring_sd->m_nVoxelsY = nY;
-  scoring_sd->m_nVoxelsZ = nZ;
+  scoring_sd->m_nVoxelsZ = nZ; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,9 +172,8 @@ G4int VPatientSD::GetScoringVolumeIdx(const G4String& hitsCollName) const {
     if (i_sd.first == hitsCollName){
       ++idx; 
       break;
-    }
-    else
-      ++idx;
+    } 
+    ++idx;
   }
   if (idx < 0 ){
     G4String msg =  "GetScoringVolumeIdx::The '"+hitsCollName+"' doesn't exist!";
@@ -163,6 +227,20 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx) c
 VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(const G4String& hitsCollName){
   auto scoringSdIdx = GetScoringVolumeIdx(hitsCollName); // this verify if this name exists, otherwise FatalExeption
   return GetScoringVolumePtr(scoringSdIdx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+VPatientSD::ScoringVolume* VPatientSD::GetRunCollectionReferenceScoringVolume(const G4String& runCollName) const{
+  for(const auto& i_sd : m_scoring_volumes){
+    if (i_sd.second->m_run_collection == runCollName){
+      return i_sd.second.get();
+    }
+  }
+  G4String msg =  "GetRunCollectionReferenceScoringVolume::The '"+runCollName+"' doesn't exist!";
+  LOGSVC_CRITICAL("{} Verify the AddHitsCollection(...) calls!",msg);
+  G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

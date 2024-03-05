@@ -29,6 +29,7 @@ class IaeaPrimaryGenerator : public G4VPrimaryGenerator {
 
     ///
     void GeneratePrimaryVertex(G4Event*) override;
+    std::vector<G4PrimaryVertex*> GeneratePrimaryVertexVector(G4Event *evt);
 
   private:
     ///

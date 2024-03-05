@@ -15,6 +15,7 @@
 #include "G4RotationMatrix.hh"
 
 class G4Event;
+class G4PrimaryVertex;
 class G4VPrimaryGenerator;
 
 enum class PrimaryGeneratorType : G4int {
@@ -40,6 +41,9 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
 
   private:
     ///
+    void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
+
+    ///
     PrimaryGeneratorType m_generatorType = PrimaryGeneratorType::PhspIAEA;
 
     ///
@@ -53,6 +57,9 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
 
     ///
     static G4RotationMatrix* m_rotation_matrix;
+
+    ///
+    int m_min_p_vrtx_vec_size = 1;
 };
 
 #endif // PRIMARYGENERATIONACTION_H

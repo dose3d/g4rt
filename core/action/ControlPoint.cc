@@ -10,12 +10,13 @@ double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
 ///
-ControlPointConfig::ControlPointConfig(int id, int nevts, int rot)
+ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
+    G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
     SetRotation(config.RotationInDeg);
     FillPlanFieldMask();
 }
@@ -57,7 +58,9 @@ void ControlPoint::SetRotation(double rotationInDegree) {
         delete m_rotation;
     G4ThreeVector AxisOfRotation = G4ThreeVector(0.,1.,0.).unit();
     m_rotation = new G4RotationMatrix();
-    m_rotation->rotate(rotationInDegree, AxisOfRotation);
+    // Geant4::SystemOfUnitsconst::rad = 1.;
+    // Geant4::SystemOfUnitsconst::deg = rad*pi/180.;
+    m_rotation->rotate(rotationInDegree*deg, AxisOfRotation); // convert deg to rad
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +170,8 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
-    x_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
-    y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
+    x_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
+    y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
         LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);

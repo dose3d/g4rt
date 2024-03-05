@@ -666,10 +666,10 @@ void GeoSvc::WriteCTLikeData(){
   // FOR CT expoty - set izocentre as patient world centre
   // FOR CT expoty - set patient world size as 400.14,400.14,400.14
 
-  startingX = (-200.07 + patientEnvXPos)/4., startingY = (-200.07 + patientEnvYPos)/4., startingZ = (-200.07 + patientEnvZPos)/4.;
+  startingX = (-198.12 + patientEnvXPos), startingY = (-198.12 + patientEnvYPos), startingZ = (-198.12 + patientEnvZPos);
   stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  // xResolution = 512, yResolution = 512, zResolution = 512;
-  xResolution = 128, yResolution = 128, zResolution = 128;
+  xResolution = 512, yResolution = 512, zResolution = 512;
+  // xResolution = 256, yResolution = 256, zResolution = 256;
 
 
   // DUMP METADATA TO FILE 
@@ -681,9 +681,9 @@ void GeoSvc::WriteCTLikeData(){
   metadata_file << "y_min," << startingY  << std::endl;
   metadata_file << "z_min," << startingZ  << std::endl;
 
-  metadata_file << "x_max," << startingX+(xResolution/2.)+400.14 << std::endl;
-  metadata_file << "y_max," << startingY+(yResolution/2.)+400.14 << std::endl;
-  metadata_file << "z_max," << startingZ+(zResolution/2.)+400.14 << std::endl;
+  metadata_file << "x_max," << startingX+396.24 << std::endl;
+  metadata_file << "y_max," << startingY+396.24 << std::endl;
+  metadata_file << "z_max," << startingZ+396.24 << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;

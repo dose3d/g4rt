@@ -99,6 +99,11 @@ void RunSvc::Configure() {
   DefineUnit<bool>("PrimariesAnalysis");
   DefineUnit<bool>("BeamAnalysis");
 
+
+  // DICOM OUTPUT MANAGEMENT
+  DefineUnit<bool>("GenerateCT");
+
+
   DefineUnit<std::string>("OutputDir");
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
@@ -215,6 +220,9 @@ void RunSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("BeamAnalysis") == 0) 
     thisConfig()->SetTValue<bool>(unit, false);
   if (unit.compare("PrimariesAnalysis") == 0) 
+    thisConfig()->SetTValue<bool>(unit, false);
+
+  if (unit.compare("GenerateCT") == 0) 
     thisConfig()->SetTValue<bool>(unit, false);
 
   if (unit.compare("OutputDir") == 0) 
@@ -540,9 +548,11 @@ void RunSvc::WriteGeometryData() const {
   auto geoSvc = Service<GeoSvc>();
   geoSvc->WriteWorldToGdml();
   geoSvc->WriteWorldToTFile();
-  geoSvc->WriteCTLikeData();
   geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
   geoSvc->WriteScoringComponentsPositioningToCsv();
+    if(thisConfig()->GetValue<bool>("GenerateCT")){
+      geoSvc->WriteCTLikeData();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

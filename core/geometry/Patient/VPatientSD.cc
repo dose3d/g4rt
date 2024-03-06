@@ -22,8 +22,7 @@ VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
 /// method but before the G4SDManager::GetSDMpointer()->AddNewDetector(aSD) is being called
 void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName){
   if(! IsHitsCollectionExist(hitsCollName) ){
-    VPatient::HitsCollections.insert(hitsCollName); // add to global container
-    collectionName.insert(hitsCollName);            // add to G4VSensitiveDetector container
+    G4VSensitiveDetector::collectionName.insert(hitsCollName);  // add to G4VSensitiveDetector container
     m_scoring_volumes.emplace_back(std::make_pair(hitsCollName,std::make_unique<ScoringVolume>()));
     m_scoring_volumes.back().second->m_run_collection = runCollName;
     // All hits collections are groupped by runCollName thus it has to be verified the new one
@@ -32,6 +31,8 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
     // if(runCollName=="Dose3DVoxelised"){
     //   G4cout << "added RC"<< m_scoring_volumes.back().second->m_run_collection << G4endl;
     // }
+    VPatient::HitsCollections.insert(hitsCollName); // add to global container TO BE DELETED !!! replaced with ctrl point containter
+    ControlPoint::RegisterRunHCollection(runCollName,hitsCollName);
   }
   else {
     G4String msg =  "AddHitsCollection::The '"+hitsCollName+"' already added!";

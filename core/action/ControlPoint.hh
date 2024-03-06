@@ -101,6 +101,8 @@ class ControlPoint {
 
   private:
     friend class ControlPointRun;
+    friend class VPatientSD;
+
     ControlPointConfig m_config;
     static std::string m_sim_dir;
     std::vector<std::string> m_data_types={"Plan", "Sim"};
@@ -120,6 +122,11 @@ class ControlPoint {
 
     /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
+
+    /// Many HitsCollections can be associated to given collection name 
+    // (e.g. when many sensitive detectors constituting a single detection unit)
+    static std::map<G4String,std::vector<G4String>> m_run_collection;
+    static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);
 
     static double FIELD_MASK_POINTS_DISTANCE;
 

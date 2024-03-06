@@ -16,6 +16,8 @@
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
+std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collection = std::map<G4String,std::vector<G4String>>();
+
 namespace {
     G4Mutex CPMutex = G4MUTEX_INITIALIZER;
 }
@@ -29,13 +31,8 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 /// TODO:: Jesli komorka nie jest voxelised nie ma sensu dodawac Scoring::Voxel
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
-    auto scoring_types = Service<RunSvc>()->GetScoringTypes();
-    ///
-    /// !!!! TODO:: tobe removed by store only in control Point!!
-    /// RunAnalysis::GetRunCollection() jest to nadmiarowe!!!
-    /// Albo taki storage powinien byc tutaj prywatny!!!
-    ///
-    auto run_collections = RunAnalysis::GetRunCollection(); 
+    auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
+    auto run_collections = ControlPoint::m_run_collection; 
     LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& scoring : run_collections){
         auto scoring_name = scoring.first;
@@ -490,8 +487,7 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
 }
 
 void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
-    auto run_collections = RunAnalysis::GetRunCollection(); 
-    for(const auto& run_collection: run_collections){
+    for(const auto& run_collection: m_run_collection){
         // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){
             // Related SensitiveDetector collection ID (Geant4 architecture)
@@ -535,6 +531,13 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
+    if(m_run_collection.find( run_collection_name ) == m_run_collection.end())
+        m_run_collection[run_collection_name] = std::vector<G4String>();
+    m_run_collection.at(run_collection_name).emplace_back(hc_name);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

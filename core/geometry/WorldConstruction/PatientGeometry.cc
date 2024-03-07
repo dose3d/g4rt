@@ -228,6 +228,9 @@ void PatientGeometry::DefineSensitiveDetector() {
        configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") ) {
       G4AutoLock lock(&phantomConstructionMutex);
       m_patient->DefineSensitiveDetector();
+    } else {
+      std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
+      LOGSVC_WARN("No sensitive detector defined for patient. Any analysis is switched on ({})!",worker);
     }
   }
 }

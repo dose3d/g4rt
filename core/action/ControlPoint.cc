@@ -540,14 +540,20 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
-    if(m_run_collections.find( run_collection_name ) == m_run_collections.end())
+    if(m_run_collections.find( run_collection_name ) == m_run_collections.end()){
         m_run_collections[run_collection_name] = std::vector<G4String>();
+        LOGSVC_INFO("Register new run collection:  {} ", run_collection_name);
+    }
     m_run_collections.at(run_collection_name).emplace_back(hc_name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 std::vector<G4String> ControlPoint::GetRunCollectionNames() {
+    G4cout << "GetRunCollectionNames... " << G4endl;
     std::vector<G4String> run_collection_names;
     for(const auto& run_collection: ControlPoint::m_run_collections){
+        G4cout << "RunCollection: " << run_collection.first << G4endl;
         run_collection_names.emplace_back(run_collection.first);
     }
     return run_collection_names;

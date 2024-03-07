@@ -543,8 +543,8 @@ void RunSvc::WriteGeometryData() const {
   auto geoSvc = Service<GeoSvc>();
   geoSvc->WriteWorldToGdml();
   geoSvc->WriteWorldToTFile();
-  geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
   geoSvc->WriteScoringComponentsPositioningToCsv();
+  geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,7 @@ PhspEvtVrtxMultiplicityTreshold = 5
 PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
 NTupleAnalysis = false
-RunAnalysis = false
+RunAnalysis = true
 
 # FieldShape = "Rectangular"
 FieldShape = "Elipsoidal"

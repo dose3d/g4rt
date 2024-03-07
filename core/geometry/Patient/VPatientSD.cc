@@ -232,15 +232,18 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(const G4String& hitsC
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-VPatientSD::ScoringVolume* VPatientSD::GetRunCollectionReferenceScoringVolume(const G4String& runCollName) const{
+VPatientSD::ScoringVolume* VPatientSD::GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check) const{
   for(const auto& i_sd : m_scoring_volumes){
     if (i_sd.second->m_run_collection == runCollName){
-      return i_sd.second.get();
+      if(voxelisation_check){
+        if(i_sd.second->IsVoxelised())
+          return i_sd.second.get();
+      }
+      else {
+        return i_sd.second.get();
+      }
     }
   }
-  G4String msg =  "GetRunCollectionReferenceScoringVolume::The '"+runCollName+"' doesn't exist!";
-  LOGSVC_CRITICAL("{} Verify the AddHitsCollection(...) calls!",msg);
-  G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
   return nullptr;
 }
 

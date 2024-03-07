@@ -145,9 +145,9 @@ G4bool D3DCell::Update() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const {
-  auto rcsv = GetSD()->GetRunCollectionReferenceScoringVolume(run_collection);
-  // Note: Once the run_collection coudn't be found, the exception is being trown...
-  return rcsv->IsVoxelised();
+  if (GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true))
+    return true;
+  return false;
 }
 
 
@@ -169,7 +169,7 @@ void D3DCell::DefineSensitiveDetector(){
     G4String hcName;
     // Scoring in the centre of the cell
     // ________________________________________________________________________
-    if (D3DCell::m_set_cell_scorer){
+    // if (D3DCell::m_set_cell_scorer){
       hcName = label+"_CellCentre";
       LOGSVC_DEBUG("Current cell hcName {}", hcName);
       patientSD->AddHitsCollection("Dose3D",hcName);
@@ -177,7 +177,7 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
       NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
-    }
+    // }
 
     // Scoring in the voxelised cell
     // ________________________________________________________________________

@@ -551,7 +551,7 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
       // Generic geometry export
       gc->ExportCellPositioningToCsv(output_dir);
       // Voxelised geometry export
-      // gc->ExportVoxelPositioningToCsv(output_dir);
+      gc->ExportVoxelPositioningToCsv(output_dir);
   }
 }
 

@@ -20,7 +20,7 @@ class G4Step;
 class G4Box;
 
 class VPatientSD : public G4VSensitiveDetector, public Logable {
-    private:
+    public:
       class ScoringVolume: public Logable {
         private:
           ///
@@ -93,6 +93,7 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
           bool IsVoxelised() const;
       };
 
+  private:
       ///
       void InitializeChannelsID();
       
@@ -174,7 +175,7 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
     void SetTracksAnalysis(bool flag) { m_tracks_analysis = flag; }
 
     ///
-    ScoringVolume* GetRunCollectionReferenceScoringVolume(const G4String& runCollName) const;
+    ScoringVolume* GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check = false) const;
 
     protected:
 

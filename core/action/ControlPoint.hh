@@ -99,8 +99,9 @@ class ControlPoint {
 
     void FillEventCollections(G4HCofThisEvent* evtHC);
 
+    ///
     static std::vector<G4String> GetRunCollectionNames();
-    
+
   private:
     friend class ControlPointRun;
     friend class VPatientSD;
@@ -125,8 +126,8 @@ class ControlPoint {
     /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
 
-    /// Many HitsCollections can be associated to given collection name 
-    // (e.g. when many sensitive detectors constituting a single detection unit)
+    /// Many HitsCollections can be associated to given run collection name 
+    // (e.g. when many sensitive detectors constituting a single detection unit a.k.a ROI)
     static std::map<G4String,std::vector<G4String>> m_run_collections;
     static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);
 

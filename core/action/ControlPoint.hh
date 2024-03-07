@@ -32,7 +32,7 @@ class ControlPointConfig {
 
 class ControlPointRun : public G4Run {
   private:
-    ///
+    /// RunCollectionName / ScoringMap
     mutable std::map<G4String,ScoringMap> m_hashed_scoring_map;
     
     ///

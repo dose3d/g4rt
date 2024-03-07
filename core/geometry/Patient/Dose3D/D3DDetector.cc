@@ -474,7 +474,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // !!! By now IsAnyCellVoxelised(mLayer,run_collection) && causes 
         // std::out_of_range, wołamy o mape której nie ma...
-        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,false); // TODO: true
+        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true);
         if(cell_sv==nullptr) // no voxelisation for this cell, continue
           continue;
         auto nvx = cell_sv->m_nVoxelsX;

@@ -28,27 +28,29 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO:: Jesli komorka nie jest voxelised nie ma sensu dodawac Scoring::Voxel
+///
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
     auto run_collections = ControlPoint::m_run_collections; 
     LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
-    for(const auto& scoring : run_collections){
-        auto scoring_name = scoring.first;
+    for(const auto& run_collection : run_collections){
+        auto run_collection_name = run_collection.first;
         for(const auto& scoring_type: scoring_types){
-            LOGSVC_INFO("Adding new scoring map: {}/{}",scoring_name,Scoring::to_string(scoring_type));
-            if(m_hashed_scoring_map.find(scoring_name)==m_hashed_scoring_map.end())
-                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(scoring_name,ScoringMap()));
-            auto& scoring_collection = m_hashed_scoring_map.at(scoring_name);
-            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_name,scoring_type);
+            if(m_hashed_scoring_map.find(run_collection_name)==m_hashed_scoring_map.end()){
+                LOGSVC_INFO("Initializing new run collection map: {}/{}",run_collection_name,Scoring::to_string(scoring_type));
+                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
+            }
+            auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
+            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(run_collection_name,scoring_type);
             if(scoring_collection[scoring_type].empty()){
-                LOGSVC_INFO("Erasing {}",Scoring::to_string(scoring_type));
+                LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);
             }
             else
                 LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
         }
+        G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }
 }
 
@@ -502,12 +504,14 @@ void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
             else {
                 auto thisHitsCollPtr = evtHC->GetHC(collID);
                 if(thisHitsCollPtr) // The particular collection is stored at the current event.
-                    FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+                   FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
             }
         }
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl){
     int nHits = hitsColl->entries();
     auto hc_name = hitsColl->GetName();
@@ -517,11 +521,13 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
     auto& scoring_collection = GetRun()->GetScoringCollection(run_collection);
     for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
-        for(const auto& scoring_type: m_scoring_types){
-            auto& current_scoring_collection = scoring_collection[scoring_type];
+        // for(const auto& scoring_type: m_scoring_types){
+        for(auto& sc : scoring_collection ){
+            const auto& current_scoring_type = sc.first;
+            auto& current_scoring_collection = sc.second;
             std::size_t hashed_id;
             bool exact_volume_match = true;
-            switch (scoring_type){
+            switch (current_scoring_type){
                 case Scoring::Type::Cell:
                     hashed_id = hit->GetGlobalHashedStrId();
                     exact_volume_match = false;

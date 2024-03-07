@@ -551,7 +551,7 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
       // Generic geometry export
       gc->ExportCellPositioningToCsv(output_dir);
       // Voxelised geometry export
-      gc->ExportVoxelPositioningToCsv(output_dir);
+      // gc->ExportVoxelPositioningToCsv(output_dir);
   }
 }
 
@@ -561,7 +561,8 @@ void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
   LOGSVC_INFO("Writing Scroing Components to TFile...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
-      gc->ExportPositioningToTFile(output_dir);
+      LOGSVC_INFO("Implement me ...");
+      // gc->ExportPositioningToTFile(output_dir); to be repaired to new scoring maps scheme
   }
 }
 

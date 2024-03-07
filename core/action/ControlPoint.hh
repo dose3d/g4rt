@@ -99,6 +99,8 @@ class ControlPoint {
 
     void FillEventCollections(G4HCofThisEvent* evtHC);
 
+    static std::vector<G4String> GetRunCollectionNames();
+    
   private:
     friend class ControlPointRun;
     friend class VPatientSD;

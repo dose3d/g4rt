@@ -284,7 +284,7 @@ void D3DDetector::AcceptGeoVisitor(GeoSvc *visitor) const {
   visitor->RegisterScoringComponent(this);
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// TO BE REPAIRED
 void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) const {
   std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
   size += "_"+std::to_string(m_cell_nX_voxels)+"x"+std::to_string(m_cell_nY_voxels)+"x"+std::to_string(m_cell_nZ_voxels);
@@ -395,6 +395,14 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir) const {
+  auto run_collections = ControlPoint::GetRunCollectionNames();
+  if (run_collections.empty()) {
+    LOGSVC_WARN("D3DDetector::ExportCellPositioningToCsv:: No RunCollection found.");
+    return;
+  }
+  // Since the cell positioning is the same for all runs, we can just take the first one
+  const auto& run_collection = run_collections.at(0);
+
   // Export CellId to Placement mapping
   std::string sep = ",";
   std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
@@ -403,8 +411,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
   std::ofstream outFile;
   outFile.open(file.c_str(), std::ios::out);
   outFile << "CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep<<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<< std::endl; // data header
-  
-  auto hashed_scoring_map = GetScoringHashedMap("Dose3D",Scoring::Type::Cell);
+  auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Cell);
   for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all cells in geometry layout
     auto& hit = scoring_volume.second;
     auto hit_centre = hit.GetCentre();
@@ -416,24 +423,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
       << sep  << hit_centre.getZ() // Cell Position Z
       << std::endl;
   }
-  
-  /* PREVIOUS IMPLEMENTATION (To Be Deleted)
-  for(const auto& mLayer: m_d3d_layers){
-    auto cells = mLayer->GetCells();
-    for(const auto& cell: cells){
-      auto label = cell->GetName();
-      auto centre = cell->GetCentre();
-      auto idX = cell->GetIdX();
-      auto posX = centre.getX()/CLHEP::mm;
-      auto idY = cell->GetIdY();
-      auto posY = centre.getY()/CLHEP::mm;
-      auto idZ = cell->GetIdZ();
-      auto posZ = centre.getZ()/CLHEP::mm;
-      outFile << idX << sep << idY << sep<< idZ << sep << posX << sep << posY << sep << posZ << std::endl;
-    }
-  } */
   outFile.close();
-  std::cout << "Writing Dose3D Scroing Positioning to file "<<file<<" - done!" << std::endl;
   LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
 
 }

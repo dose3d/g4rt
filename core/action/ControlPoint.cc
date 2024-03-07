@@ -545,6 +545,14 @@ void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, c
     m_run_collections.at(run_collection_name).emplace_back(hc_name);
 }
 
+std::vector<G4String> ControlPoint::GetRunCollectionNames() {
+    std::vector<G4String> run_collection_names;
+    for(const auto& run_collection: ControlPoint::m_run_collections){
+        run_collection_names.emplace_back(run_collection.first);
+    }
+    return run_collection_names;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 // G4ThreeVector ControlPoint::GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data) const {

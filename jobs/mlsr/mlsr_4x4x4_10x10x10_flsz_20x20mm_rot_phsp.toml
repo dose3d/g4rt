@@ -38,10 +38,9 @@ MLayerShift = false
 Medium = "PMMA"
 Voxelization = [10,10,10]
 TracksAnalysis = false
-CellScorer = true
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 1
 Gantry_Angle_Per_Control_Point = [0.0,30.0]
-Particle_Counter_Per_Control_Point = [2e2,1e2]
+Particle_Counter_Per_Control_Point = [5e2,1e2]

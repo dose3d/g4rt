@@ -521,7 +521,6 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
     auto& scoring_collection = GetRun()->GetScoringCollection(run_collection);
     for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
-        // for(const auto& scoring_type: m_scoring_types){
         for(auto& sc : scoring_collection ){
             const auto& current_scoring_type = sc.first;
             auto& current_scoring_collection = sc.second;

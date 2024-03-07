@@ -41,16 +41,6 @@ class RunAnalysis {
     static std::map<G4String,std::vector<G4String>> m_run_collection;
 
     ///
-    std::set<Scoring::Type> m_scoring_types;
-
-    ///
-    void FillEventCollection(const G4String& collection_name, const G4Event *evt, VoxelHitsCollection* hitsColl);
-
-    ///
-    void FillCellEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit);
-    void FillVoxelEventCollection(std::map<std::size_t, VoxelHit>& scoring_collection, VoxelHit* hit);
-
-    ///
     CsvRunAnalysis* m_csv_run_analysis = nullptr;
     NTupleRunAnalysis* m_ntuple_run_analysis = nullptr;
 
@@ -72,11 +62,6 @@ class RunAnalysis {
 
     ///
     void EndOfEventAction(const G4Event *evt);
-
-
-    /// Many HitsCollections can be associated to given run collection
-    static void AddRunHCollection(const G4String& collection_name, const G4String& hc_name);
-    static std::map<G4String,std::vector<G4String>> GetRunCollection() { return m_run_collection; }
 
 };
 #endif //RUN_ANALYSIS_HH

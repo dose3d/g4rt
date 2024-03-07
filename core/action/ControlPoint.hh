@@ -125,7 +125,7 @@ class ControlPoint {
 
     /// Many HitsCollections can be associated to given collection name 
     // (e.g. when many sensitive detectors constituting a single detection unit)
-    static std::map<G4String,std::vector<G4String>> m_run_collection;
+    static std::map<G4String,std::vector<G4String>> m_run_collections;
     static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);
 
     static double FIELD_MASK_POINTS_DISTANCE;

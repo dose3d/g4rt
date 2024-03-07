@@ -177,7 +177,6 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
       NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
-      RunAnalysis::AddRunHCollection("Dose3D",hcName);
     }
 
     // Scoring in the voxelised cell
@@ -190,7 +189,6 @@ void D3DCell::DefineSensitiveDetector(){
       patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));  // size and position extracted from pv
       NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);
       NTupleEventAnalisys::SetTracksAnalysis("Dose3DVoxelised",m_tracks_analysis);
-      RunAnalysis::AddRunHCollection("Dose3DVoxelised",hcName);
 
     }
     // ________________________________________________________________________

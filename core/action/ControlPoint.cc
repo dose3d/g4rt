@@ -16,7 +16,7 @@
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
-std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collection = std::map<G4String,std::vector<G4String>>();
+std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collections = std::map<G4String,std::vector<G4String>>();
 
 namespace {
     G4Mutex CPMutex = G4MUTEX_INITIALIZER;
@@ -32,7 +32,7 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
-    auto run_collections = ControlPoint::m_run_collection; 
+    auto run_collections = ControlPoint::m_run_collections; 
     LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& scoring : run_collections){
         auto scoring_name = scoring.first;
@@ -486,8 +486,10 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     return 1.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// 
 void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
-    for(const auto& run_collection: m_run_collection){
+    for(const auto& run_collection: ControlPoint::m_run_collections){
         // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){
             // Related SensitiveDetector collection ID (Geant4 architecture)
@@ -517,16 +519,20 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
         for(const auto& scoring_type: m_scoring_types){
             auto& current_scoring_collection = scoring_collection[scoring_type];
+            std::size_t hashed_id;
+            bool exact_volume_match = true;
             switch (scoring_type){
                 case Scoring::Type::Cell:
-                    //TODO FillCellEventCollection(current_scoring_collection,hit);
+                    hashed_id = hit->GetGlobalHashedStrId();
+                    exact_volume_match = false;
                     break;
                 case Scoring::Type::Voxel:
-                    //TODO FillVoxelEventCollection(current_scoring_collection,hit);
+                    hashed_id = hit->GetHashedStrId();
                     break;
                 default:
                     break;
             }
+            current_scoring_collection.at(hashed_id).Cumulate(*hit,exact_volume_match);
         }
     }
 }
@@ -534,9 +540,9 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
-    if(m_run_collection.find( run_collection_name ) == m_run_collection.end())
-        m_run_collection[run_collection_name] = std::vector<G4String>();
-    m_run_collection.at(run_collection_name).emplace_back(hc_name);
+    if(m_run_collections.find( run_collection_name ) == m_run_collections.end())
+        m_run_collections[run_collection_name] = std::vector<G4String>();
+    m_run_collections.at(run_collection_name).emplace_back(hc_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

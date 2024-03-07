@@ -469,7 +469,7 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
-  G4cout<<"\n\nGetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
+  G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
@@ -483,7 +483,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashedCellString+=std::to_string(cIdY);
       hashedCellString+=std::to_string(cIdZ);
 
-      if(type==Scoring::Type::Voxel ){ 
+      if( type==Scoring::Type::Voxel ){ 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // !!! By now IsAnyCellVoxelised(mLayer,run_collection) && causes 
         // std::out_of_range, wołamy o mape której nie ma...
@@ -516,7 +516,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
             }
           }
         }
-      } else {
+      } else if (type==Scoring::Type::Cell){
         auto cellHash = std::hash<std::string>{}(hashedCellString);
         hashed_map_scoring[cellHash] = VoxelHit();
         hashed_map_scoring[cellHash].SetCentre(centre);

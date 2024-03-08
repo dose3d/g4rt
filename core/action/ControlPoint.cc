@@ -555,7 +555,6 @@ void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, c
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4String> ControlPoint::GetRunCollectionNames() {
-    G4cout << "GetRunCollectionNames... " << G4endl;
     std::vector<G4String> run_collection_names;
     for(const auto& run_collection: ControlPoint::m_run_collections){
         G4cout << "RunCollection: " << run_collection.first << G4endl;

@@ -50,7 +50,6 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
       isVoxelised = true;
     NTupleEventAnalisys::DefineTTree(runCollName,isVoxelised,hitsCollName,"Event data from cell");
     NTupleEventAnalisys::SetTracksAnalysis(hitsCollName,m_tracks_analysis);
-
   }
 };
 

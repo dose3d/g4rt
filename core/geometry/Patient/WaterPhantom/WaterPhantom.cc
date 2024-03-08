@@ -177,13 +177,10 @@ void WaterPhantom::ConstructFullVolumeScoring(const G4String& name){
   if(m_patientSD.Get()==0)
     ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
-  patientSD->AddHitsCollection("WaterPhantom",name);
-  patientSD->SetScoringParameterization(name,
-                                    m_detectorVoxelizationX,
-                                    m_detectorVoxelizationY,
-                                    m_detectorVoxelizationZ);
   auto envBox = dynamic_cast<G4Box*>(GetPhysicalVolume()->GetLogicalVolume()->GetSolid());
-  patientSD->SetScoringVolume(name,*envBox,G4ThreeVector(0,0,0));
+  patientSD->AddScoringVolume(name,name,*envBox,m_detectorVoxelizationX,
+                                                m_detectorVoxelizationY,
+                                                m_detectorVoxelizationZ);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,27 +189,18 @@ void WaterPhantom::ConstructFarmerVolumeScoring(const G4String& name){
   if(m_patientSD.Get()==0)
     ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
-  patientSD->AddHitsCollection("Farmer30013",name);
   auto farmerBox = G4Box(name+"Box",2.65*mm,2.65*mm,20*cm); 
-  patientSD->SetScoringParameterization(name,1,1,200);
-  patientSD->SetScoringVolume(name,farmerBox,G4ThreeVector(0., 0., 0.));
-
+  patientSD->AddScoringVolume(name,name,farmerBox,1,1,200);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void WaterPhantom::DefineSensitiveDetector(){
   if(m_patientSD.Get()==0){
     if(m_watertankScoring){
-      G4String scoringName = "FullVolumeWaterTank";
-      ConstructFullVolumeScoring(scoringName);
-      NTupleEventAnalisys::DefineTTree(scoringName,"TTree data from full volume water tank phantom");
-      NTupleEventAnalisys::SetTracksAnalysis(scoringName,m_tracks_analysis);
+      ConstructFullVolumeScoring("WaterTank");
     }
     if(m_farmerScoring){
-      G4String scoringName = "Farmer30013";
-      ConstructFarmerVolumeScoring(scoringName);
-      NTupleEventAnalisys::DefineTTree(scoringName,"TTree data from Farmer30013ScanZ Chamber placed in water phantom - scan in Z axis");
-      NTupleEventAnalisys::SetTracksAnalysis(scoringName,m_tracks_analysis);
+      ConstructFarmerVolumeScoring("Farmer30013");
     }
     //
     VPatient::SetSensitiveDetector("waterPhantomLV", m_patientSD.Get());

@@ -53,6 +53,8 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
     if(scoringNX > 1 || scoringNY > 1 ||scoringNZ > 1)
       isVoxelised = true;
     NTupleEventAnalisys::DefineTTree(runCollName,isVoxelised,hitsCollName,"Event data from cell");
+    NTupleEventAnalisys::SetTracksAnalysis(hitsCollName,m_tracks_analysis);
+
   }
 };
 
@@ -295,21 +297,6 @@ void VPatientSD::InitializeChannelsID(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void VPatientSD::EndOfEvent(G4HCofThisEvent* hCofThisEvent){}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void VPatientSD::SetScoringVolume(const G4String& hitsCollName, G4VPhysicalVolume* pv){
-  if (!pv) {
-    G4String msg = "SetScoringVolume::The envelope volume is empty!";
-    LOGSVC_CRITICAL("{}. Verify the given physica volume the SD assumed belong to...", msg);
-    G4Exception("VPatientSD", msg, FatalException,"Verify the given physica volume the SD assumed belong to...");
-  }
-  auto scoringSdIdx = GetScoringVolumeIdx(hitsCollName);
-  auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
-  auto translation = pv->GetTranslation();
-  SetScoringVolume(scoringSdIdx,*envBox,translation);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

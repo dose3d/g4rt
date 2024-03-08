@@ -179,7 +179,6 @@ void D3DCell::DefineSensitiveDetector(){
     }
     patientSD->AddScoringVolume("Dose3D",hcName,*envBox,nvx,nvy,nvz);
 
-    NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
 
     // ________________________________________________________________________
     VPatient::SetSensitiveDetector(label+"LV", patientSD); // this call G4SDManager::GetSDMpointer()->AddNewDetector(aSD);

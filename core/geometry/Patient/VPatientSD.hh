@@ -103,7 +103,20 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
       /// The actual volumes for scoring within given SD in which HC's are defined
       /// - as many as number of HitsCollections added by the user
       std::vector<std::pair<G4String,std::unique_ptr<ScoringVolume>>> m_scoring_volumes;
+      
+      ///
+      void SetScoringVolume(const G4String& hitsCollName, const G4Box& envelopBox, const G4ThreeVector& translation);
 
+      ///
+      void SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, const G4ThreeVector& translation);
+
+      ///
+      void SetScoringShape(const G4String& hitsCollName, const G4String& shapeName);
+
+
+      ///
+      void AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName);
+      
       ///
       void AcknowledgeHitsCollection(const G4String&runCollName,const std::pair<G4String,std::unique_ptr<ScoringVolume>>& scoring_volume);
 
@@ -140,21 +153,6 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
 
     ///
     void EndOfEvent(G4HCofThisEvent* HCE) override;
-
-    ///
-    void SetScoringVolume(const G4String& hitsCollName, G4VPhysicalVolume* pv);
-
-    ///
-    void SetScoringVolume(const G4String& hitsCollName, const G4Box& envelopBox, const G4ThreeVector& translation);
-
-    ///
-    void SetScoringShape(const G4String& hitsCollName, const G4String& shapeName);
-
-    ///
-    void SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, const G4ThreeVector& translation);
-
-    ///
-    void AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName);
 
     ///
     void AddScoringVolume(const G4String& runCollName, const G4String& hitsCollName, const G4Box& scoringBox, int scoringNX, int scoringNY, int scoringNZ, const G4ThreeVector& translation=G4ThreeVector());

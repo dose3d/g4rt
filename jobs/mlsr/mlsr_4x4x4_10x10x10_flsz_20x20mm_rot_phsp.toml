@@ -9,7 +9,6 @@ PhspEvtVrtxMultiplicityTreshold = 5
 PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
 NTupleAnalysis = true
-# TODO: NTupleAnalysisScoreTracks = true
 RunAnalysis = true
 
 # FieldShape = "Rectangular"

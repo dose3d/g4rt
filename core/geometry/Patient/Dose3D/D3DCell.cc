@@ -171,19 +171,15 @@ void D3DCell::DefineSensitiveDetector(){
     // ________________________________________________________________________
     hcName = label+"_Cell";
     LOGSVC_DEBUG("Current cell hcName {}", hcName);
-    patientSD->AddHitsCollection("Dose3D",hcName,"Dose3d event data from cell");
     G4int nvx(1), nvy(1), nvz(1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
     if(D3DCell::m_set_cell_voxelised_scorer){
       nvx = m_cell_voxelization_x;
       nvy = m_cell_voxelization_y;
       nvz = m_cell_voxelization_z;
     }
-    patientSD->SetScoringParameterization(hcName,nvx,nvy,nvz);
-    patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
-    // NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
+    patientSD->AddScoringVolume("Dose3D",hcName,*envBox,nvx,nvy,nvz);
+
     NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
-    // NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);
-    // NTupleEventAnalisys::SetTracksAnalysis("Dose3DVoxelised",m_tracks_analysis);
 
     // ________________________________________________________________________
     VPatient::SetSensitiveDetector(label+"LV", patientSD); // this call G4SDManager::GetSDMpointer()->AddNewDetector(aSD);

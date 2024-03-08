@@ -154,7 +154,10 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
     void SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, const G4ThreeVector& translation);
 
     ///
-    void AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName, const G4String& description=G4String());
+    void AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName);
+
+    ///
+    void AddScoringVolume(const G4String& runCollName, const G4String& hitsCollName, const G4Box& scoringBox, int scoringNX, int scoringNY, int scoringNZ, const G4ThreeVector& translation=G4ThreeVector());
 
     ///
     G4int GetScoringVolumeIdx(const G4String& hitsCollName) const;

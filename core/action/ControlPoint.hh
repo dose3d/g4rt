@@ -101,6 +101,7 @@ class ControlPoint {
 
     ///
     static std::vector<G4String> GetRunCollectionNames();
+    static std::set<G4String> GetHitCollectionNames();
 
   private:
     friend class ControlPointRun;

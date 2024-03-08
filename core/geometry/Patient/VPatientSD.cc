@@ -5,6 +5,7 @@
 #include <string>
 #include "PatientTrackInfo.hh"
 #include "PrimaryParticleInfo.hh"
+#include "NTupleEventAnalisys.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -20,7 +21,7 @@ VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
 /// Bartek's note: Typically the adding HC call is being placed inside SD constructor, 
 /// within this application framework I've exposed this to the level of UserDecectorClass::DefineSensitiveDetector()
 /// method but before the G4SDManager::GetSDMpointer()->AddNewDetector(aSD) is being called
-void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName){
+void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName, const G4String& description){
   if(! IsHitsCollectionExist(hitsCollName) ){
     G4VSensitiveDetector::collectionName.insert(hitsCollName);  // add to G4VSensitiveDetector container
     m_scoring_volumes.emplace_back(std::make_pair(hitsCollName,std::make_unique<ScoringVolume>()));
@@ -33,6 +34,10 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
     // }
     VPatient::HitsCollections.insert(hitsCollName); // add to global container TO BE DELETED !!! replaced with ctrl point containter
     ControlPoint::RegisterRunHCollection(runCollName,hitsCollName);
+
+    if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis"))
+      NTupleEventAnalisys::DefineTTree(runCollName,description,hitsCollName);
+
   }
   else {
     G4String msg =  "AddHitsCollection::The '"+hitsCollName+"' already added!";

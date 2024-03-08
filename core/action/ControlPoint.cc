@@ -566,6 +566,18 @@ std::vector<G4String> ControlPoint::GetRunCollectionNames() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+std::set<G4String> ControlPoint::GetHitCollectionNames() {
+    G4cout << "GetHitCollectionNames... " << G4endl;
+    std::set<G4String> hit_collection_names;
+    for(const auto& run_collection: ControlPoint::m_run_collections){
+        const auto& rc_hcs = run_collection.second;
+        hit_collection_names.insert(rc_hcs.begin(), rc_hcs.end());
+    }
+    return hit_collection_names;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 // G4ThreeVector ControlPoint::GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data) const {
 //   std::vector<const VoxelHit*> in_field_scoring_volume;
 //   for(auto& scoring_volume : data){

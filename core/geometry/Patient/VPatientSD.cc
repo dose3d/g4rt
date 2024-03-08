@@ -29,10 +29,6 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
     // All hits collections are groupped by runCollName thus it has to be verified the new one
     // if it is compatible with the previously added ones!
     AcknowledgeHitsCollection(runCollName,m_scoring_volumes.back());
-    // if(runCollName=="Dose3DVoxelised"){
-    //   G4cout << "added RC"<< m_scoring_volumes.back().second->m_run_collection << G4endl;
-    // }
-    VPatient::HitsCollections.insert(hitsCollName); // add to global container TO BE DELETED !!! replaced with ctrl point containter
     ControlPoint::RegisterRunHCollection(runCollName,hitsCollName);
   }
   else {

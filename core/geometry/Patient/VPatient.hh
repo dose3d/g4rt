@@ -41,9 +41,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ~VPatient() = default;
 
     ///
-    static std::set<G4String> HitsCollections;
-
-    ///
     void SetTracksAnalysis(bool flag) {m_tracks_analysis = flag; }
 
     ///

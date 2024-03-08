@@ -567,11 +567,12 @@ std::vector<G4String> ControlPoint::GetRunCollectionNames() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::set<G4String> ControlPoint::GetHitCollectionNames() {
-    G4cout << "GetHitCollectionNames... " << G4endl;
-    std::set<G4String> hit_collection_names;
-    for(const auto& run_collection: ControlPoint::m_run_collections){
-        const auto& rc_hcs = run_collection.second;
-        hit_collection_names.insert(rc_hcs.begin(), rc_hcs.end());
+    static std::set<G4String> hit_collection_names;
+        if(hit_collection_names.empty()){
+        for(const auto& run_collection: ControlPoint::m_run_collections){
+            const auto& rc_hcs = run_collection.second;
+            hit_collection_names.insert(rc_hcs.begin(), rc_hcs.end());
+        }
     }
     return hit_collection_names;
 }

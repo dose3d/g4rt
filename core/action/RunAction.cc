@@ -24,7 +24,7 @@ RunAction::RunAction():G4UserRunAction(){
   auto analysisManager = G4AnalysisManager::Instance();
   // auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")  )
-    analysisManager->SetNtupleMerging(false); // TODO somehow its use thread-shared objects?
+    analysisManager->SetNtupleMerging(false); // we do manual merge, see RunSvc::MergeOutput
   analysisManager->SetVerboseLevel(0);
   //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "RunAnalysis"))

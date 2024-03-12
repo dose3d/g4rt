@@ -561,7 +561,7 @@ void RunSvc::MergeOutput(bool cleanUp) const {
   auto files_to_merge = svc::getFilesInDir(sim_dir,".root");
   auto geo_dir = GeoSvc::GetOutputDir();
   auto files_to_merge_geo = svc::getFilesInDir(geo_dir,".root");
-  if ((Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads"))>1){
+  if ((Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads"))>0){
     auto additional_files_to_merge = svc::getFilesInDir(sim_dir+"/subjobs",".root");
     files_to_merge.insert(std::end(files_to_merge), std::begin(additional_files_to_merge), std::end(additional_files_to_merge));
   }

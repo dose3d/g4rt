@@ -376,6 +376,7 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VoxelHit& VoxelHit::operator+=(const VoxelHit& other){
+  // TODO: m_Voxel.m_Dose+=other.GetDose()*other.GetVolume() / GetVolume(); Tu też? 
   m_Voxel.m_Dose+=other.GetDose();
   return *this;
 }

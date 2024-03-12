@@ -8,51 +8,62 @@
 #include "G4SDManager.hh"
 #include "VoxelHit.hh"
 #include "G4AnalysisManager.hh"
+#include "CsvRunAnalysis.hh"
+#include "NTupleRunAnalysis.hh"
+#include "Services.hh"
+#ifdef G4MULTITHREADED
+  #include "G4MTRunManager.hh"
+#endif
+
+RunAnalysis::RunAnalysis(){
+  if(!m_is_initialized){
+    if(!m_csv_run_analysis) // TODO: && RUN_CSV_ANALYSIS
+        m_csv_run_analysis = CsvRunAnalysis::GetInstance();
+    if(!m_ntuple_run_analysis) // TODO: && RUN_NTUPLE_ANALYSIS
+        m_ntuple_run_analysis = NTupleRunAnalysis::GetInstance();
+    // TODO: RUN_HDF5_ANALYSIS
+  }
+  m_is_initialized = true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 RunAnalysis *RunAnalysis::GetInstance() {
-  static RunAnalysis instance = RunAnalysis();
-  return &instance;
+    static RunAnalysis instance = RunAnalysis();
+    return &instance;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
-  // Extract from VPatient geometry information, and define NTuples structure
-  //
-  //auto analysisManager =  G4AnalysisManager::Instance();
+    m_current_cp = Service<RunSvc>()->CurrentControlPoint();
+    std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
+    LOGSVC_DEBUG("RunAnalysis:: begin of run at {} thread.",worker);
+    // Note: Everything is being care by ControlPointRun::InitializeScoringCollection
+}
 
-  // Book Voxel data Ntuple
-  //------------------------------------------
-  // TODO: define any TTree ?
-
-  // Book histograms
-  //------------------------------------------
-  //for(int i =0; i<200; ++i) m_voxelTotalDoseZProfile.Push_back(0.);
-  //auto histId = analysisManager->CreateH1("PDD","PDD",200,0,40);
-  //m_pddHistId.Put(histId);
-
+////////////////////////////////////////////////////////////////////////////////
+/// This member is called at the end of every event from EventAction::EndOfEventAction
+void RunAnalysis::EndOfEventAction(const G4Event *evt){
+    auto hCofThisEvent = evt->GetHCofThisEvent();
+    m_current_cp->FillEventCollections(hCofThisEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunAnalysis::FillEvent(G4double totalEvEnergy) {}
+void RunAnalysis::EndOfRun(const G4Run* runPtr){
+    LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
+    // Note: Multithreading merging is being performed before...
+   
+    if(m_csv_run_analysis){
+        m_csv_run_analysis->WriteDoseToCsv(runPtr);
+        m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
+    }
 
-////////////////////////////////////////////////////////////////////////////////
-/// This member is called at the end of every event from EventAction::EndOfEventAction
-void RunAnalysis::EndOfEventAction(const G4Event *evt){}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunAnalysis::ClearEventData(){}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunAnalysis::EndOfRun(){
-//  auto analysisManager = G4AnalysisManager::Instance();
-//  auto hist = analysisManager->GetH1(m_pddHistId.Get());
-//  for(int i =0; i<200; ++i)
-//    hist->set_bin_content(i,m_voxelTotalDoseZProfile[i]);
+    if(m_ntuple_run_analysis){
+        m_ntuple_run_analysis->WriteDoseToTFile(runPtr);
+        m_ntuple_run_analysis->WriteFieldMaskToTFile(runPtr);
+    }
 }

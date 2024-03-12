@@ -23,3 +23,7 @@ scripts/__pycache__
 output/*
 out/*
 jobs/test/*
+
+# To prevent tracking of all directores named "Test" created on testing propouses.
+*/Test/*
+# 

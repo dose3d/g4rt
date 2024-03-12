@@ -20,11 +20,13 @@ class G4Step;
 class G4Box;
 
 class VPatientSD : public G4VSensitiveDetector, public Logable {
-    private:
+    public:
       class ScoringVolume: public Logable {
         private:
           ///
           G4bool IsInsideFarmer30013(const G4ThreeVector& position) const;
+
+          ///
 
         public:
           ScoringVolume():Logable("GeoAndScoring"){}
@@ -32,6 +34,9 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
           G4int m_nVoxelsX = 0;
           G4int m_nVoxelsY = 0;
           G4int m_nVoxelsZ = 0;
+
+          ///
+          G4String m_run_collection;
 
           ///
           std::unique_ptr<G4Box> m_envelopeBoxPtr = nullptr;
@@ -81,8 +86,14 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
           ///
           G4bool IsInside(const G4ThreeVector& position) const;
           G4bool IsOnBorder(const G4ThreeVector& position) const;
+
+          bool operator == (const ScoringVolume& other);
+
+          ///
+          bool IsVoxelised() const;
       };
 
+  private:
       ///
       void InitializeChannelsID();
       
@@ -92,6 +103,22 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
       /// The actual volumes for scoring within given SD in which HC's are defined
       /// - as many as number of HitsCollections added by the user
       std::vector<std::pair<G4String,std::unique_ptr<ScoringVolume>>> m_scoring_volumes;
+      
+      ///
+      void SetScoringVolume(const G4String& hitsCollName, const G4Box& envelopBox, const G4ThreeVector& translation);
+
+      ///
+      void SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, const G4ThreeVector& translation);
+
+      ///
+      void SetScoringShape(const G4String& hitsCollName, const G4String& shapeName);
+
+
+      ///
+      void AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName);
+      
+      ///
+      void AcknowledgeHitsCollection(const G4String&runCollName,const std::pair<G4String,std::unique_ptr<ScoringVolume>>& scoring_volume);
 
       /// 
           
@@ -128,19 +155,7 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
     void EndOfEvent(G4HCofThisEvent* HCE) override;
 
     ///
-    void SetScoringVolume(const G4String& hitsCollName, G4VPhysicalVolume* pv);
-
-    ///
-    void SetScoringVolume(const G4String& hitsCollName, const G4Box& envelopBox, const G4ThreeVector& translation);
-
-    ///
-    void SetScoringShape(const G4String& hitsCollName, const G4String& shapeName);
-
-    ///
-    void SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, const G4ThreeVector& translation);
-
-    ///
-    void AddHitsCollection(const G4String& hitsCollName);
+    void AddScoringVolume(const G4String& runCollName, const G4String& hitsCollName, const G4Box& scoringBox, int scoringNX, int scoringNY, int scoringNZ, const G4ThreeVector& translation=G4ThreeVector());
 
     ///
     G4int GetScoringVolumeIdx(const G4String& hitsCollName) const;
@@ -160,6 +175,9 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
     ///
     void SetTracksAnalysis(bool flag) { m_tracks_analysis = flag; }
 
+    ///
+    ScoringVolume* GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check = false) const;
+
     protected:
 
     ///
@@ -168,10 +186,9 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
     // G4double GetSizeZ(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeZ();}
 
     ///
-    ScoringVolume* GetScoringVolumePtr(const G4String& hitsCollName);
     ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx) const;
     ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx);
-
+    ScoringVolume* GetScoringVolumePtr(const G4String& hitsCollName);
     ///
     std::vector<G4String> GetScoringVolumeNames() const;
 

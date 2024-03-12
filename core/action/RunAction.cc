@@ -24,9 +24,11 @@ RunAction::RunAction():G4UserRunAction(){
   auto analysisManager = G4AnalysisManager::Instance();
   // auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")  )
-    analysisManager->SetNtupleMerging(false); // TODO somehow its use thread-shared objects?
+    analysisManager->SetNtupleMerging(false); // we do manual merge, see RunSvc::MergeOutput
   analysisManager->SetVerboseLevel(0);
   //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "RunAnalysis"))
+    m_run_scoring = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -38,17 +40,16 @@ RunAction::~RunAction(){
 /////////////////////////////////////////////////////////////////////////////
 ///
 G4Run* RunAction::GenerateRun(){
+  auto control_point = Service<RunSvc>()->CurrentControlPoint();
   if (IsMaster()){
-    auto runSvc = Service<RunSvc>();
-    auto control_point = runSvc->CurrentControlPoint();
+    // control_point->InitializeRun();
     G4cout << FGRN("[INFO]")<<":: " << FBLU("GENERATING NEW RUN... ") << G4endl;
     G4cout << FGRN("[INFO]")<<":: NEvents: " << control_point->GetNEvts() << G4endl;
     auto rot = control_point->GetRotation();
     if(rot)
       G4cout << FGRN("[INFO]")<<":: Rotation: " << *control_point->GetRotation() << G4endl;
   }
-
-  return new G4Run();
+  return control_point->GenerateRun(m_run_scoring);
 }
 
 
@@ -100,14 +101,14 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
     world->WriteInfo();
   }
 
-  MyTime.Start();
+  m_timer.Start();
 }
 
 /////////////////////////////////////////////////////////////////////////////
 ///
-void RunAction::EndOfRunAction(const G4Run *) {
-  MyTime.Stop();
-  G4double loopRealElapsedTime = MyTime.GetRealElapsed();
+void RunAction::EndOfRunAction(const G4Run* aRun) {
+  m_timer.Stop();
+  G4double loopRealElapsedTime = m_timer.GetRealElapsed();
   if (IsMaster()) {
     G4cout << "Global-loop elapsed time [s] : " << loopRealElapsedTime << G4endl;
   }
@@ -118,6 +119,11 @@ void RunAction::EndOfRunAction(const G4Run *) {
   auto analysisManager = G4AnalysisManager::Instance();
   analysisManager->Write();
   analysisManager->CloseFile();
+
+  //___________________________________________________________________________
+  auto configSvc = Service<ConfigSvc>();
+  if(configSvc->GetValue<bool>("RunSvc", "RunAnalysis") && IsMaster())
+    RunAnalysis::GetInstance()->EndOfRun(aRun);
 
   // Service<RunSvc>()->EndOfRun();
 }

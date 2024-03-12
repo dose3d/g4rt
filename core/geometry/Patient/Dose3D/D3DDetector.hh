@@ -46,8 +46,8 @@ class D3DDetector : public VPatient, public GeoComponet{
     std::string SetGeometrySource();
     
     ///
-    bool IsAnyCellVoxelised(int idx) const;
-    bool IsAnyCellVoxelised(D3DMLayer* layer) const;
+    bool IsAnyCellVoxelised(int idx, const G4String& run_collection) const;
+    bool IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const;
 
     ///
     void ExportCellPositioningToCsv(const std::string& path_to_output_dir) const override;
@@ -57,8 +57,7 @@ class D3DDetector : public VPatient, public GeoComponet{
     void ExportLayerPads(const std::string& path_to_output_dir) const;
 
     //
-    std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const override;
-    std::map<std::size_t, VoxelHit> GetScoringHashedMap(Scoring::Type type) const override;
+    std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
   private:
 

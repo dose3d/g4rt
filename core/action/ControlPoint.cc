@@ -1,22 +1,188 @@
 #include "ControlPoint.hh"
 #include "Services.hh"
 #include "NTupleEventAnalisys.hh"
+#include "RunAnalysis.hh"
 #include "IO.hh"
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
+#include "D3DCell.hh"
+#include "G4SDManager.hh"
+#ifdef G4MULTITHREADED
+    #include "G4Threading.hh"
+    #include "G4MTRunManager.hh"
+#endif
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
 std::string ControlPoint::m_sim_dir = "sim";
 
+std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collections = std::map<G4String,std::vector<G4String>>();
+
+namespace {
+    G4Mutex CPMutex = G4MUTEX_INITIALIZER;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void ControlPointRun::InitializeScoringCollection(){
+    std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
+    auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
+    auto run_collections = ControlPoint::m_run_collections; 
+    LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
+    for(const auto& run_collection : run_collections){
+        auto run_collection_name = run_collection.first;
+        for(const auto& scoring_type: scoring_types){
+            if(m_hashed_scoring_map.find(run_collection_name)==m_hashed_scoring_map.end()){
+                LOGSVC_INFO("Initializing new run collection map: {}/{}",run_collection_name,Scoring::to_string(scoring_type));
+                m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
+            }
+            auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
+            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(run_collection_name,scoring_type);
+            if(scoring_collection[scoring_type].empty()){
+                LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
+                scoring_collection.erase(scoring_type);
+            }
+            else
+                LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
+        }
+        G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::Merge(const G4Run* worker_run){
+    LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
+    auto cell_size = D3DCell::SIZE;
+    auto cell_volume = cell_size*cell_size*cell_size;
+    auto merge = [&](ScoringMap& left, const ScoringMap& right){
+        for(auto& scoring : left){
+            G4double total_dose(0);
+            auto& type = scoring.first;
+            bool isVoxel = type == Scoring::Type::Voxel ? true : false;
+            LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
+            auto& hashed_scoring_left = scoring.second;
+            const auto& hashed_scoring_right = right.at(type);
+            for(auto& hashed_voxel : hashed_scoring_left){
+                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
+                auto voxel_volume = hashed_voxel.second.GetVolume();
+                if(isVoxel && voxel_volume < cell_volume){
+                    //LOGSVC_INFO("Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
+                    total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
+                } else {
+                    total_dose += hashed_voxel.second.GetDose();
+                }
+            }
+            LOGSVC_INFO("Total dose: {}",total_dose);
+        } 
+    };
+
+    for(auto& scoring : m_hashed_scoring_map){
+        auto scoring_name = scoring.first;
+        LOGSVC_INFO("Merging collection: {}",scoring_name);
+        auto& master_scoring = scoring.second;
+        // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
+        const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
+        // LOGSVC_DEBUG("Worker scoring #types: {}",worker_scoring.size());
+        merge(master_scoring,worker_scoring);
+    }
+
+    // Realease memory after merging... we don't need this anymore.
+    dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.clear();
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
+    if (m_hashed_scoring_map.find(name) == m_hashed_scoring_map.end())
+        LOGSVC_ERROR("Couldn't find scoring collection in current run: {}",name)
+    return m_hashed_scoring_map.at(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::EndOfRun(){
+    if(m_hashed_scoring_map.size()>0){
+        LOGSVC_INFO("ControlPointRun::EndOfRun...");
+        FillDataTagging();
+    }
+    else {
+        LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
+        return;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::FillDataTagging(){
+    auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+    for(auto& scoring_map: m_hashed_scoring_map){
+        LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
+        auto& hashed_scoring_map = scoring_map.second;
+
+        std::vector<const VoxelHit*> in_field_scoring_volume;
+
+        auto getActivityGeoCentre = [&](bool weighted){
+            G4ThreeVector sum{0,0,0};
+            G4double total_dose{0};
+            std::for_each(  in_field_scoring_volume.begin(),
+                            in_field_scoring_volume.end(),
+                            [&](const VoxelHit* iv) {
+                        sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
+                        total_dose += iv->GetDose();
+                        });
+            if(total_dose<1e-30){
+                LOGSVC_WARN("No activity found!");
+            }
+            if(weighted){
+                LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
+                return total_dose == 0 ? sum : sum / total_dose;
+            }
+            else{
+                auto size = in_field_scoring_volume.size();
+                LOGSVC_INFO("getActivityGeoCentre: size: {}",size);
+                return size > 0 ? sum / size : sum;
+            }
+        };
+
+        auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
+            auto mask_tag = current_cp->GetInFieldMaskTag(hit.GetCentre());
+            auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
+            auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
+            hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
+        };
+
+        for(auto& scoring: hashed_scoring_map){
+            auto scoring_type = scoring.first;
+            LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
+            auto& data = scoring.second;
+            in_field_scoring_volume.clear();
+            for(auto& hit : data){
+                if(current_cp->IsInField(hit.second.GetCentre()))
+                    in_field_scoring_volume.push_back(&hit.second);
+            }
+            auto geo_centre = getActivityGeoCentre(false);
+            LOGSVC_INFO("Geocentre: {}",geo_centre);
+            auto wgeo_centre = getActivityGeoCentre(true);
+            LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
+            for(auto& hit : data){
+                fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
+    m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
     FillPlanFieldMask();
 }
@@ -25,6 +191,7 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
 ///
 ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
     m_rotation = new G4RotationMatrix(*cp.m_rotation);
+    m_scoring_types = cp.m_scoring_types;
     m_plan_mask_points = cp.m_plan_mask_points;
     m_sim_mask_points = cp.m_sim_mask_points;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
@@ -34,6 +201,7 @@ ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
+    m_scoring_types = cp.m_scoring_types;
     m_rotation = cp.m_rotation;
     cp.m_rotation = nullptr;
     m_plan_mask_points = cp.m_plan_mask_points;
@@ -45,10 +213,21 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::~ControlPoint() {
-    if (m_rotation) 
-        delete m_rotation;
-    m_rotation = nullptr;
+    if (m_rotation) delete m_rotation; m_rotation = nullptr;
+    // for(auto run : m_mt_run){
+    //     delete run;
+    //     //TODO m_mt_run.erase(run);
+    // }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+/// Multi-thread safe method
+G4Run* ControlPoint::GenerateRun(bool scoring){
+    G4AutoLock lock(&CPMutex);
+    m_mt_run.push_back(new ControlPointRun(scoring));
+    m_cp_run.Put(m_mt_run.back());
+    return m_mt_run.back();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -110,22 +289,6 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
     LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "GetFieldMask", FatalErrorInArgument , msg);
     return m_plan_mask_points;
-}
- 
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteIntegratedDoseToFile(bool tfile, bool csv) const {
-    LOGSVC_DEBUG("Writing integrated dose to file");
-
-// GetPatientScoring(Scoring::Type stype){
-//     std::string name = Scoring::to_string(stype);
-//   if (m_hashed_scoring.find(stype) != m_hashed_scoring.end()) {
-//     LOGSVC_DEBUG("Override existing scoring: {}",name)
-//   }
-//   m_hashed_scoring[stype] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(name,true);
-//   if(m_hashed_scoring[stype].empty()){
-//     LOGSVC_WARN("Empty scoring map instantiated for {}!",name);
-//   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,330 +372,6 @@ void ControlPoint::FillPlanFieldMaskFromRTPlan(){
     G4String msg = "Field Mask RTPlan type not implemented yet!";
     LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::FillScoringData(){
-    if(m_is_scoring_data_filled) 
-        return;
-
-    LOGSVC_INFO("Filling scoring data (CP-{})",GetId());
-
-    auto getTreeName = [&](){
-        // TODO: Once the m_scoring_types includes Voxel the [...]Voxelised[...] tree should be picked up
-        auto scoring_collection = NTupleEventAnalisys::TreeCollection();
-        for(const auto& scoring : scoring_collection){
-            LOGSVC_INFO("Scoring type: {}",scoring.m_name);
-        }
-        return std::string("Dose3DVoxelisedTTree"); // FIXED
-    };
-
-    auto treeName = getTreeName();
-
-    bool voxelised = false;
-    if(treeName.find("Voxel") != std::string::npos)
-        voxelised = true;
-    else {
-        // Once there is no corresponding TTree we shouldn't consider anymore
-        // this scoring type:
-        m_scoring_types.erase(Scoring::Type::Voxel);
-    }
-
-    auto isHashedScoringExists = [&](Scoring::Type type){
-        if (m_hashed_scoring_map.find(type) != m_hashed_scoring_map.end())
-            return true;
-        return false;
-    };
-
-    for(const auto& scoring_type: m_scoring_types){
-        if(!isHashedScoringExists(scoring_type)){
-            LOGSVC_INFO("Adding new map for scoring type: {}",Scoring::to_string(scoring_type));
-            m_hashed_scoring_map[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(scoring_type);
-        }
-    }
-
-    TTree* tree = nullptr;
-    // Now get data from the corresponding tfile/tree
-    auto singleRootTfile =  GetSimOutputTFileName();
-    std::cout << "singleRootTfile " << singleRootTfile << std::endl;
-
-    // auto chain = 
-    if (svc::checkIfFileExist(singleRootTfile)){
-        auto f = std::make_unique<TFile>(TString(singleRootTfile));
-        tree = static_cast<TTree*>(f->Get(TString(treeName)));
-        std::cout << "got  " << singleRootTfile << std::endl;
-
-    }
-    else{
-        auto subjob_dir = GetOutputDir()+"/subjobs";
-        std::cout << "getting  " << subjob_dir << std::endl;
-
-        auto filelist = svc::getFilesInDir(subjob_dir);
-        tree = new TChain(treeName.c_str());
-        for (const auto &file : filelist){
-            auto f_s = std::make_unique<TFile>(TString(file.c_str()));
-            auto tree_s = static_cast<TTree*>(f_s->Get(TString(treeName)));
-
-            std::cout << "File  "  << file << std::endl;
-            std::cout << "Tree entries:  "  << tree_s->GetEntriesFast() << std::endl;
-
-            dynamic_cast<TChain*>(tree)->AddFile(file.c_str());
-        }
-        // tree = static_cast<TTree*>(f->GetTree());
-        std::cout << "Chain n trees " << dynamic_cast<TChain*>(tree)->GetNtrees() << std::endl;
-
-    }
-
-    G4int cIdx; tree->SetBranchAddress("CellIdX",&cIdx);
-    G4int cIdy; tree->SetBranchAddress("CellIdY",&cIdy);
-    G4int cIdz; tree->SetBranchAddress("CellIdZ",&cIdz);
-    G4double c_dose; tree->SetBranchAddress("CellDose",&c_dose);
-
-    G4int vIdx;
-    G4int vIdy;
-    G4int vIdz;
-    G4double v_dose; 
-    if(voxelised){
-        tree->SetBranchAddress("VoxelIdX",&vIdx);
-        tree->SetBranchAddress("VoxelIdY",&vIdy);
-        tree->SetBranchAddress("VoxelIdZ",&vIdz);
-        tree->SetBranchAddress("VoxelDose",&v_dose);
-    }
-
-    auto nentries = tree->GetEntries();
-    LOGSVC_INFO("Reading {}",GetSimOutputTFileName());
-    LOGSVC_INFO("NEntries {} ({})",nentries,getTreeName());
-    for (Long64_t i=0;i<nentries;i++) {
-        tree->GetEntry(i);
-        auto hash_str = std::to_string(cIdx);
-        hash_str+= std::to_string(cIdy);
-        hash_str+= std::to_string(cIdz);
-        auto hash_key_c = std::hash<std::string>{}(hash_str);
-        auto& cell_hit = m_hashed_scoring_map[Scoring::Type::Cell].at(hash_key_c);
-        cell_hit.SetDose(cell_hit.GetDose()+c_dose);
-        if(voxelised){
-            hash_str+= std::to_string(vIdx);
-            hash_str+= std::to_string(vIdy);
-            hash_str+= std::to_string(vIdz);
-            auto hash_key = std::hash<std::string>{}(hash_str);
-            auto& voxel_hit = m_hashed_scoring_map[Scoring::Type::Voxel].at(hash_key);
-            voxel_hit.SetDose(voxel_hit.GetDose()+v_dose);
-        }
-    }
-    m_is_scoring_data_filled = true;
-    FillScoringDataTagging();
-    LOGSVC_INFO("Filling scoring data (CP-{}) - done!",GetId());
-    delete tree;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::FillScoringDataTagging(){
-    LOGSVC_INFO("Filling scoring tagging....");
-    std::vector<const VoxelHit*> in_field_scoring_volume;
-
-    auto getActivityGeoCentre = [&](bool weighted){
-        G4ThreeVector sum{0,0,0};
-        G4double total_dose{0};
-        std::for_each(  in_field_scoring_volume.begin(),
-                        in_field_scoring_volume.end(),
-                        [&](const VoxelHit* iv) {
-                    sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
-                    total_dose += iv->GetDose();
-                    });
-        if(weighted){
-            LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
-            return total_dose == 0 ? sum : sum / total_dose;
-        }
-        else{
-            auto size = in_field_scoring_volume.size();
-            LOGSVC_INFO("getActivityGeoCentre: size: {}",size);
-            return size > 0 ? sum / size : sum;
-        }
-    };
-
-    auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
-        auto mask_tag = GetInFieldMaskTag(hit.GetCentre());
-        auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
-        auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
-        hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
-    };
-
-    for(auto& scoring_type: m_scoring_types){
-        LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
-        auto& data = m_hashed_scoring_map[scoring_type];
-        in_field_scoring_volume.clear();
-        for(auto& hit : data){
-            if(IsInField(hit.second.GetCentre()))
-                in_field_scoring_volume.push_back(&hit.second);
-        }
-        auto geo_centre = getActivityGeoCentre(false);
-        LOGSVC_INFO("Geocentre: {}",geo_centre);
-        auto wgeo_centre = getActivityGeoCentre(true);
-        LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
-        for(auto& hit : data){
-            fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteFieldMaskToTFile() const {
-    auto fname = GetOutputFileName()+"_field_mask.root";
-    auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
-    auto file = IO::CreateOutputTFile(fname,dir_name);
-    auto cp_dir = file->GetDirectory(dir_name.c_str());
-    for(const auto& type : m_data_types){
-        auto field_mask = GetFieldMask(type);
-        if(field_mask.size()>0){
-            auto linearized_mask_vec = svc::linearizeG4ThreeVector(field_mask);
-            std::string name = "FieldMask_"+type;
-            cp_dir->WriteObject(&linearized_mask_vec,name.c_str());
-            file->Write();
-        }
-    }
-    file->Close();
-    LOGSVC_INFO("Writing Field Mask to file: {} - done!",file->GetName()); // LOGSVC_DEBUG
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteFieldMaskToCsv() const {
-    for(const auto& type : m_data_types){
-        LOGSVC_INFO("Writing field mask (type={}) to CSV...",type);
-        auto field_mask = GetFieldMask(type);
-        if(field_mask.size()>0){
-            auto file = GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
-            std::string header = "X [mm],Y [mm],Z [mm]";
-            std::ofstream c_outFile;
-            c_outFile.open(file.c_str(), std::ios::out);
-            c_outFile << header << std::endl;
-            for(auto& mp : field_mask)
-                c_outFile << mp.getX() << "," << mp.getY() << "," << mp.getZ() << std::endl;
-            c_outFile.close();
-            LOGSVC_INFO("Writing Field Mask to file {} - done!",file);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteVolumeDoseAndTaggingToTFile(){
-    if(!m_is_scoring_data_filled) 
-        FillScoringData();
-    auto fname = GetOutputFileName()+"_dose_and_volume_tagging.root";
-    auto dir_name = "RT_Plan/CP_"+std::to_string(GetId());
-    auto file = IO::CreateOutputTFile(fname,dir_name);
-    auto cp_dir = file->GetDirectory(dir_name.c_str());
-    for(const auto& scoring_type: m_scoring_types) {
-        auto& data = m_hashed_scoring_map[scoring_type];
-        auto type = Scoring::to_string(scoring_type);
-        std::vector<double> linearized_mask_vec;
-        std::vector<double> infield_tag_vec;
-        std::vector<double> geo_tag_vec;
-        std::vector<double> geo_tag_weighted_vec;
-        std::vector<double> dose_vec;
-        for(auto& scoring : data){
-            auto pos = scoring.second.GetCentre();
-            for(const auto& i :  svc::linearizeG4ThreeVector(pos))
-                linearized_mask_vec.emplace_back(i);
-            infield_tag_vec.emplace_back(scoring.second.GetMaskTag());
-            geo_tag_vec.emplace_back(scoring.second.GetGeoTag());
-            geo_tag_weighted_vec.emplace_back(scoring.second.GetWeigthedGeoTag());
-            dose_vec.emplace_back(scoring.second.GetDose());
-        }
-        std::string name_pos = "VolumeFieldMaskTagPosition_"+type;
-        std::string name_ftag = "VolumeFieldMaskTagValue_"+type;
-        std::string name_gtag = "VolumeGeoTagValue_"+type;
-        std::string name_wgtag = "VolumeWeightedGeoTagValue_"+type;
-        std::string name_dose = "Dose_"+type;
-        cp_dir->WriteObject(&linearized_mask_vec,name_pos.c_str());
-        cp_dir->WriteObject(&infield_tag_vec,name_ftag.c_str());
-        cp_dir->WriteObject(&geo_tag_vec,name_gtag.c_str());
-        cp_dir->WriteObject(&geo_tag_weighted_vec,name_wgtag.c_str());
-        cp_dir->WriteObject(&dose_vec,name_dose.c_str());
-        file->Write();
-    }
-    file->Close();
-    LOGSVC_INFO("Writing Scoring Volume Field Mask to file {} - done!",file->GetName());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::WriteVolumeDoseAndTaggingToCsv(){
-    if(!m_is_scoring_data_filled) 
-        FillScoringData();
-    
-    auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
-        auto cxId = hit.GetGlobalID(0);
-        auto cyId = hit.GetGlobalID(1);
-        auto czId = hit.GetGlobalID(2);
-        auto vxId = hit.GetID(0);
-        auto vyId = hit.GetID(1);
-        auto vzId = hit.GetID(2);
-        auto volume_centre = hit.GetCentre();
-        auto dose = hit.GetDose();
-        auto geoTag = hit.GetGeoTag();
-        auto wgeoTag = hit.GetWeigthedGeoTag();
-        auto inField = hit.GetMaskTag();
-        file <<cxId<<","<<cyId<<","<<czId;
-        if(voxelised)
-            file <<","<<vxId<<","<<vyId<<","<<vzId;
-        file <<","<<volume_centre.getX()<<","<<volume_centre.getY()<<","<<volume_centre.getZ();
-        file <<","<<dose<<","<< inField <<","<< geoTag<<","<< wgeoTag;
-        file <<","<< dose / ( geoTag * inField );
-        file <<","<< dose / ( wgeoTag * inField ) << std::endl;
-    };
-
-    for(const auto& scoring_type: m_scoring_types) {
-        auto& data = m_hashed_scoring_map[scoring_type];
-        auto type = Scoring::to_string(scoring_type);
-        auto file = GetOutputFileName()+"_dose_and_volume_tagging_"+svc::tolower(type)+".csv";
-        std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
-        if(scoring_type==Scoring::Type::Voxel)
-            header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
-
-        std::ofstream c_outFile;
-        c_outFile.open(file.c_str(), std::ios::out);
-        c_outFile << header << std::endl;
-        for(auto& scoring : data){
-            writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);
-            // auto pos = scoring.second.GetCentre();
-            // auto trans_pos = TransformToMaskPosition(pos);
-            // auto inFieldTag = scoring.second.GetMaskTag();
-            // c_outFile   << pos.getX() << ","
-            //             << pos.getY() << "," 
-            //             << pos.getZ() << "," 
-            //             << trans_pos.getX() << ","
-            //             << trans_pos.getY() << "," 
-            //             << trans_pos.getZ() << "," 
-            //             << inFieldTag << std::endl;
-        }
-        c_outFile.close();
-        LOGSVC_INFO("Writing scoring volume field mask to file {} - done!",file);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::ClearCachedData() {
-    m_hashed_scoring_map.clear();
-    m_is_scoring_data_filled = false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::IntegrateAndWriteTotalDoseToTFile(){
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPoint::IntegrateAndWriteTotalDoseToCsv(){
-    // Integration is based on individual control points integration dumped to csv
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -635,6 +474,94 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
         return 1. / (closest_dist/FIELD_MASK_POINTS_DISTANCE);
     }
     return 1.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// 
+void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
+    for(const auto& run_collection: ControlPoint::m_run_collections){
+        // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
+        for(const auto& hc: run_collection.second){
+            // Related SensitiveDetector collection ID (Geant4 architecture)
+            auto collID = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
+            // collID==-1 the collection is not found
+            // collID==-2 the collection name is ambiguous
+            if(collID<0){
+                LOGSVC_INFO("ControlPoint::FillEventCollections: HC: {} / G4SDManager Err: {}", hc, collID);
+            }
+            else {
+                auto thisHitsCollPtr = evtHC->GetHC(collID);
+                if(thisHitsCollPtr) // The particular collection is stored at the current event.
+                   FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl){
+    int nHits = hitsColl->entries();
+    auto hc_name = hitsColl->GetName();
+    if(nHits==0){
+        return; // no hits in this event
+    }
+    auto& scoring_collection = GetRun()->GetScoringCollection(run_collection);
+    for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
+        auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
+        for(auto& sc : scoring_collection ){
+            const auto& current_scoring_type = sc.first;
+            auto& current_scoring_collection = sc.second;
+            std::size_t hashed_id;
+            bool exact_volume_match = true;
+            switch (current_scoring_type){
+                case Scoring::Type::Cell:
+                    hashed_id = hit->GetGlobalHashedStrId();
+                    exact_volume_match = false;
+                    break;
+                case Scoring::Type::Voxel:
+                    hashed_id = hit->GetHashedStrId();
+                    break;
+                default:
+                    break;
+            }
+            current_scoring_collection.at(hashed_id).Cumulate(*hit,exact_volume_match);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
+    if(m_run_collections.find( run_collection_name ) == m_run_collections.end()){
+        m_run_collections[run_collection_name] = std::vector<G4String>();
+        LOGSVC_INFO("Register new run collection:  {} ", run_collection_name);
+    }
+    m_run_collections.at(run_collection_name).emplace_back(hc_name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::vector<G4String> ControlPoint::GetRunCollectionNames() {
+    std::vector<G4String> run_collection_names;
+    for(const auto& run_collection: ControlPoint::m_run_collections){
+        G4cout << "RunCollection: " << run_collection.first << G4endl;
+        run_collection_names.emplace_back(run_collection.first);
+    }
+    return run_collection_names;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::set<G4String> ControlPoint::GetHitCollectionNames() {
+    static std::set<G4String> hit_collection_names;
+        if(hit_collection_names.empty()){
+        for(const auto& run_collection: ControlPoint::m_run_collections){
+            const auto& rc_hcs = run_collection.second;
+            hit_collection_names.insert(rc_hcs.begin(), rc_hcs.end());
+        }
+    }
+    return hit_collection_names;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

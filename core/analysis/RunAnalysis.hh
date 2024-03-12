@@ -10,51 +10,58 @@
 #include "G4ThreeVector.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Cache.hh"
+#include "VoxelHit.hh"
+#include "Types.hh"
 
+class ControlPoint;
+class CsvRunAnalysis;
+class NTupleRunAnalysis;
 class G4Event;
 class G4Run;
+
+typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
 class RunAnalysis {
 
   private:
-  ///
-  RunAnalysis() = default;
+    ///
+    RunAnalysis();
 
-  ///
-  ~RunAnalysis() = default;
+    ///
+    ~RunAnalysis() = default;
 
-  /// Delete the copy and move constructors
-  RunAnalysis(const RunAnalysis &) = delete;
+    /// Delete the copy and move constructors
+    RunAnalysis(const RunAnalysis &) = delete;
+    RunAnalysis &operator=(const RunAnalysis &) = delete;
+    RunAnalysis(RunAnalysis &&) = delete;
+    RunAnalysis &operator=(RunAnalysis &&) = delete;
 
-  RunAnalysis &operator=(const RunAnalysis &) = delete;
+    /// Many HitsCollections can be associated to given collection name 
+    // (e.g. when many sensitive detectors constituting a single detection unit)
+    static std::map<G4String,std::vector<G4String>> m_run_collection;
 
-  RunAnalysis(RunAnalysis &&) = delete;
+    ///
+    CsvRunAnalysis* m_csv_run_analysis = nullptr;
+    NTupleRunAnalysis* m_ntuple_run_analysis = nullptr;
 
-  RunAnalysis &operator=(RunAnalysis &&) = delete;
+    ///
+    bool m_is_initialized = false;
 
-  // TODO
-  // zdefiniować histogram do ktorego bede ustawial wartosci poprzez SetBinContent()
-  //G4VectorCache<G4double> m_voxelTotalDoseZProfile; // suma po wszystkich eventa (nie robic .Clear())
-  //G4Cache<G4int> m_pddHistId;
+    ///
+    ControlPoint* m_current_cp = nullptr;
 
   public:
-  ///
-  static RunAnalysis* GetInstance();
+    ///
+    static RunAnalysis* GetInstance();
 
-  ///
-  void FillEvent(G4double totalEvEnergy);
+    ///
+    void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
 
-  ///
-  void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
+    ///
+    void EndOfRun(const G4Run* runPtr);
 
-  ///
-  void EndOfRun();
-
-  ///
-  void EndOfEventAction(const G4Event *evt);
-
-  ///
-  void ClearEventData();
+    ///
+    void EndOfEventAction(const G4Event *evt);
 
 };
 #endif //RUN_ANALYSIS_HH

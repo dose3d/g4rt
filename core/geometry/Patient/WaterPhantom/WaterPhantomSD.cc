@@ -45,7 +45,7 @@ G4bool WaterPhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   }
 
   // ____________________________________________________________________________
-  for(const auto& hcName : WaterPhantom::HitsCollections)
+  for(const auto& hcName : ControlPoint::GetHitCollectionNames())
     ProcessHitsCollection(hcName,aStep); 
 
   // ____________________________________________________________________________

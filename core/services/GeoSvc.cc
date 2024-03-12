@@ -646,6 +646,9 @@ void GeoSvc::WriteWorldToTFile() {
 }
 
 void GeoSvc::WriteCTLikeData(){
+
+  // Service<DicomSvc>()->ExportPatientToCT("test","test");
+
   G4Navigator* g4Navigator = new G4Navigator();
   g4Navigator->SetWorldVolume(World()->GetPhysicalVolume());
   auto output_dir = GetOutputDir()+"/DikomlikeData/Images";
@@ -662,17 +665,16 @@ void GeoSvc::WriteCTLikeData(){
   auto patientEnvYPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
+  // TODO - granice CT - grznice świata pacjenta - voxel size jako patient geometry properties...  configSvc()->GetValue<double>("PatientGeometry", "CTPixelSize")
+
   auto patientPositionInEnv = Patient()->GetSurfacePositioning();
 
-  // FOR CT expoty - set izocentre as patient world centre
-  // FOR CT expoty - set patient world size as 400.14,400.14,400.14
-
-  startingX = svc::round_with_prec((-198.12 + patientEnvXPos),4);
-  startingY = svc::round_with_prec((-198.12 + patientEnvYPos),4);
-  startingZ = svc::round_with_prec((-198.12 + patientEnvZPos),4);
+  startingX = svc::round_with_prec((-198.12 + patientEnvXPos)/4,4);
+  startingY = svc::round_with_prec((-198.12 + patientEnvYPos)/4,4);
+  startingZ = svc::round_with_prec((-198.12 + patientEnvZPos)/4,4);
   stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  xResolution = 512, yResolution = 512, zResolution = 512;
-  // xResolution = 256, yResolution = 256, zResolution = 256;
+  // xResolution = 512, yResolution = 512, zResolution = 512;
+  xResolution = 128, yResolution = 128, zResolution = 128;
 
 
   // DUMP METADATA TO FILE 
@@ -698,8 +700,6 @@ void GeoSvc::WriteCTLikeData(){
 
   metadata_file << "SSD," << svc::round_with_prec((1000 + patientEnvZPos + patientPositionInEnv.getZ()),4) << std::endl;
 
-
-
   for( int y = 0; y < yResolution; y++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << y+1 ;
@@ -716,12 +716,15 @@ void GeoSvc::WriteCTLikeData(){
         currentPos.setY((startingY+stepY*y));
         currentPos.setZ((startingZ+stepZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        // materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
       }
     }
     c_outFile.close();
   }
+
+  auto dicomSvc = Service<DicomSvc>();
+  auto dciom_dir = GetOutputDir()+"/../DicomCt/";
+  dicomSvc->ExportPatientToCT(output_dir,dciom_dir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

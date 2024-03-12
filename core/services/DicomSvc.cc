@@ -6,8 +6,8 @@
 #include <pybind11/numpy.h>
 #include "LogSvc.hh"
 
-namespace py = pybind11;
-using namespace py::literals;
+// namespace py = pybind11;
+// using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -147,3 +147,8 @@ unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
   // To be done when you will not use the 0 beam and control point 0.
   return 100; // dummy number
 }
+
+void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const {
+    m_ct_svc.set_output_path(output_path);
+    m_ct_svc.create_ct_series(series_csv_path);
+  }

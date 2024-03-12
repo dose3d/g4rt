@@ -77,16 +77,6 @@ void ControlPointRun::Merge(const G4Run* worker_run){
                 } else {
                     total_dose += hashed_voxel.second.GetDose();
                 }
-
-                // if(isVoxel){
-                //     G4cout<<G4endl;
-                //     // hashed_voxel.second.Print();
-                //     // G4cout<<G4endl;
-                //     // hashed_scoring_right.at(hashed_voxel.first).Print();
-                //     G4cout<< "Dose: " <<hashed_scoring_right.at(hashed_voxel.first).GetDose() << G4endl;
-                //     G4cout<< "Total: " << total_dose << G4endl;
-                //     G4cout<<G4endl;
-                // }
             }
             LOGSVC_INFO("Total dose: {}",total_dose);
         } 

@@ -66,26 +66,16 @@ void ControlPointRun::Merge(const G4Run* worker_run){
             auto& type = scoring.first;
             bool isVoxel = type == Scoring::Type::Voxel ? true : false;
             LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
-            // LOGSVC_INFO("\n\tTotal dose should be 0!!!: {}\n\t",total_dose);
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
-            // LOGSVC_INFO("\n\tTotal dose: {}\n\t",total_dose);
             for(auto& hashed_voxel : hashed_scoring_left){
-                
-                // hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
+                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
                 auto voxel_volume = hashed_voxel.second.GetVolume();
-                    
                 if(isVoxel && voxel_volume < cell_volume){
                     //LOGSVC_INFO("Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
-                    // total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
-                    total_dose += hashed_scoring_right.at(hashed_voxel.first).GetDose()*voxel_volume/cell_volume;
-
-                    // LOGSVC_INFO("\n\tPartial dose: {}\n",hashed_voxel.second.GetDose()*voxel_volume/cell_volume);
+                    total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
                 } else {
-                    // total_dose += hashed_voxel.second.GetDose();
-                    total_dose += hashed_scoring_right.at(hashed_voxel.first).GetDose();
-                    // LOGSVC_INFO("\n\tPartial dose: {}\n",hashed_voxel.second.GetDose());
-
+                    total_dose += hashed_voxel.second.GetDose();
                 }
 
                 // if(isVoxel){
@@ -98,7 +88,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
                 //     G4cout<<G4endl;
                 // }
             }
-            LOGSVC_INFO("\n\tTotal dose: {}\n\t",total_dose);
+            LOGSVC_INFO("Total dose: {}",total_dose);
         } 
     };
 

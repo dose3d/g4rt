@@ -36,8 +36,8 @@ MLayerShift = false
 Medium = "RMPS470"
 Voxelization = [2,2,2]
 TracksAnalysis = true
-WriteCellTTree = true
-WriteVoxelisedCellTTree = true
+CellScorer = true
+CellVoxelisedScorer = true
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 1

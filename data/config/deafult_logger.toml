@@ -13,6 +13,6 @@ LogFileName = "run_svc_info.log"
 
 [Log_GeoAndScoring]
 LogLevel = "debug"
-Console = "false"
+Console = "true"
 FilePattern = "[%Y-%m-%d %H:%M:%S.%e] %@ %n [%^%l%$] %v"
 LogFileName = "geo_and_scoring_debug.log"

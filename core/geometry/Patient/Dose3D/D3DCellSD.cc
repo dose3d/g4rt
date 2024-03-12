@@ -18,7 +18,6 @@ D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is being called for each G4Step in sensitive volume
 G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
-  
   // The TouchableHistory is used to obtain the physical volume of the hit
   // i.e. get volume where G4Step is remember 
   // Note: PostStep on the boundary "belongs" to next volume hence we use PreStepPoint!
@@ -44,7 +43,7 @@ G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // ____________________________________________________________________________
   auto thisSdHCNames = GetScoringVolumeNames(); // it may happen that there is more instances of this SD type, 
   // hence Hits Collections existing independent from this cell geometry. 
-  for(const auto& hcName : D3DCell::HitsCollections){
+  for(const auto& hcName : ControlPoint::GetHitCollectionNames()){
     if(find(thisSdHCNames.begin(), thisSdHCNames.end(), hcName) != thisSdHCNames.end())
       ProcessHitsCollection(hcName,aStep); 
   }

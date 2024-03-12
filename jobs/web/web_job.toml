@@ -38,8 +38,8 @@ MLayerShift = false
 Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 TracksAnalysis = false
-WriteCellTTree = false
-WriteVoxelisedCellTTree = true
+CellScorer = false
+CellVoxelisedScorer = true
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 2

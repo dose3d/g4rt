@@ -92,9 +92,8 @@ void DishCubePhantom::DefineSensitiveDetector(){
     // The full tank scoring:
     // ________________________________________________________________________
     G4String hcName = "DishCubePhantom";
-    patientSD->AddHitsCollection(hcName);
-    patientSD->SetScoringVolume(hcName,pv);  // size and position extracted from pv
-    patientSD->SetScoringParameterization(hcName,10,10,20); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
+    auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
+    patientSD->AddScoringVolume(hcName,hcName,*envBox,10,10,20,pv->GetTranslation());
 
     // Dish 1 scoring:
     // ________________________________________________________________________

@@ -65,7 +65,7 @@ class D3DCell : public VPatient {
     void ParseTomlConfig() override {}
 
     ///
-    bool IsVoxelised() const;
+    bool IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const;
 
     ///
     int GetNXVoxels() const { return m_cell_voxelization_x; }
@@ -73,10 +73,10 @@ class D3DCell : public VPatient {
     int GetNZVoxels() const { return m_cell_voxelization_z; }
 
     ///
-    void static WriteCellTtree(G4bool val) { m_write_cell_ttree = val; }
+    void static CellScorer(G4bool val);
 
     ///
-    void static WriteVoxelisedCellTtree(G4bool val) { m_write_voxelised_cell_ttree = val; }
+    void static CellVoxelisedScorer(G4bool val);
 
 
   private:
@@ -107,10 +107,10 @@ class D3DCell : public VPatient {
     G4int m_id_z = -1;
 
     ///
-    static G4bool m_write_cell_ttree;
+    static G4bool m_set_cell_scorer;
 
     ///
-    static G4bool m_write_voxelised_cell_ttree;
+    static G4bool m_set_cell_voxelised_scorer;
 };
 
 #endif  // D3D_CELL_HH

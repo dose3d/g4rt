@@ -9,6 +9,7 @@
 #include "ConfigSvc.hh"
 #include "G4UserLimits.hh"
 #include "NTupleEventAnalisys.hh"
+#include "RunAnalysis.hh"
 #include "colors.hh"
 #include <vector>
 #include "Services.hh"
@@ -18,8 +19,24 @@ G4double D3DCell::SIZE = 10.4 * mm;
 // G4double D3DCell::SIZE = 2 * cm;
 
 
-G4bool D3DCell::m_write_cell_ttree = true;
-G4bool D3DCell::m_write_voxelised_cell_ttree = true;
+G4bool D3DCell::m_set_cell_scorer = true;
+G4bool D3DCell::m_set_cell_voxelised_scorer = true;
+////////////////////////////////////////////////////////////////////////////////
+/// static
+void D3DCell::CellScorer(G4bool val) { 
+  m_set_cell_scorer = val; 
+  // if(!val){ // by default it's set to true
+  //   Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Cell);
+  // }
+}
+////////////////////////////////////////////////////////////////////////////////
+/// static
+void D3DCell::CellVoxelisedScorer(G4bool val) { 
+  m_set_cell_voxelised_scorer = val; 
+  if(!val){ // by default it's set to true
+    Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Voxel);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -127,8 +144,8 @@ G4bool D3DCell::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DCell::IsVoxelised() const {
-  if(m_cell_voxelization_x>1 || m_cell_voxelization_y>1 || m_cell_voxelization_z>1)
+bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const {
+  if (GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true))
     return true;
   return false;
 }
@@ -152,27 +169,17 @@ void D3DCell::DefineSensitiveDetector(){
     G4String hcName;
     // Scoring in the centre of the cell
     // ________________________________________________________________________
-    if (D3DCell::m_write_cell_ttree){
-      hcName = label+"_CellCentre";
-      LOGSVC_DEBUG("Current cell hcName {}", hcName);
-      patientSD->AddHitsCollection(hcName);
-      patientSD->SetScoringParameterization(hcName,1,1,1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
-      patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));
-      NTupleEventAnalisys::DefineTTree("Dose3D","TTree data from cell as a single voxel scoring",hcName);
-      NTupleEventAnalisys::SetTracksAnalysis("Dose3D",m_tracks_analysis);
+    hcName = label+"_Cell";
+    LOGSVC_DEBUG("Current cell hcName {}", hcName);
+    G4int nvx(1), nvy(1), nvz(1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
+    if(D3DCell::m_set_cell_voxelised_scorer){
+      nvx = m_cell_voxelization_x;
+      nvy = m_cell_voxelization_y;
+      nvz = m_cell_voxelization_z;
     }
+    patientSD->AddScoringVolume("Dose3D",hcName,*envBox,nvx,nvy,nvz);
 
-    // Scoring in the voxelised cell
-    // ________________________________________________________________________
-    if (D3DCell::m_write_voxelised_cell_ttree){
-      hcName = label+"_VoxelisedCell";
-      LOGSVC_DEBUG("Hits Collection Name: {}",hcName);
-      patientSD->AddHitsCollection(hcName);
-      patientSD->SetScoringParameterization(hcName,m_cell_voxelization_x,m_cell_voxelization_y,m_cell_voxelization_z); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
-      patientSD->SetScoringVolume(hcName,*envBox,G4ThreeVector(0,0,0));  // size and position extracted from pv
-      NTupleEventAnalisys::DefineTTree("Dose3DVoxelised","TTree data from vexelised cell scoring",hcName);
-      NTupleEventAnalisys::SetTracksAnalysis("Dose3DVoxelised",m_tracks_analysis);
-    }
+
     // ________________________________________________________________________
     VPatient::SetSensitiveDetector(label+"LV", patientSD); // this call G4SDManager::GetSDMpointer()->AddNewDetector(aSD);
 

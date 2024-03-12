@@ -36,7 +36,7 @@ G4bool SciSlicePhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   }
 
   // ____________________________________________________________________________
-  for(const auto& hcName : SciSlicePhantom::HitsCollections)
+  for(const auto& hcName : ControlPoint::GetHitCollectionNames())
     ProcessHitsCollection(hcName,aStep); 
 
   // ____________________________________________________________________________

@@ -98,6 +98,9 @@ class VoxelHit final : public G4VHit {
   ///
   bool m_tracks_analysis = false;
 
+  ///
+  VoxelHit& operator+=(const VoxelHit& other);
+
   public:
   ///
   VoxelHit() = default;
@@ -112,10 +115,18 @@ class VoxelHit final : public G4VHit {
   inline void operator delete(void *);
 
   ///
+  bool operator==(const VoxelHit& other) const;
+  bool IsAligned(const VoxelHit& other, bool global_and_local = true) const;
+
+  ///
+  VoxelHit& Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check = true);
+
+  ///
   void Draw() override {};
 
   ///
-  void Print() override;
+  void Print() override; // shit happens
+  void Print() const;
 
   ///
   void SetId(G4int xId, G4int yId, G4int zId);
@@ -137,6 +148,9 @@ class VoxelHit final : public G4VHit {
 
   ///
   G4double GetVolume() const {return m_Voxel.m_Volume; }
+
+  ///
+  void SetMass(G4double mass) {m_Voxel.m_Mass=mass; }
 
   ///
   G4ThreeVector GetGravCentre() const { return m_Voxel.m_GravitationalCentre; }
@@ -226,6 +240,10 @@ class VoxelHit final : public G4VHit {
   G4double GetGeoTag() const { return m_geo_tag; }
   G4double GetWeigthedGeoTag() const { return m_wgeo_tag; }
   G4double GetMaskTag() const { return m_mask_tag; }
+
+  ///
+  std::size_t GetGlobalHashedStrId() const;
+  std::size_t GetHashedStrId() const;
 
 };
 

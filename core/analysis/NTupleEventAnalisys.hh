@@ -40,9 +40,8 @@ class NTupleEventAnalisys {
         G4int m_evtId = -1;
         G4int m_ntupleId = -1;
         std::map<G4String, G4int> m_colId; // variable index within NTuples structure
-        bool m_cell_tree_structure = false;
+        bool m_cell_tree_structure = true;
         bool m_voxel_tree_structure = false;
-        bool m_cell_in_voxel_tree_structure = false;
         bool m_tracks_analysis = false;
         bool m_minimalistic_ttree = true;
         G4double m_global_time = 0.;
@@ -72,6 +71,7 @@ class NTupleEventAnalisys {
       public:
         G4String m_name;
         G4String m_description;
+        bool m_voxel_tree_structure = false;
         bool m_tracks_analysis = false;
         /// Single or many HitsCollections can be related to single tree,
         /// see NTupleEventAnalisys::DefineTTree definition
@@ -129,7 +129,7 @@ class NTupleEventAnalisys {
     void EndOfEventAction(const G4Event *evt);
 
     /// Once the scoringVolumeName remain empty it means that tree is related to single hits collection
-    static void DefineTTree(const G4String& treeName, const G4String& treeDescription, const G4String& scoringVolumeName=G4String());
+    static void DefineTTree(const G4String& treeName, bool cellVoxelisation=false, const G4String& hcName=G4String(), const G4String& treeDescription=G4String());
 
     ///
     static void SetTracksAnalysis(const G4String& treeName, bool flag);

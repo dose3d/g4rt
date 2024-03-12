@@ -27,15 +27,18 @@ NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& treeDescription,const G4String& scoringVolumeName){
+void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
+    return;
 
-  if(scoringVolumeName.empty()){
-    LOGSVC_INFO("Creating tree: {}",treeName);
+  if(hcName.empty()){
+    LOGSVC_INFO("Defining TTree: {}",treeName);
     // Given tree is related to single scoring volume (hits collection)
     m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
     m_ttree_collection.back().m_name = treeName;
     m_ttree_collection.back().m_hc_names.emplace_back(treeName);
     m_ttree_collection.back().m_description = treeDescription;
+    m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
   }
   else {
     // Given tree is related to many scoring volume (hits collection)
@@ -51,13 +54,14 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& 
         ++treeIdx;
     }
     if (!treeExists){
-      LOGSVC_INFO("Creating tree: {}",treeName);
+      LOGSVC_INFO("Defining TTree: {}",treeName);
       m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
       m_ttree_collection.back().m_name = treeName;
       m_ttree_collection.back().m_description = treeDescription;
-      m_ttree_collection.back().m_hc_names.emplace_back(scoringVolumeName);
+      m_ttree_collection.back().m_hc_names.emplace_back(hcName);
+      m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
     } else {
-      m_ttree_collection.at(treeIdx).m_hc_names.emplace_back(scoringVolumeName);
+      m_ttree_collection.at(treeIdx).m_hc_names.emplace_back(hcName);
     }
   }
 }
@@ -65,6 +69,8 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, const G4String& 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
+    return;
   for(auto& tree : m_ttree_collection){
     if (tree.m_name==treeName){
       //G4cout<< "[INFO]:: NTupleEventAnalisys:: Set Tracks Analysis for " << treeName << " to:" << flag << G4endl;
@@ -76,6 +82,8 @@ void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
+    return;
   // Book Voxel data Ntuple for all HitsColletions
   //------------------------------------------
   m_runId = runPtr->GetRunID();
@@ -95,7 +103,7 @@ void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
   auto treeName = treeColl.m_name+m_treeNamePostfix;
   auto treeDescription = treeColl.m_description;
-  G4cout << "[DEUBG]:: NTupleEventAnalisys:: creating "<< treeDescription << G4endl;
+  G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree "<< treeDescription << G4endl;
   auto analysisManager =  G4AnalysisManager::Instance();
   m_ntuple_collection.Insert(treeName,TTreeEventCollection());
   auto& evtNTupleColl = m_ntuple_collection.Get(treeName);
@@ -103,17 +111,7 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
   evtNTupleColl.m_ntupleId = ntupleId;
   evtNTupleColl.m_tracks_analysis = treeColl.m_tracks_analysis;
   evtNTupleColl.m_minimalistic_ttree = treeColl.m_minimalistic;
-  if(treeName == "Dose3DTTree")
-    evtNTupleColl.m_cell_tree_structure = true;
-
-  if(treeName == "Dose3DVoxelisedTTree"){ 
-    evtNTupleColl.m_voxel_tree_structure = true;
-    evtNTupleColl.m_cell_in_voxel_tree_structure = true;
-  }
-
-  if(treeName == "FullVolumeWaterTankTTree" || treeName == "Farmer30013TTree" || treeName == "Farmer30013ScanZTTree") 
-    evtNTupleColl.m_voxel_tree_structure = true;
-  
+  evtNTupleColl.m_voxel_tree_structure = treeColl.m_voxel_tree_structure;
 
   /* NOTE:
     The G4AnalysisManager CreateNtuple(X)Column creates each column with unique ID,
@@ -164,17 +162,6 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
 
   // Any voxel-like scoring (+ Dose-3D scope)
   if(evtNTupleColl.m_voxel_tree_structure){
-    if(evtNTupleColl.m_cell_in_voxel_tree_structure){
-      createNtupleIColumn("CellIdX");
-      createNtupleIColumn("CellIdY");
-      createNtupleIColumn("CellIdZ");
-      if(!treeColl.m_minimalistic){
-        createNtupleDColumn("CellPositionX");
-        createNtupleDColumn("CellPositionY");
-        createNtupleDColumn("CellPositionZ");
-      }
-      createNtupleDColumn("CellDose");
-    }
     createNtupleIColumn("VoxelIdX");
     createNtupleIColumn("VoxelIdY");
     createNtupleIColumn("VoxelIdZ");
@@ -251,7 +238,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
       evtColl.m_CellPositionZ.push_back(cell_centre.z());
     }
 
-    auto voxelDose = hit->GetDose() / gray;
+    auto voxelDose = hit->GetDose(); // note: it's in gray already;
     auto size = D3DCell::SIZE;
     double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
@@ -380,17 +367,6 @@ void NTupleEventAnalisys::FillNTupleEvent(){
 
         }
         if(treeEvtColl.m_voxel_tree_structure){
-          if(treeEvtColl.m_cell_in_voxel_tree_structure){
-            fillNtupleIColumn("CellIdX",treeEvtColl.m_CellIdX.at(i));
-            fillNtupleIColumn("CellIdY",treeEvtColl.m_CellIdY.at(i));
-            fillNtupleIColumn("CellIdZ",treeEvtColl.m_CellIdZ.at(i));
-            if(!minimalistic_ttree){
-              fillNtupleDColumn("CellPositionX",treeEvtColl.m_CellPositionX.at(i));
-              fillNtupleDColumn("CellPositionY",treeEvtColl.m_CellPositionY.at(i));
-              fillNtupleDColumn("CellPositionZ",treeEvtColl.m_CellPositionZ.at(i));
-            }
-            fillNtupleDColumn("CellDose",treeEvtColl.m_CellIDose.at(i));
-          }
           fillNtupleIColumn("VoxelIdX",treeEvtColl.m_VoxelIdX.at(i));
           fillNtupleIColumn("VoxelIdY",treeEvtColl.m_VoxelIdY.at(i));
           fillNtupleIColumn("VoxelIdZ",treeEvtColl.m_VoxelIdZ.at(i));

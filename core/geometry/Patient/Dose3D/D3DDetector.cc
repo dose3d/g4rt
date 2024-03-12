@@ -14,6 +14,8 @@
 #include <vector>
 #include <array>
 #include "IO.hh"
+#include "VPatientSD.hh"
+
 
 std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_scoring_map_template = std::map<std::string, std::map<std::size_t, VoxelHit>>();
 
@@ -100,10 +102,10 @@ void D3DDetector::ParseTomlConfig(){
 
   m_tracks_analysis = config[configObjCell]["TracksAnalysis"].value_or(false);
 
-  G4bool write_cell_ttree = config[configObjCell]["WriteCellTTree"].value_or(true);
-  D3DCell::WriteCellTtree(write_cell_ttree);
-  G4bool write_voxcell_ttree = config[configObjCell]["WriteVoxelisedCellTTree"].value_or(true);
-  D3DCell::WriteVoxelisedCellTtree(write_voxcell_ttree);
+  G4bool cell_scorer = config[configObjCell]["CellScorer"].value_or(true);
+  D3DCell::CellScorer(cell_scorer);
+  G4bool voxcell_scorer = config[configObjCell]["CellVoxelisedScorer"].value_or(true);
+  D3DCell::CellVoxelisedScorer(voxcell_scorer);
   }
 
 
@@ -282,7 +284,7 @@ void D3DDetector::AcceptGeoVisitor(GeoSvc *visitor) const {
   visitor->RegisterScoringComponent(this);
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// TO BE REPAIRED
 void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) const {
   std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
   size += "_"+std::to_string(m_cell_nX_voxels)+"x"+std::to_string(m_cell_nY_voxels)+"x"+std::to_string(m_cell_nZ_voxels);
@@ -293,7 +295,7 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
     std::vector<double> linearized_positioning;
     std::vector<int> linearized_id_global;
     std::vector<int> linearized_id;
-    auto hashed_scoring_map = GetScoringHashedMap(type);
+    auto hashed_scoring_map = GetScoringHashedMap("Dose3D",type);
     for(auto& scoring_volume : hashed_scoring_map){
       auto& hit = scoring_volume.second;
       auto volume_centre = hit.GetCentre();
@@ -325,74 +327,80 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir) const {
-
-  std::string sep = ",";
-  std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
-  size += "_"+std::to_string(m_cell_nX_voxels)+"x"+std::to_string(m_cell_nY_voxels)+"x"+std::to_string(m_cell_nZ_voxels);
-  std::string file = "/detector_" + size + "_voxel_positioning.csv";
-  file = path_to_out_dir + file;
-  std::ofstream outFile;
-  outFile.open(file.c_str(), std::ios::out);
-  outFile <<"CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep;
-  outFile <<"VoxelIdX"<<sep<<"VoxelIdY"<<sep<<"VoxelIdZ"<<sep;
-  outFile <<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<<sep;
-  outFile <<"VoxelPosX[mm]"<<sep<<"VoxelPosY[mm]"<<sep<<"VoxelPosZ[mm]"<< std::endl; // data header
-
-  auto hashed_scoring_map = GetScoringHashedMap(Scoring::Type::Voxel);
-  for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all voxels in geometry layout
-    auto& hit = scoring_volume.second;
-    auto hit_centre_global = hit.GetGlobalCentre();
-    auto hit_centre = hit.GetCentre();
-    outFile   << hit.GetGlobalID(0) // Cell ID X
-      << sep  << hit.GetGlobalID(1) // Cell ID Y
-      << sep  << hit.GetGlobalID(2) // Cell ID Z
-      << sep  << hit.GetID(0) // Voxel ID X
-      << sep  << hit.GetID(1) // Voxel ID Y
-      << sep  << hit.GetID(2) // Voxel ID Z
-      << sep  << hit_centre_global.getX() // Cell Position X
-      << sep  << hit_centre_global.getY() // Cell Position Y
-      << sep  << hit_centre_global.getZ() // Cell Position Z
-      << sep  << hit_centre.getX() // Voxel Position X
-      << sep  << hit_centre.getY() // Voxel Position Y
-      << sep  << hit_centre.getZ() // Voxel Position Z
-      << std::endl;
+  auto run_collections = ControlPoint::GetRunCollectionNames();
+  G4cout << "DEBUG1 Writing Dose3D Voxel scroing positioning to csv..." << G4endl;
+  if (run_collections.empty()) {
+    LOGSVC_WARN("D3DDetector::ExportVoxelPositioningToCsv:: Any RunCollection found.");
+    return;
   }
-
-  /* PREVIOUS IMPLEMENTATION (To Be Deleted)
-  auto cell_size = D3DCell::SIZE;
-  for(const auto& mLayer: m_d3d_layers){
-    // G4cout << "[DEBUG]:: D3DDetector:: mLayer: " << mLayer->GetName() << G4endl;
-    auto cells = mLayer->GetCells();
-    for(const auto& cell: cells){
-      auto label = cell->GetName();
-      auto centre = cell->GetCentre();
-      // G4cout << "[DEBUG]:: D3DDetector:: cell: " << label << " centre:" << centre << G4endl;
-      auto idX = cell->GetIdX();
-      auto posX = centre.getX()/CLHEP::mm;
-      auto idY = cell->GetIdY();
-      auto posY = centre.getY()/CLHEP::mm;
-      auto idZ = cell->GetIdZ();
-      auto posZ = centre.getZ()/CLHEP::mm;
-      for(int voxelIteratorX = 0; voxelIteratorX < m_cell_nX_voxels; voxelIteratorX++){
-        for(int voxelIteratorY = 0; voxelIteratorY < m_cell_nY_voxels; voxelIteratorY++){
-          for(int voxelIteratorZ = 0; voxelIteratorZ < m_cell_nZ_voxels; voxelIteratorZ++){
-            auto subPositionX = ((posX - (cell_size/2.)) + cell_size/((m_cell_nX_voxels)*(2.)) + ((voxelIteratorX)*(cell_size))/(m_cell_nX_voxels));
-            auto subPositionY = ((posY - (cell_size/2.)) + cell_size/((m_cell_nY_voxels)*(2.)) + ((voxelIteratorY)*(cell_size))/(m_cell_nY_voxels));
-            auto subPositionZ = ((posZ - (cell_size/2.)) + cell_size/((m_cell_nZ_voxels)*(2.)) + ((voxelIteratorZ)*(cell_size))/(m_cell_nZ_voxels));
-            outFile << idX << sep << idY << sep<< idZ << sep << voxelIteratorX << sep << voxelIteratorY << sep<< voxelIteratorZ << sep << posX << sep << posY << sep << posZ << sep << subPositionX << sep << subPositionY << sep << subPositionZ << std::endl;
-          }
-        }
-      }
+  //
+  // Export takes place for each run collection that is found with cell voxelisation
+  //
+  std::string sep = ",";
+  for(const auto& run_collection : run_collections){
+    G4cout << "DEBUG2:: Writing Dose3D Voxel scroing positioning for RunCollection: " << run_collection << G4endl;
+    auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Voxel);
+    if(hashed_scoring_map.empty()){
+      LOGSVC_DEBUG("D3DDetector::ExportVoxelPositioningToCsv:: No voxelisation found for {} run collection.",run_collection);
+      continue;
     }
-  } */
-  outFile.close();
-  std::cout << "Writing Dose3D Scroing Positioning to file " <<file<< " - done!" << std::endl;
-  LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
+    //Iterate over all cells in the detector to find any cell that is voxelised for given run collection
+    VPatientSD::ScoringVolume* cell_sv = nullptr;
+    for(const auto& mLayer: m_d3d_layers){
+      for(const auto& cell: mLayer->GetCells()){
+        cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,false); // TEMPORARY!!!! to be set to true
+        if(cell_sv) break;
+      }
+      if(cell_sv) break;
+    }
+    auto nvx = cell_sv->m_nVoxelsX;
+    auto nvy = cell_sv->m_nVoxelsY;
+    auto nvz = cell_sv->m_nVoxelsZ;
+    std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
+    size += "_"+std::to_string(nvx)+"x"+std::to_string(nvy)+"x"+std::to_string(nvz);
+    std::string file = path_to_out_dir + "/detector_"+run_collection +"_"+size+"_voxel_positioning.csv";
+    std::ofstream outFile;
+    outFile.open(file.c_str(), std::ios::out);
+    outFile <<"CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep;
+    outFile <<"VoxelIdX"<<sep<<"VoxelIdY"<<sep<<"VoxelIdZ"<<sep;
+    outFile <<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<<sep;
+    outFile <<"VoxelPosX[mm]"<<sep<<"VoxelPosY[mm]"<<sep<<"VoxelPosZ[mm]"<< std::endl; // data header
+    // Extract voxel position for each cell from scoring map
+    for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all voxels for given run collection
+      auto& hit = scoring_volume.second;
+      auto hit_centre_global = hit.GetGlobalCentre();
+      auto hit_centre = hit.GetCentre();
+      outFile   << hit.GetGlobalID(0) // Cell ID X
+        << sep  << hit.GetGlobalID(1) // Cell ID Y
+        << sep  << hit.GetGlobalID(2) // Cell ID Z
+        << sep  << hit.GetID(0) // Voxel ID X
+        << sep  << hit.GetID(1) // Voxel ID Y
+        << sep  << hit.GetID(2) // Voxel ID Z
+        << sep  << hit_centre_global.getX() // Cell Position X
+        << sep  << hit_centre_global.getY() // Cell Position Y
+        << sep  << hit_centre_global.getZ() // Cell Position Z
+        << sep  << hit_centre.getX() // Voxel Position X
+        << sep  << hit_centre.getY() // Voxel Position Y
+        << sep  << hit_centre.getZ() // Voxel Position Z
+        << std::endl;
+    }
+    outFile.close();
+    std::cout << "Writing Dose3D Voxel Scroing Positioning to file " <<file<< " - done!" << std::endl;
+    LOGSVC_INFO("Writing Dose3D Voxel Scroing Positioning to file {} - done!",file);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir) const {
+  auto run_collections = ControlPoint::GetRunCollectionNames();
+  if (run_collections.empty()) {
+    LOGSVC_WARN("D3DDetector::ExportCellPositioningToCsv:: Any RunCollection found.");
+    return;
+  }
+  // Since the cell positioning is the same for all runs, we can just take the first one
+  const auto& run_collection = run_collections.at(0);
+
   // Export CellId to Placement mapping
   std::string sep = ",";
   std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
@@ -401,8 +409,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
   std::ofstream outFile;
   outFile.open(file.c_str(), std::ios::out);
   outFile << "CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep<<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<< std::endl; // data header
-  
-  auto hashed_scoring_map = GetScoringHashedMap(Scoring::Type::Cell);
+  auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Cell);
   for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all cells in geometry layout
     auto& hit = scoring_volume.second;
     auto hit_centre = hit.GetCentre();
@@ -414,26 +421,8 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
       << sep  << hit_centre.getZ() // Cell Position Z
       << std::endl;
   }
-  
-  /* PREVIOUS IMPLEMENTATION (To Be Deleted)
-  for(const auto& mLayer: m_d3d_layers){
-    auto cells = mLayer->GetCells();
-    for(const auto& cell: cells){
-      auto label = cell->GetName();
-      auto centre = cell->GetCentre();
-      auto idX = cell->GetIdX();
-      auto posX = centre.getX()/CLHEP::mm;
-      auto idY = cell->GetIdY();
-      auto posY = centre.getY()/CLHEP::mm;
-      auto idZ = cell->GetIdZ();
-      auto posZ = centre.getZ()/CLHEP::mm;
-      outFile << idX << sep << idY << sep<< idZ << sep << posX << sep << posY << sep << posZ << std::endl;
-    }
-  } */
   outFile.close();
-  std::cout << "Writing Dose3D Scroing Positioning to file "<<file<<" - done!" << std::endl;
-  LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
-
+  LOGSVC_INFO("Writing Dose3D Cell Scroing Positioning to file {} - done!",file);
 }
 
 
@@ -466,9 +455,11 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type type) const {
+std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
+  G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
   for(const auto& mLayer: m_d3d_layers){
     for(const auto& cell: mLayer->GetCells()){
       auto centre = cell->GetGlobalCentre();
@@ -476,24 +467,31 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
       auto cIdY = cell->GetIdY();
       auto cIdZ = cell->GetIdZ();
       auto hashedCellString = std::to_string(cIdX);
-      hashedCellString.append(std::to_string(cIdY));
-      hashedCellString.append(std::to_string(cIdZ));
+      hashedCellString+=std::to_string(cIdY);
+      hashedCellString+=std::to_string(cIdZ);
 
-      if(IsAnyCellVoxelised(mLayer) && type==Scoring::Type::Voxel ){
-        auto nvx = cell->GetNXVoxels();
+      if( type==Scoring::Type::Voxel ){ 
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! By now IsAnyCellVoxelised(mLayer,run_collection) && causes 
+        // std::out_of_range, wołamy o mape której nie ma...
+        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true);
+        if(cell_sv==nullptr) // no voxelisation for this cell, continue
+          continue;
+        auto nvx = cell_sv->m_nVoxelsX;
+        auto nvy = cell_sv->m_nVoxelsY;
+        auto nvz = cell_sv->m_nVoxelsZ;
+
         double pix_size_x = size / nvx;
-        auto nvy = cell->GetNYVoxels();
         double pix_size_y = size / nvy;
-        auto nvz = cell->GetNZVoxels();
         double pix_size_z = size / nvz;
 
         for(int ix=0; ix<nvx; ix++ ){
           for(int iy=0; iy<nvy; iy++ ){
             for(int iz=0; iz<nvz; iz++ ){
               auto hashedVoxelString = hashedCellString;
-              hashedVoxelString.append(std::to_string(ix));
-              hashedVoxelString.append(std::to_string(iy));
-              hashedVoxelString.append(std::to_string(iz));
+              hashedVoxelString+=std::to_string(ix);
+              hashedVoxelString+=std::to_string(iy);
+              hashedVoxelString+=std::to_string(iz);
               auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
               hashed_map_scoring[voxelHash] = VoxelHit();
               auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
@@ -502,81 +500,30 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(Scoring::Type t
               hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
+              hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
+              hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
             }
           }
         }
-      } else {
+      } else if (type==Scoring::Type::Cell){
         auto cellHash = std::hash<std::string>{}(hashedCellString);
         hashed_map_scoring[cellHash] = VoxelHit();
         hashed_map_scoring[cellHash].SetCentre(centre);
         hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
         hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
+        hashed_map_scoring[cellHash].SetVolume( size*size*size );
+        hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
+        // hashed_map_scoring[cellHash].Print();
       }
     }
   }
-  return hashed_map_scoring;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TO BE DELETED
-std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const std::string& name, bool voxelised) const {
-  if (m_hashed_scoring_map_template.find(name) != m_hashed_scoring_map_template.end()) {
-    return D3DDetector::m_hashed_scoring_map_template.at(name);
-}
-
-  std::map<std::size_t, VoxelHit> hashed_map_scoring;
-  auto size = D3DCell::SIZE;
-  for(const auto& mLayer: m_d3d_layers){
-    for(const auto& cell: mLayer->GetCells()){
-      auto centre = cell->GetGlobalCentre();
-      auto cIdX = cell->GetIdX();
-      auto cIdY = cell->GetIdY();
-      auto cIdZ = cell->GetIdZ();
-      auto hashedCellString = std::to_string(cIdX);
-      hashedCellString.append(std::to_string(cIdY));
-      hashedCellString.append(std::to_string(cIdZ));
-
-      if(IsAnyCellVoxelised(mLayer) && voxelised ){
-        auto nvx = cell->GetNXVoxels();
-        double pix_size_x = size / nvx;
-        auto nvy = cell->GetNYVoxels();
-        double pix_size_y = size / nvy;
-        auto nvz = cell->GetNZVoxels();
-        double pix_size_z = size / nvz;
-
-        for(int ix=0; ix<nvx; ix++ ){
-          for(int iy=0; iy<nvy; iy++ ){
-            for(int iz=0; iz<nvz; iz++ ){
-              auto hashedVoxelString = hashedCellString;
-              hashedVoxelString.append(std::to_string(ix));
-              hashedVoxelString.append(std::to_string(iy));
-              hashedVoxelString.append(std::to_string(iz));
-              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
-              hashed_map_scoring[voxelHash] = VoxelHit();
-              auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
-              auto y_centre = centre.getY() - size/2 + (iy) * pix_size_y + pix_size_y/2.;  
-              auto z_centre = centre.getZ() - size/2 + (iz) * pix_size_z + pix_size_z/2.; 
-              hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
-              hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
-              hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
-            }
-          }
-        }
-      } else {
-        auto cellHash = std::hash<std::string>{}(hashedCellString);
-        hashed_map_scoring[cellHash] = VoxelHit();
-        hashed_map_scoring[cellHash].SetCentre(centre);
-        hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ);
-      }
-    }
-  }
-  D3DDetector::m_hashed_scoring_map_template[name] = hashed_map_scoring;
   return hashed_map_scoring;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO https://jira.plgrid.pl/jira/browse/TNSIM-291
 void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
+  // TODO: Once this method is still valid it should iterate trough all Scoring::Types
   LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
 
     auto global_cell_id = [&](int idX, int idY, int idZ) -> int {
@@ -623,7 +570,7 @@ void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
       // _______________________________________
       // Create TH2Poly for each "layer" within cell
       // Note: However, this cell level histograms defines common set for all the cells within MLayer!
-      if(IsAnyCellVoxelised(mLayer)){
+      if(IsAnyCellVoxelised(mLayer,"Dose3D")){
         if(vox_dir==nullptr){ // Hide these histograms into layer level directory
           auto cell_layer = layer+"_CellVoxelisation";
           vox_dir = cell_dir->mkdir(cell_layer.c_str());
@@ -686,21 +633,21 @@ void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DDetector::IsAnyCellVoxelised(D3DMLayer* layer) const {
+bool D3DDetector::IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const {
   if(layer){
     for(const auto& cell: layer->GetCells()){
-      if( cell->IsVoxelised() )
-        return true;
+      if( cell->IsRunCollectionScoringVolumeVoxelised(run_collection) )
+        return true; // Any cell in layer is voxelised
     }
   }
   return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DDetector::IsAnyCellVoxelised(int idx) const {
+bool D3DDetector::IsAnyCellVoxelised(int idx, const G4String& run_collection) const {
   if (m_d3d_layers.size()>=idx)
     return false;
-  return IsAnyCellVoxelised(m_d3d_layers.at(idx));
+  return IsAnyCellVoxelised(m_d3d_layers.at(idx),run_collection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -7,8 +7,6 @@
 #include "WorldConstruction.hh"
 #include "G4SDManager.hh"
 
-std::set<G4String> VPatient::HitsCollections = std::set<G4String>();
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr){

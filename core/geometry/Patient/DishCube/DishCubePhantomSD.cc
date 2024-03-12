@@ -34,7 +34,7 @@ G4bool DishCubePhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   }
 
   // ____________________________________________________________________________
-  for(const auto& hcName : DishCubePhantom::HitsCollections)
+  for(const auto& hcName : ControlPoint::GetHitCollectionNames())
     ProcessHitsCollection(hcName,aStep); 
 
   // ____________________________________________________________________________

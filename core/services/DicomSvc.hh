@@ -19,17 +19,13 @@ namespace py = pybind11;
 using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// 
 class CtSvc {
   private:
     py::object m_py_dicom_ct;
   public:
     ///
-    CtSvc() {
-      py::module sys = py::module::import("sys");
-      sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
-      m_py_dicom_ct = py::module::import("dicom_ct").attr("PyCtSvc")();
-    }
+    CtSvc():m_py_dicom_ct(py::module::import("dicom_ct").attr("PyCtSvc")()) {}
     ///
     void set_output_path(const std::string& path) const{
       m_py_dicom_ct.attr("set_output_path")(path);

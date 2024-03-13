@@ -12,11 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///
 DicomSvc::DicomSvc() {
-  // Initialize the Python Interpreter to be alive within DicomSvc scope
-  //py::scoped_interpreter guard{};
-  py::module sys = py::module::import("sys");
-  sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
-
   // Get current RT-Plan file
   m_rtplan_file = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "RTPlanInputFile");
   Initialize();

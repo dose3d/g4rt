@@ -255,9 +255,9 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   G4String materialName;
   G4ThreeVector currentPos;
 
-  auto patientEnvXPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
-  auto patientEnvYPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
-  auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+  auto patientEnvXPos = thisConfig()->GetValue<double>("EnviromentPositionX");
+  auto patientEnvYPos = thisConfig()->GetValue<double>("EnviromentPositionY");
+  auto patientEnvZPos = thisConfig()->GetValue<double>("EnviromentPositionZ");
 
   // TODO - granice CT - grznice świata pacjenta - voxel size jako patient geometry properties...  configSvc()->GetValue<double>("PatientGeometry", "CTPixelSize")
 

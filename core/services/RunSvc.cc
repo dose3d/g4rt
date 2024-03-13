@@ -554,9 +554,8 @@ void RunSvc::WriteGeometryData() const {
   geoSvc->WriteScoringComponentsPositioningToCsv();
   geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
   if(thisConfig()->GetValue<bool>("GenerateCT")){
-    geoSvc->WriteCTLikeData();
-    
-
+    geoSvc->WritePatientToCsvCT();
+    geoSvc->WritePatientToDicomCT();
   }
 }
 

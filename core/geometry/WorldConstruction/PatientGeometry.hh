@@ -51,6 +51,8 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   VPatient* GetPatient() const { return m_patient; }
 
+  ///
+  void ExportToCsvCT(const std::string& path_to_output_dir) const;
 
   private:
   ///

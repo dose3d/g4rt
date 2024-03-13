@@ -645,85 +645,21 @@ void GeoSvc::WriteWorldToTFile() {
   m_is_tfile_exported = true;
 }
 
-void GeoSvc::WriteCTLikeData(){
+////////////////////////////////////////////////////////////////////////////////
+///
+void GeoSvc::WritePatientToCsvCT(){
+  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
+  PatientGeometry::GetInstance()->ExportToCsvCT(output_dir);
+}
 
-  // Service<DicomSvc>()->ExportPatientToCT("test","test");
-
-  G4Navigator* g4Navigator = new G4Navigator();
-  g4Navigator->SetWorldVolume(World()->GetPhysicalVolume());
-  auto output_dir = GetOutputDir()+"/DikomlikeData/Images";
-  IO::CreateDirIfNotExits(output_dir);
-
-  // Step size 
-  G4double startingX, startingY, startingZ;
-  G4double stepX, stepY, stepZ;
-  G4int xResolution,yResolution,zResolution;
-  G4String materialName;
-  G4ThreeVector currentPos;
-
-  auto patientEnvXPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
-  auto patientEnvYPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
-  auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
-
-  // TODO - granice CT - grznice świata pacjenta - voxel size jako patient geometry properties...  configSvc()->GetValue<double>("PatientGeometry", "CTPixelSize")
-
-  auto patientPositionInEnv = Patient()->GetSurfacePositioning();
-
-  startingX = svc::round_with_prec((-198.12 + patientEnvXPos)/4,4);
-  startingY = svc::round_with_prec((-198.12 + patientEnvYPos)/4,4);
-  startingZ = svc::round_with_prec((-198.12 + patientEnvZPos)/4,4);
-  stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  // xResolution = 512, yResolution = 512, zResolution = 512;
-  xResolution = 128, yResolution = 128, zResolution = 128;
-
-
-  // DUMP METADATA TO FILE 
-  auto meta =  output_dir+"/../series_metadata.csv";
-  std::ofstream metadata_file;
-  metadata_file.open(meta.c_str(), std::ios::out);
-
-  metadata_file << "x_min," << startingX  << std::endl;
-  metadata_file << "y_min," << startingY  << std::endl;
-  metadata_file << "z_min," << startingZ  << std::endl;
-
-  metadata_file << "x_max," << svc::round_with_prec((startingX+396.24),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((startingY+396.24),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((startingZ+396.24),4) << std::endl;
-
-  metadata_file << "x_resolution," << xResolution << std::endl;
-  metadata_file << "y_resolution," << yResolution << std::endl;
-  metadata_file << "z_resolution," << zResolution << std::endl;
-
-  metadata_file << "x_step," << stepX << std::endl;
-  metadata_file << "y_step," << stepY << std::endl;
-  metadata_file << "z_step," << stepZ << std::endl;
-
-  metadata_file << "SSD," << svc::round_with_prec((1000 + patientEnvZPos + patientPositionInEnv.getZ()),4) << std::endl;
-
-  for( int y = 0; y < yResolution; y++ ){
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << y+1 ;
-    std::string s2(ss.str());
-    auto file =  output_dir+"/img"+s2+".csv";
-    G4cout << "output filepath:  " << file << G4endl;
-    std::string header = "X [mm],Y [mm],Z [mm],Material";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
-    for( int x = 0; x < xResolution; x++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((startingX+stepX*x));
-        currentPos.setY((startingY+stepY*y));
-        currentPos.setZ((startingZ+stepZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
-      }
-    }
-    c_outFile.close();
-  }
-
+////////////////////////////////////////////////////////////////////////////////
+///
+void GeoSvc::WritePatientToDicomCT(){
+  // NOTE: Currently this service is using the csv data, 
+  // hence the GeoSvc::WritePatientToCsvCT has to be called!
+  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
   auto dicomSvc = Service<DicomSvc>();
-  auto dciom_dir = GetOutputDir()+"/../DicomCt/";
+  auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";
   dicomSvc->ExportPatientToCT(output_dir,dciom_dir);
 }
 

@@ -340,7 +340,7 @@ std::string WorldConstruction::ExportToGDML(const std::string& path, const std::
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void WorldConstruction::WriteInfo(){
-  if (m_gantryEnv) m_gantryEnv->WriteInfo();
+  if(m_gantryEnv) m_gantryEnv->WriteInfo();
   if(m_phantomEnv) m_phantomEnv->WriteInfo();
 }
 

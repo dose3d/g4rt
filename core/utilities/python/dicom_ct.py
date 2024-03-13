@@ -10,11 +10,18 @@ import pydicom
 import pydicom._storage_sopclass_uids
 from pydicom.dataset import Dataset, FileDataset
 from pydicom.uid import ExplicitVRLittleEndian
-from ROOT import TGeoManager
 import json
 from pathlib import Path
 
+# def CtSvc():
+#     logger.info("Initialoizing CT scaner.")
 
+# def create_ct_series():
+#     logger.info("Initialoizing CT series.")
+    
+# def set_output_path():
+#     logger.info("Setting path for CT series.")
+    
 
 class CtSvc():
     __output_path = None
@@ -205,9 +212,6 @@ class CtSvc():
 
 
 # -------------------------------- Public Methods --------------------------------
-
-    def import_gdml(self,frame):
-        self._geom = TGeoManager.Import(frame)
 
     def create_ct_series(self,directory_path):
         # print("Heloł")

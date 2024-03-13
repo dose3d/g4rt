@@ -20,12 +20,12 @@ using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
-class CtSvc {
+class ICtSvc {
   private:
     py::object m_py_dicom_ct;
   public:
     ///
-    CtSvc():m_py_dicom_ct(py::module::import("dicom_ct").attr("PyCtSvc")()) {}
+    ICtSvc():m_py_dicom_ct(py::module::import("dicom_ct").attr("CtSvc")()) {}
     ///
     void set_output_path(const std::string& path) const{
       m_py_dicom_ct.attr("set_output_path")(path);
@@ -69,7 +69,7 @@ class DicomSvc {
     void Initialize();
 
     ///
-    CtSvc m_ct_svc;
+    ICtSvc m_ct_svc;
 
   public:
     ///\brief Static method to get instance of this singleton object.

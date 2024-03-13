@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 
-class PyCtSvc():
+class CtSvc():
     __output_path = None
     
 # -------------------------------- Init -----------------------------------------

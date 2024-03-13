@@ -27,8 +27,9 @@ class ICtSvc {
     ///
     ICtSvc():m_py_dicom_ct(py::module::import("dicom_ct").attr("CtSvc")()) {}
     ///
-    void set_output_path(const std::string& path) const{
-      m_py_dicom_ct.attr("set_output_path")(path);
+    void set_paths(const std::string& output_path) const{
+      m_py_dicom_ct.attr("set_output_path")(output_path);
+      m_py_dicom_ct.attr("set_project_path")(PROJECT_DATA_PATH);
     }
     ///
     void create_ct_series(const std::string& series_csv_path) const{

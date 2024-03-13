@@ -18,15 +18,11 @@ from pathlib import Path
 
 class CtSvc():
     __output_path = None
+    __project_path = None
     
 # -------------------------------- Init -----------------------------------------
     def __init__(self, label="CT_"):
         logger.info("Initialoizing CT scaner.")
-        # TODO: Move hounsfield to material service.
-        dictionary = ("/home/g4rt/workDir/develop/g4rt/data/TempJsonMap/hounsfield_scale.json")
-        
-        with open(dictionary) as jsn_file:
-            self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
         self.__label = label # Did I Need that?
         self.__generate_CT = True # Did I Need that?
         self.__output_array = np.zeros((1, 1, 1))
@@ -50,9 +46,9 @@ class CtSvc():
 # -------------------------------- User Interface Methods -----------------------
 
     @classmethod
-    def set_output_path(cls, path):
+    def set_output_path(cls, output_path):
         
-        cls.__output_path = path
+        cls.__output_path = output_path
         if cls.__output_path[-1] != "/":
             cls.__output_path=cls.__output_path+"/"
         try:
@@ -60,15 +56,29 @@ class CtSvc():
         except FileExistsError:
             # directory already exists
             pass
-        logger.info(f"Output was set to: {path}")
-        return cls.__output_path
+        logger.info(f"Output was set to: {output_path}")
 
+    def set_project_path(cls, project_path):
+        # Not as set_hounsfield_dictiobnary cause also it sett path to template CT.dcm
+        cls.__project_path = project_path
+        if cls.__project_path[-1] != "/":
+            cls.__project_path=cls.__project_path+"/"
+        try:
+            os.makedirs(cls.__project_path)
+        except FileExistsError:
+            # directory already exists
+            pass
+        logger.info(f"Project root was set to: {project_path}")
 
+    def  __set_hounsfield_dictiobnary(self):
+        dictionary = (f"{self.__project_path}CT_Maker/hounsfield_scale.json")
+        with open(dictionary) as jsn_file:
+            self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
 # ------------------------------- Priv Class Methods ----------------------------
 
     
     def __get_metadata_from_file(self):
-        data = pd.read_csv(f'{self.__data_path}/../series_metadata.csv',header=None,index_col=0)
+        data = pd.read_csv(f'{self.__data_path}/../ct_series_metadata.csv',header=None,index_col=0)
         data_dict = data.to_dict(orient='dict')[1]
         self.__x_min = round(data_dict["x_min"],4)
         self.__x_max = round(data_dict["x_max"],4)
@@ -92,7 +102,8 @@ class CtSvc():
 
 
     def __start_Dicom_series(self):
-        name = "/home/g4rt/workDir/develop/g4rt/data/TempJsonMap/CT.dcm"
+        self.__set_hounsfield_dictiobnary()
+        name = f"{self.__project_path}CT_Maker/CT.dcm"
         ds = pydicom.dcmread(name)
         
         # --------------- overwrite metadata ----------------
@@ -191,7 +202,6 @@ class CtSvc():
                                         ["Material"]).map(self.__hounsfield_units_dictionary)
                                         .values.reshape(int(self.__pixel_in_x),int(self.__pixel_in_z), order="F"), iterator)
 
-        return True
 
 
 # -------------------------------- Public Methods --------------------------------

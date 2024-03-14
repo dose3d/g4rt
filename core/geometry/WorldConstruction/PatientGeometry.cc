@@ -49,6 +49,10 @@ void PatientGeometry::Configure() {
   DefineUnit<std::string>("EnviromentMedium");
   DefineUnit<std::string>("ConfigFile");
   DefineUnit<std::string>("ConfigPrefix");
+  DefineUnit<double>("VoxelSizeXCT");
+  DefineUnit<double>("VoxelSizeYCT");
+  DefineUnit<double>("VoxelSizeZCT");
+
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   // G4cout << "[DEBUG]:: PatientGeometry:: Configure: DefaultConfig"<< G4endl;
   // Configurable::PrintConfig();
@@ -100,6 +104,15 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     }
   if (unit.compare("ConfigPrefix") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+    }
+  if (unit.compare("VoxelSizeXCT") == 0){
+    thisConfig()->SetTValue<double>(unit, double(0.78));
+    }
+  if (unit.compare("VoxelSizeYCT") == 0){
+    thisConfig()->SetTValue<double>(unit, double(0.78));
+    }
+  if (unit.compare("VoxelSizeZCT") == 0){
+    thisConfig()->SetTValue<double>(unit, double(0.78));
     }
 
 }
@@ -248,67 +261,69 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 
-  // Step size 
-  G4double startingX, startingY, startingZ;
-  G4double stepX, stepY, stepZ;
-  G4int xResolution,yResolution,zResolution;
   G4String materialName;
   G4ThreeVector currentPos;
 
-  auto patientEnvXPos = thisConfig()->GetValue<double>("EnviromentPositionX");
-  auto patientEnvYPos = thisConfig()->GetValue<double>("EnviromentPositionY");
-  auto patientEnvZPos = thisConfig()->GetValue<double>("EnviromentPositionZ");
+  auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
 
-  // TODO - granice CT - grznice świata pacjenta - voxel size jako patient geometry properties...  configSvc()->GetValue<double>("PatientGeometry", "CTPixelSize")
+  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
+  auto ct_cube_init_x = svc::round_with_prec( env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX"),4);
 
-  auto patientPositionInEnv = patientInstance->GetSurfacePositioning();
+  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
+  auto ct_cube_init_y = svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY"),4);
 
-  startingX = svc::round_with_prec((-198.12 + patientEnvXPos)/4,4);
-  startingY = svc::round_with_prec((-198.12 + patientEnvYPos)/4,4);
-  startingZ = svc::round_with_prec((-198.12 + patientEnvZPos)/4,4);
-  stepX = 0.78, stepY = 0.78, stepZ = 0.78;
-  // xResolution = 512, yResolution = 512, zResolution = 512;
-  xResolution = 128, yResolution = 128, zResolution = 128;
+  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
+  auto ct_cube_init_z = svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ"),4);
 
+  auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
+  auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
+  auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
+
+  G4int xResolution = env_size_x / sizeX;
+  G4int yResolution = env_size_y / sizeY;
+  G4int zResolution = env_size_z / sizeZ;
+
+  LOGSVC_INFO("ExportToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // DUMP METADATA TO FILE 
   auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
 
-  metadata_file << "x_min," << startingX  << std::endl;
-  metadata_file << "y_min," << startingY  << std::endl;
-  metadata_file << "z_min," << startingZ  << std::endl;
+  metadata_file << "x_min," << ct_cube_init_x  << std::endl;
+  metadata_file << "y_min," << ct_cube_init_y  << std::endl;
+  metadata_file << "z_min," << ct_cube_init_z  << std::endl;
 
-  metadata_file << "x_max," << svc::round_with_prec((startingX+396.24),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((startingY+396.24),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((startingZ+396.24),4) << std::endl;
+  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x),4) << std::endl;
+  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y),4) << std::endl;
+  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z),4) << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;
   metadata_file << "z_resolution," << zResolution << std::endl;
 
-  metadata_file << "x_step," << stepX << std::endl;
-  metadata_file << "y_step," << stepY << std::endl;
-  metadata_file << "z_step," << stepZ << std::endl;
+  metadata_file << "x_step," << sizeX << std::endl;
+  metadata_file << "y_step," << sizeY << std::endl;
+  metadata_file << "z_step," << sizeZ << std::endl;
 
-  metadata_file << "SSD," << svc::round_with_prec((1000 + patientEnvZPos + patientPositionInEnv.getZ()),4) << std::endl;
+  double source_to_isocentre = 1000;
+  metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
 
   for( int y = 0; y < yResolution; y++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << y+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/img"+s2+".csv";
-    G4cout << "output filepath:  " << file << G4endl;
+    // G4cout << "output filepath:  " << file << G4endl;
     std::string header = "X [mm],Y [mm],Z [mm],Material";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
     for( int x = 0; x < xResolution; x++ ){
       for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((startingX+stepX*x));
-        currentPos.setY((startingY+stepY*y));
-        currentPos.setZ((startingZ+stepZ*z));
+        currentPos.setX((ct_cube_init_x+sizeX*x));
+        currentPos.setY((ct_cube_init_y+sizeY*y));
+        currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
       }

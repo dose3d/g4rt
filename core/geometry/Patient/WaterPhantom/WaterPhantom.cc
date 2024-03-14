@@ -57,8 +57,13 @@ void WaterPhantom::ParseTomlConfig(){
   /// 
   detectorMediumName = config[configObjDetector]["Medium"].value_or("");
 
-  ///
-  m_patient_surface_positioning = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ + m_sizeZ);
+  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
+  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
+  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+
+  auto top_position_in_env = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ + m_sizeZ);
+  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + top_position_in_env;
+
   
   ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);

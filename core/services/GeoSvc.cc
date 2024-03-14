@@ -647,6 +647,24 @@ void GeoSvc::WriteWorldToTFile() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void GeoSvc::WritePatientToCsvCT(){
+  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
+  PatientGeometry::GetInstance()->ExportToCsvCT(output_dir);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void GeoSvc::WritePatientToDicomCT(){
+  // NOTE: Currently this service is using the csv data, 
+  // hence the GeoSvc::WritePatientToCsvCT has to be called!
+  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
+  auto dicomSvc = Service<DicomSvc>();
+  auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";
+  dicomSvc->ExportPatientToCT(output_dir,dciom_dir);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void GeoSvc::WriteWorldToGdml(){
   LOGSVC_DEBUG("Writing World Geometry To GDML...");
   World()->ExportToGDML(GetOutputDir(),m_world_file_name+".gdml");

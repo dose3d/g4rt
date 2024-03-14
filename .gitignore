@@ -14,6 +14,8 @@ data/*
 !data/Results/
 !data/dose3d/
 !data/gps/
+!data/CT_positioner/
+!data/CT_Maker/
 build/
 build-vscode/
 output/

@@ -128,6 +128,12 @@ class GeoSvc : public TomlConfigurable, Logable {
   void WriteWorldToTFile();
 
   ///
+  void WritePatientToCsvCT();
+
+  ///
+  void WritePatientToDicomCT();
+
+  ///
   void WriteWorldToGdml(); 
 
   ///

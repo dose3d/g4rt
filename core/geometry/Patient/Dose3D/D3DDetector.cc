@@ -82,6 +82,12 @@ void D3DDetector::ParseTomlConfig(){
   m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
   m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
 
+  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
+  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
+  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+
+  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + m_top_position_in_env;
+
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)
   m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);
@@ -157,6 +163,8 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
     SetPhysicalVolume(new G4PVPlacement(nullptr, m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
+    // auto pv = GetPhysicalVolume();
+
 
     //
     int i_layer = 0;

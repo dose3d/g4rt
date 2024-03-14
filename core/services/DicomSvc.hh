@@ -9,6 +9,38 @@
 #define Dose3D_DicomSvcSVC_H
 
 #include "Types.hh"
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
+
+
+namespace py = pybind11;
+using namespace py::literals;
+
+////////////////////////////////////////////////////////////////////////////////
+/// 
+class ICtSvc {
+  
+  private:
+    py::object m_py_dicom_ct;
+  public:
+    ///
+    ICtSvc():m_py_dicom_ct(py::reinterpret_borrow<py::object>(py::module::import("dicom_ct").attr("CtSvc")().ptr())) {
+    }
+    ///
+    ~ICtSvc(){
+      m_py_dicom_ct.release();
+    }
+    void set_paths(const std::string& output_path) const{
+      m_py_dicom_ct.attr("set_output_path")(output_path);
+      m_py_dicom_ct.attr("set_project_path")(PROJECT_DATA_PATH);
+    }
+    ///
+    void create_ct_series(const std::string& series_csv_path) const{
+      m_py_dicom_ct.attr("create_ct_series")(series_csv_path);
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -42,6 +74,9 @@ class DicomSvc {
     ///
     void Initialize();
 
+    ///
+    ICtSvc m_ct_svc;
+
   public:
     ///\brief Static method to get instance of this singleton object.
     static DicomSvc* GetInstance();
@@ -66,5 +101,8 @@ class DicomSvc {
 
     ///
     unsigned GetTotalNumberOfControlPoints() const;
+
+    void ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const;
 };
+
 #endif  // Dose3D_DicomSvcSVC_H

@@ -12,11 +12,6 @@ using namespace py::literals;
 ////////////////////////////////////////////////////////////////////////////////
 ///
 DicomSvc::DicomSvc() {
-  // Initialize the Python Interpreter to be alive within DicomSvc scope
-  //py::scoped_interpreter guard{};
-  py::module sys = py::module::import("sys");
-  sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
-
   // Get current RT-Plan file
   m_rtplan_file = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "RTPlanInputFile");
   Initialize();
@@ -147,3 +142,11 @@ unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
   // To be done when you will not use the 0 beam and control point 0.
   return 100; // dummy number
 }
+
+void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const {
+
+    // PyGILState_Release(gstate);
+    m_ct_svc.set_paths(output_path);
+    m_ct_svc.create_ct_series(series_csv_path);
+    m_ct_svc.~ICtSvc();
+  }

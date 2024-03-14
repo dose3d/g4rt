@@ -19,7 +19,10 @@
 
 int main(int argc, const char *argv[]) {
 
+
   pybind11::scoped_interpreter guard{};
+  pybind11::module sys = pybind11::module::import("sys");
+  sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
   SPDLOG_DEBUG("Initialize services");
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
@@ -130,5 +133,6 @@ int main(int argc, const char *argv[]) {
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;
   }
+  
   return EXIT_SUCCESS;
 }

@@ -5,8 +5,8 @@ cmake-build-release/
 !.vscode/c_cpp_properties.json
 data/*
 !data/config
-!data/DICOM/000000.dcm
 !data/README.md
+!data/dicom/
 !data/TrueBeam/
 !data/Geant4
 !data/Real
@@ -14,8 +14,6 @@ data/*
 !data/Results/
 !data/dose3d/
 !data/gps/
-!data/CT_positioner/
-!data/CT_Maker/
 build/
 build-vscode/
 output/
@@ -27,4 +25,5 @@ jobs/test/*
 
 # To prevent tracking of all directores named "Test" created on testing propouses.
 */Test/*
+*/test/*
 # 

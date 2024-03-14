@@ -213,7 +213,7 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("RTPlanInputFile") == 0){
     std::string data_path = PROJECT_DATA_PATH;
-    thisConfig()->SetValue(unit, std::string(data_path+"/DICOM/example-imrt.dcm"));
+    thisConfig()->SetValue(unit, std::string(data_path+"/dicom/example-imrt.dcm"));
   }
 
   if (unit.compare("RunAnalysis") == 0) 

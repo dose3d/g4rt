@@ -24,9 +24,9 @@ Type = "D3DDetector"
 EnviromentPositionX = 0.0
 EnviromentPositionY = 0.0
 EnviromentPositionZ = 50.0
-EnviromentSizeX = 100.0
-EnviromentSizeY = 100.0
-EnviromentSizeZ = 100.0
+EnviromentSizeX = 110.0
+EnviromentSizeY = 110.0
+EnviromentSizeZ = 110.0
 EnviromentMedium = "G4_WATER"
 
 [D3DDetector_Detector]

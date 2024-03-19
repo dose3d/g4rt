@@ -8,12 +8,10 @@
 #include <vector>
 #include "Types.hh"
 #include "IPhysicalVolume.hh"
-#include "IRunConfigurable.hh"
 
 class G4Region;
 
 class MlcCustom : public IPhysicalVolume
-                , public IRunConfigurable
                 , public Configurable {
   private:
       ///
@@ -52,6 +50,9 @@ class MlcCustom : public IPhysicalVolume
       void DefaultConfig(const std::string &unit) override;
 
       ///
+      void SetRunConfig() override;
+
+      ///
       G4bool Update() override;
 
       ///
@@ -59,9 +60,5 @@ class MlcCustom : public IPhysicalVolume
 
       ///
       void WriteInfo() override;
-
-      ///
-      void SetRunConfiguration(const G4Run* aRun) override;
-
 };
 #endif //DOSE3D_VARIANMLCCUSTOM_HH

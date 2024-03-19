@@ -161,6 +161,15 @@ void ConfigSvc::ReloadConfiguration()const{
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void ConfigSvc::SetRunConfiguration() const {
+    for(auto& module : m_config_modules){
+        module.second->SetRunConfig();
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
 bool ConfigSvc::IsTomlParsed(const std::string& module) const { 
     if (module.empty()) // generic check for any module
         return m_toml; 

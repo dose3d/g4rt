@@ -23,7 +23,7 @@ G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // Note: PostStep on the boundary "belongs" to next volume hence we use PreStepPoint!
   auto theTouchable = dynamic_cast<const G4TouchableHistory *>(aStep->GetPreStepPoint()->GetTouchable());
   auto volumeName = theTouchable->GetVolume()->GetName();
-  if ( !volumeName.contains("D3D"))
+  if ( ! G4StrUtil::contains(volumeName, "D3D"))
     LOGSVC_DEBUG("ProcessHits volume name ", volumeName);
   
   // ____________________________________________________________________________

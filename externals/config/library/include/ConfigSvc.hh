@@ -115,7 +115,8 @@ class ConfigSvc {
         ///\brief Run across all registered modules and validate their config trough Configurable::ValidateConfig() method
         bool ValidateConfiguration(const std::string& module=std::string()) const;
 
-
+        ///
+        void SetRunConfiguration() const;
 };
 
 template <typename T> T ConfigSvc::GetValue(const std::string& module, const std::string& unit, const char* caller) const {

@@ -15,7 +15,6 @@
 MlcCustom::MlcCustom(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcCustom"), Configurable("MlcCustom"){
   Configure();
   Construct(parentPV);
-  IRunConfigurable::AddRunConfigurableModule(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +126,7 @@ void MlcCustom::Construct(G4VPhysicalVolume *parentPV){
 ///
 G4bool MlcCustom::Update(){
   // implement me.
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ void MlcCustom::WriteInfo(){
 ///           1. Ctrl point value
 ///           2. Gantry rotation value
 ///           3. etc...
-void MlcCustom::SetRunConfiguration(const G4Run* aRun){
+void MlcCustom::SetRunConfig(){
 
   G4cout << "[WARNING]:: VMlcCustom:: SetRunConfiguration IS SWITCHED OFF!!!" << G4endl;
   return; // tempory!

@@ -3,7 +3,6 @@
 #include "PatientGeometry.hh"
 #include "SavePhSpConstruction.hh"
 #include "LinacGeometry.hh"
-#include "IRunConfigurable.hh"
 #include "G4GDMLParser.hh"
 #include "G4GeometryManager.hh"
 #include "G4Box.hh"
@@ -342,11 +341,4 @@ std::string WorldConstruction::ExportToGDML(const std::string& path, const std::
 void WorldConstruction::WriteInfo(){
   if(m_gantryEnv) m_gantryEnv->WriteInfo();
   if(m_phantomEnv) m_phantomEnv->WriteInfo();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void WorldConstruction::SetRunConfiguration(const G4Run* aRun){
-  LOGSVC_INFO("Setting the World Configuration for the run: {}", aRun->GetRunID());
-  IRunConfigurable::SetRunConfigurationForAllModules(aRun);
 }

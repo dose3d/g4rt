@@ -57,9 +57,6 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   void WriteInfo() override;
 
-  ///
-  void SetRunConfiguration(const G4Run* runPtr);
-
   /// 
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
 

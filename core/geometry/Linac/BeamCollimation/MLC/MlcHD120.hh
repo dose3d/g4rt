@@ -8,14 +8,13 @@
 #include <vector>
 #include "Types.hh"
 #include "IPhysicalVolume.hh"
-#include "IRunConfigurable.hh"
 #include <G4IntersectionSolid.hh>
 #include <G4SubtractionSolid.hh>
 #include <G4UnionSolid.hh>
 
 class G4Region;
 
-class MlcHd120 :  public IPhysicalVolume, public IRunConfigurable, public Configurable {
+class MlcHd120 :  public IPhysicalVolume, public Configurable {
   private:
     ///
     G4double m_mlcPosZ = 46.5 * cm; // The fixed Z position
@@ -79,6 +78,9 @@ class MlcHd120 :  public IPhysicalVolume, public IRunConfigurable, public Config
 
     ///
     void DefaultConfig(const std::string &unit) override;
+    
+    ///
+    void SetRunConfig() override;
 
     ///
     G4bool Update() override;
@@ -88,9 +90,5 @@ class MlcHd120 :  public IPhysicalVolume, public IRunConfigurable, public Config
 
     ///
     void WriteInfo() override;
-
-    ///
-    void SetRunConfiguration(const G4Run* runPtr) override;
-
 };
 #endif //DOSE3D_VARIANMLCHD120_HH

@@ -617,6 +617,7 @@ G4VSolid* MlcHd120::CreateEndCapCutBox() const {
 ///
 G4bool MlcHd120::Update(){
     // implement me.
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -631,21 +632,21 @@ void MlcHd120::WriteInfo(){
     // implement me.
 }
 
-// void MlcHd120::SetRunConfiguration(const G4Run* runPtr){
+void MlcHd120::SetRunConfig(){
 
-//     auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
-//     G4cout << "[INFO]:: MlcHd120:: the run configuration type: "<< inputType << G4endl;
+    auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
+    G4cout << "[INFO]:: MlcHd120:: the run configuration type: "<< inputType << G4endl;
 
-//     if(inputType=="Custom"){
-//         auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
-//         SetCustomPositioning(flsz);
-//     }
-//     else if(inputType=="RTPlan"){
-//         auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
-//         auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
-//         SetRTPlanPositioning(beamId,controlPointId);
-//     }
-// }
+    if(inputType=="Custom"){
+        auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
+        SetCustomPositioning(flsz);
+    }
+    else if(inputType=="RTPlan"){
+        auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
+        auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
+        SetRTPlanPositioning(beamId,controlPointId);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

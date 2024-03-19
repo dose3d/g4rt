@@ -78,6 +78,9 @@ class MlcHd120 :  public IPhysicalVolume, public Configurable {
 
     ///
     void DefaultConfig(const std::string &unit) override;
+    
+    ///
+    void SetRunConfig() override;
 
     ///
     G4bool Update() override;

@@ -50,6 +50,9 @@ class MlcCustom : public IPhysicalVolume
       void DefaultConfig(const std::string &unit) override;
 
       ///
+      void SetRunConfig() override;
+
+      ///
       G4bool Update() override;
 
       ///

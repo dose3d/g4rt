@@ -613,7 +613,7 @@ void GeoSvc::WriteWorldToTFile() {
     TGeoIterator next(tgeom->GetMasterVolume());
     TGeoNode *node;
     while ((node = next())) {
-      if (TString(node->GetVolume()->GetName()).Contains(containStr)) {
+      if ( G4StrUtil::contains(node->GetVolume()->GetName(), containStr.Data())) {
         setTGeoVolumeVis(node->GetVolume(),colour,transp);
       }
     }
@@ -624,7 +624,7 @@ void GeoSvc::WriteWorldToTFile() {
     TGeoIterator next(tgeom->GetMasterVolume());
     TGeoNode *node;
     while ((node = next())) {
-      if (TString(node->GetVolume()->GetMaterial()->GetName()).Contains(material)) {
+      if (G4StrUtil::contains(node->GetVolume()->GetMaterial()->GetName(), material.Data())) {
         setTGeoVolumeVis(node->GetVolume(),colour,transp);
       }
     }

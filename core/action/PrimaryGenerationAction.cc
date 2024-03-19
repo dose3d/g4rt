@@ -172,10 +172,7 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       primary_vrtx.push_back(anEvent->GetPrimaryVertex(i));
   }
 
-  // NOTE: An extra rotation is being performed aroud Z-axis 
-  // in order to match data with CT image:
-  G4RotationMatrix rotation;
-  // TODO:: rotation.rotate(90.0 *deg, G4ThreeVector(0.0,0.0,1.0));
+
   // IDEA:: Implement Origin/Frame switch (See: IAEAPrimaryGenerator, l. 27-30)
   G4ThreeVector new_centre;
 
@@ -183,14 +180,12 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   for (const auto& vrtx : primary_vrtx){
     if(m_rotation_matrix){
       new_centre=(*m_rotation_matrix)*(vrtx->GetPosition());
-      new_centre=(rotation)*(new_centre);
     }
     vrtx->SetPosition(new_centre.x(),new_centre.y(),new_centre.z());
 
     auto momentum = (vrtx->GetPrimary()->GetMomentum());
     if(m_rotation_matrix){
       momentum = (*m_rotation_matrix)*(momentum);
-      momentum = (rotation)*(momentum);
     }
     vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
     anEvent->AddPrimaryVertex(vrtx);

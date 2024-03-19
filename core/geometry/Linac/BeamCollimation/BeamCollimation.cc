@@ -105,6 +105,8 @@ void BeamCollimation::Reset() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
+//TODO:!!! G4ThreeVector BeamCollimation::TransformBEforeMlctPlane(const G4ThreeVector& momentum) if not ghost.
+
 G4ThreeVector BeamCollimation::TransformToHeadOuputPlane(const G4ThreeVector& momentum){
   G4double x, y, z, zRatio = 0.;
   z = 1000 - 320.;

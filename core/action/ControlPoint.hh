@@ -27,7 +27,7 @@ class ControlPointConfig {
     double RotationInDeg = 0.;
     int NEvts = 0.;
     int Id = 0;
-    std::string RTPlanFile = std::string();
+    std::string MlcPositioninngFile = std::string();
 };
 
 class ControlPointRun : public G4Run {

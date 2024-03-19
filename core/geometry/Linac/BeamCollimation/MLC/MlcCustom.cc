@@ -15,7 +15,6 @@
 MlcCustom::MlcCustom(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcCustom"), Configurable("MlcCustom"){
   Configure();
   Construct(parentPV);
-  IRunConfigurable::AddRunConfigurableModule(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,24 +147,24 @@ void MlcCustom::WriteInfo(){
 ///           1. Ctrl point value
 ///           2. Gantry rotation value
 ///           3. etc...
-void MlcCustom::SetRunConfiguration(const G4Run* aRun){
+// void MlcCustom::SetRunConfiguration(const G4Run* aRun){
 
-  G4cout << "[WARNING]:: VMlcCustom:: SetRunConfiguration IS SWITCHED OFF!!!" << G4endl;
-  return; // tempory!
+//   G4cout << "[WARNING]:: VMlcCustom:: SetRunConfiguration IS SWITCHED OFF!!!" << G4endl;
+//   return; // tempory!
   
-  auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
-  G4cout << "[INFO]:: MlcCustom:: the run configuration type: "<< inputType << G4endl;
+//   auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
+//   G4cout << "[INFO]:: MlcCustom:: the run configuration type: "<< inputType << G4endl;
 
-  if(inputType=="Custom"){
-    auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
-    SetCustomPositioning(flsz);
-  }
-  else if(inputType=="RTPlan"){
-    auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
-    auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
-    SetRTPlanPositioning(beamId,controlPointId);
-  }
-}
+//   if(inputType=="Custom"){
+//     auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
+//     SetCustomPositioning(flsz);
+//   }
+//   else if(inputType=="RTPlan"){
+//     auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
+//     auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
+//     SetRTPlanPositioning(beamId,controlPointId);
+//   }
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 

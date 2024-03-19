@@ -77,6 +77,9 @@ class Configurable : public std::enable_shared_from_this<Configurable> {
         ///\brief Virtual method to enable final class config walidation method to be implemented.
         virtual bool ValidateConfig() const;
 
+        ///
+        virtual void SetRunConfig() {};
+
         /// /// Simple wrapper to  ConfigModule::DefineUnit
         void PrintConfig() const { m_config->Print(); }
 

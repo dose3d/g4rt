@@ -12,7 +12,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcCustom::MlcCustom(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcCustom"), Configurable("MlcCustom"){
+MlcCustom::MlcCustom(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcCustom"), VMlc("MlcCustom"){
   Configure();
   Construct(parentPV);
 }

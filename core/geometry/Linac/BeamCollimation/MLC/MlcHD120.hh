@@ -14,7 +14,7 @@
 
 class G4Region;
 
-class MlcHd120 :  public IPhysicalVolume, public Configurable {
+class MlcHd120 :  public IPhysicalVolume, public VMlc {
   private:
     ///
     G4double m_mlcPosZ = 46.5 * cm; // The fixed Z position
@@ -35,9 +35,7 @@ class MlcHd120 :  public IPhysicalVolume, public Configurable {
     std::unique_ptr<G4Region> m_mlc_region;
 
     ///
-    std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
-    std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves;
-    std::vector<G4VPhysicalVolumeUPtr> m_side_leaves;
+
 
     ///
     void Construct(G4VPhysicalVolume *parentPV) override;

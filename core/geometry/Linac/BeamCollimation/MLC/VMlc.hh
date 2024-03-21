@@ -1,12 +1,19 @@
 #include "TomlConfigModule.hh"
 #include "Logable.hh"
 
-class vMlc :public Logable, public Configurable {
+class VMlc: public TomlConfigurable {
 
+    protected:
+    std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
+    std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves;
+
+
+    private:
+        void Configure() override;
+        VMlc() = delete;
+        ~VMlc() = default;
     public:
-        vMlc() = delete;
-        explicit vMlc(const std::string& name):Configurable(name),Logable(){}
-        ~vMlc() = default;
-
+        explicit VMlc(const std::string& name):TomlConfigurable(name){}
+        void ParseTomlConfig() override {}
     
-};
+}

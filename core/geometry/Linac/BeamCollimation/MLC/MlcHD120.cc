@@ -15,7 +15,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), Configurable("MlcHd120"){
+MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
     Configure();
     Construct(parentPV);
 }

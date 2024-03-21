@@ -41,7 +41,9 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   ///
   void DefaultConfig(const std::string &unit) override;
 
-  static G4ThreeVector TransformToHeadOuputPlane(const G4ThreeVector& momentum);
+  static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
+
+  static G4ThreeVector TransformToNewPlane(const G4ThreeVector& momentum, G4ThreeVector& position, G4double finalZ);
 
   private:
   ///
@@ -63,7 +65,7 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   void Configure() override;
 
   ///
-  std::vector<G4double> m_leavesA, m_leavesB;
+  std::vector<G4double> m_leavesA, m_leavesB; 
 
   ///
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;

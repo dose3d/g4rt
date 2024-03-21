@@ -9,7 +9,7 @@ BeamType = "IAEA"
 PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/data3/TN-Dose3D/data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH LHCBD1 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
-PhspInputPosition = "s2"
+# PhspInputPosition = "s2"
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 2

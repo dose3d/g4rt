@@ -12,7 +12,7 @@
 class G4Region;
 
 class MlcCustom : public IPhysicalVolume
-                , public Configurable {
+                , public VMlc {
   private:
       ///
       std::unique_ptr<G4Region> m_mlc_region;

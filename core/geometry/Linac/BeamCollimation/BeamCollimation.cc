@@ -105,16 +105,39 @@ void BeamCollimation::Reset() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-//TODO:!!! G4ThreeVector BeamCollimation::TransformBEforeMlctPlane(const G4ThreeVector& momentum) if not ghost.
+void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
-G4ThreeVector BeamCollimation::TransformToHeadOuputPlane(const G4ThreeVector& momentum){
-  G4double x, y, z, zRatio = 0.;
-  z = 1000 - 320.;
-  zRatio = z/momentum.getZ();
-  x = zRatio * momentum.getX();
-  y = zRatio * momentum.getY();
-  z = -320;
-  return G4ThreeVector(x,y,z);
+  auto model = Service<GeoSvc>()->GetMlcModel();
+  auto nVrtx = p_vrtx.size();
+  for(int i=0; i<nVrtx;++i){
+    auto vrtx = p_vrtx.at(i);
+    CurrentCentre = vrtx->GetPosition();
+    if(model == EMlcModel::Simplified){ 
+      CurrentCentre = BeamCollimation::TransformToNewPlane(vrtx->GetPrimary()->GetMomentum(),CurrentCentre, -430.0); 
+      if(!MlcSimplified::formField(CurrentCentre)) {
+        delete vrtx;
+        p_vrtx.at(i) = nullptr;
+      }
+          }
+      else{
+        CurrentCentre = BeamCollimation::TransformToNewPlane(vrtx->GetPrimary()->GetMomentum(),CurrentCentre, -550.0); 
+      }
+  }
+  p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
+}
+
+G4ThreeVector BeamCollimation::TransformToNewPlane(const G4ThreeVector& momentum, G4ThreeVector& position, G4double finalZ) {
+  G4double x, y, zRatio = 0.;
+  G4double deltaX, deltaY, deltaZ;
+  deltaZ = finalZ - position.getZ();
+  G4ThreeVector directionalVersor = momentum.unit();
+  zRatio = deltaZ / directionalVersor.getZ(); 
+  deltaX = zRatio * directionalVersor.getX();
+  delts=aY = zRatio * directionalVersor.getY();
+  x = position.getX() + deltaX;
+  y = position.getY() + deltaY;
+  position = G4ThreeVector(x, y, finalZ);
+  return position;
 }
 
 
@@ -302,8 +325,8 @@ bool BeamCollimation::MLC() {
       case EMlcModel::HD120:
         m_mlc.reset(new MlcHd120(m_parentPV));
         break;
-      case EMlcModel::Ghost:
-        LOGSVC_INFO("Using Ghost type of MLC")
+      case EMlcModel::Simplified:
+        LOGSVC_INFO("Using Simplified type of MLC")
         break;
     }
 

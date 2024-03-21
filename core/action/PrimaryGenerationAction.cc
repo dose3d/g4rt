@@ -94,59 +94,6 @@ PrimaryGenerationAction::~PrimaryGenerationAction(void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void PrimaryGenerationAction::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
-  G4ThreeVector CurrentCentre;
-  auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
-  auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
-
-  if(fieldSize_b == 0){
-    fieldSize_b = fieldSize_a;
-  }
-  auto fieldshape = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "FieldShape");
-  auto fieldPossition =  Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "PhspInputPosition");
-  double cutFieldSize_a = 0;
-  double cutFieldSize_b = 0;
-  double fa = 1000.;
-  if (fieldSize_a>0){ // calc for SSD = 1000 mm
-    double ssd = 1000;
-    if (fieldPossition == "s1")
-      fa = ssd - 745.4;
-    if (fieldPossition == "s2")
-      fa = ssd - 300.25; // by default it should be 699.75; 
-
-    cutFieldSize_a = (fa / ssd) * fieldSize_a / 2.;
-    cutFieldSize_b = (fa / ssd) * fieldSize_b / 2.;
-  }
-  auto nVrtx = p_vrtx.size();
-  for(int i=0; i<nVrtx;++i){
-    auto vrtx = p_vrtx.at(i);
-    auto model = Service<GeoSvc>()->GetMlcModel();
-    CurrentCentre = vrtx->GetPosition();
-    if(model == EMlcModel::Ghost){
-      CurrentCentre = BeamCollimation::TransformToHeadOuputPlane(vrtx->GetPrimary()->GetMomentum()); 
-    }
-      // Set arbitrary cut for field size:
-      if(cutFieldSize_a>0){
-        if (fieldshape == "Rectangular"){
-          if (CurrentCentre.x()<-cutFieldSize_a || CurrentCentre.x() > cutFieldSize_a || CurrentCentre.y()<-cutFieldSize_b || CurrentCentre.y() > cutFieldSize_b ){
-              delete vrtx;
-              p_vrtx.at(i) = nullptr;
-          }
-        }
-        if (fieldshape == "Elipsoidal"){
-          if ((pow(CurrentCentre.x(),2)/ pow(cutFieldSize_a,2) + pow(CurrentCentre.y(),2)/pow(cutFieldSize_b,2))> 1 ){
-              delete vrtx;
-              p_vrtx.at(i) = nullptr;
-          }
-        }
-      }
-  }
-  p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto runSvc = Service<RunSvc>();
   G4AutoLock lock(&PrimGenMutex);
@@ -158,7 +105,7 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
     while(primary_vrtx.empty() || primary_vrtx.size() < m_min_p_vrtx_vec_size ){
         ++n_reader_calls;
         auto read_p_vrtx = p_gen->GeneratePrimaryVertexVector(anEvent);
-        FilterPrimaries(read_p_vrtx);
+        BeamCollimation::FilterPrimaries(read_p_vrtx);
         primary_vrtx.insert(primary_vrtx.end(),read_p_vrtx.begin(),read_p_vrtx.end());
         auto nVrtx = primary_vrtx.size();
         if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 99){ // in order to avoid infinit loop

@@ -88,7 +88,7 @@ void RunSvc::Configure() {
   DefineUnit<bool>("SavePhSp");
   DefineUnit<std::string>("PhspInputFileName");
   DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
-  DefineUnit<std::string>("PhspInputPosition");
+  // DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
 
   // DICOM initial parameters
@@ -209,11 +209,6 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("PhspInputFileName") == 0){
     m_config->SetTValue<std::string>(unit, std::string("None"));
-  }
-  // if (unit.compare("PhspInputFileName") == 0) thisConfig()->SetValue(unit, G4String("/primo/iaea_clinac2300/s2/field3x3-s2"));
-
-  if (unit.compare("PhspInputPosition") == 0){
-    m_config->SetTValue<std::string>(unit, std::string("s2"));
   }
 
   if (unit.compare("PhspOutputFileName") == 0) 

@@ -5,34 +5,29 @@
 
 
 
-class MlcSimplified : VMlc("MlcGhost"){
+bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition){
 
-G4ThreeVector CurrentCentre;
-auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
-auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+    auto getFieldAB = [=](G4double zPosition) {
+        auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
+        auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+        auto ssd = 1000.0;
+        if(fieldSize_b == 0)
+            fieldSize_b = fieldSize_a;
+        return std::make_pair( ((zPosition / ssd ) * fieldSize_a / 2.), ((zPosition / ssd) * fieldSize_b / 2.) );
+    };
 
-if(fieldSize_b == 0)
-    fieldSize_b = fieldSize_a;
+    auto cutFieldParam = getFieldAB(vertexPosition.getZ());
+    G4double cutFieldSize_a = cutFieldParam.first;
+    G4double cutFieldSize_b = cutFieldParam.second;
 
-auto fieldshape = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "FieldShape");
-double cutFieldSize_a = 0;
-double cutFieldSize_b = 0;
-
-if (fieldSize_a>0){ 
-    auto fa = 570.0; 
-    auto ssd = 1000.;
-    cutFieldSize_a = (fa / ssd) * fieldSize_a / 2.;
-    cutFieldSize_b = (fa / ssd) * fieldSize_b / 2.;
-}
-
-bool MlcSimplified::formField(G4ThreeVector centre){
+    auto fieldshape = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "FieldShape");
     if (fieldshape == "Rectangular"){
-        if (CurrentCentre.x()<=-cutFieldSize_a || CurrentCentre.x() >= cutFieldSize_a || CurrentCentre.y()<=-cutFieldSize_b || CurrentCentre.y() >= cutFieldSize_b ){
+        if (vertexPosition.x()<=-cutFieldSize_a || vertexPosition.x() >= cutFieldSize_a || vertexPosition.y()<=-cutFieldSize_b || vertexPosition.y() >= cutFieldSize_b ){
             return false;
         }
     }
     if (fieldshape == "Elipsoidal"){
-        if ((pow(CurrentCentre.x(),2)/ pow(cutFieldSize_a,2) + pow(CurrentCentre.y(),2)/pow(cutFieldSize_b,2))>= 1 ){
+        if ((pow(vertexPosition.x(),2)/ pow(cutFieldSize_a,2) + pow(vertexPosition.y(),2)/pow(cutFieldSize_b,2))>= 1 ){
             return false;
         }
     }
@@ -43,4 +38,3 @@ bool MlcSimplified::formField(G4ThreeVector centre){
 
 }
 
-}

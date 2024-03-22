@@ -8,6 +8,7 @@
 #include <vector>
 #include "Types.hh"
 #include "IPhysicalVolume.hh"
+#include "VMlc.hh"
 #include <G4IntersectionSolid.hh>
 #include <G4SubtractionSolid.hh>
 #include <G4UnionSolid.hh>
@@ -72,7 +73,7 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     explicit MlcHd120(G4VPhysicalVolume* parentPV);
 
     ////
-    ~MlcHd120();
+    ~MlcHd120() override;
 
     ///
     void DefaultConfig(const std::string &unit) override;
@@ -88,5 +89,6 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
 
     ///
     void WriteInfo() override;
+
 };
 #endif //DOSE3D_VARIANMLCHD120_HH

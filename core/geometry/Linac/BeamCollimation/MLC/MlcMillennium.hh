@@ -13,7 +13,7 @@ class MlcMillennium {
       MlcMillennium() = delete;
 
       ///
-      explicit MlcMillennium(G4VPhysicalVolume* parentPV){};
+      MlcMillennium(G4VPhysicalVolume* parentPV){};
 
       ////
       ~MlcMillennium() = default;

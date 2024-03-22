@@ -9,8 +9,10 @@
 #define Dose3D_VARIAN_TRUEBEAM_HEAD_MOCKUP_HH
 
 #include "IPhysicalVolume.hh"
+#include "G4PrimaryVertex.hh"
 #include "Configurable.hh"
 #include "Types.hh"
+#include "VMlc.hh"
 
 class G4VPhysicalVolume;
 
@@ -44,6 +46,8 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
   static G4ThreeVector TransformToNewPlane(const G4ThreeVector& momentum, G4ThreeVector& position, G4double finalZ);
+
+  VMlc* GetMlc() const { return m_mlc.get(); }
 
   private:
   ///
@@ -84,7 +88,7 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   bool MLC();
 
   ///
-  std::unique_ptr<IPhysicalVolume> m_mlc;
+  std::unique_ptr<VMlc> m_mlc;
 
   ///
   void DefineSensitiveDetector() {}

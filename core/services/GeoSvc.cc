@@ -483,8 +483,6 @@ EMlcModel GeoSvc::GetMlcModel() const {
     return EMlcModel::Millennium;
   } else if (mlcName.compare("Varian-HD120") == 0) {
     return EMlcModel::HD120;
-  } else if (mlcName.compare("MlcCustom") == 0) {
-    return EMlcModel::Custom;
   } else if (mlcName.compare("Simplified") == 0) {
     return EMlcModel::Simplified;
   } else if (mlcName.compare("None") == 0) {

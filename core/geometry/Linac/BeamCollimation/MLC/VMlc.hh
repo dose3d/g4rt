@@ -1,5 +1,9 @@
-#include "TomlConfigModule.hh"
-#include "Logable.hh"
+#ifndef VMLC_HH
+#define VMLC_HH
+
+#include "TomlConfigurable.hh"
+#include "G4VPhysicalVolume.hh"
+
 
 class VMlc: public TomlConfigurable {
 
@@ -7,13 +11,11 @@ class VMlc: public TomlConfigurable {
     std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
     std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves;
 
-
-    private:
-        void Configure() override;
-        VMlc() = delete;
-        ~VMlc() = default;
     public:
-        explicit VMlc(const std::string& name):TomlConfigurable(name){}
-        void ParseTomlConfig() override {}
+        VMlc() = delete;
+        explicit VMlc(const std::string& name) : TomlConfigurable(name) {};
+        virtual ~VMlc() = default;
+        void ParseTomlConfig() override {};
     
-}
+};
+#endif // VMLC_HH

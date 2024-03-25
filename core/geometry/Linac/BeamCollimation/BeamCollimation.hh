@@ -45,15 +45,12 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
 
   static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
-  static G4ThreeVector TransformToNewPlane(const G4ThreeVector& momentum, G4ThreeVector& position, G4double finalZ);
+  static G4ThreeVector SetParticlePositionTransformedInZ(G4PrimaryVertex* vrtx, G4double finalZ);
 
-  VMlc* GetMlc() const { 
-    if(!m_mlc){
-      std::cout << "[ERROR]:: BeamCollimation::GetMlc():: m_mlc is nullptr" << G4endl;
-      return nullptr;}
-    else{
-      std::cout << "[INFO]:: BeamCollimation::GetMlc():: m_mlc is not nullptr" << G4endl;
-      return m_mlc.get();} }
+  VMlc* GetMlc() const { return m_mlc.get(); }
+
+  static G4double AfterMLC;
+  static G4double BeforeMLC;
 
   private:
   ///
@@ -94,7 +91,7 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   bool MLC();
 
   ///
-  std::unique_ptr<VMlc> m_mlc;
+  static std::unique_ptr<VMlc> m_mlc;
 
   ///
   void DefineSensitiveDetector() {}

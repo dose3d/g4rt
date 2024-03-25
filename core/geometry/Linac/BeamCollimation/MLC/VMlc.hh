@@ -16,6 +16,8 @@ class VMlc: public TomlConfigurable {
         explicit VMlc(const std::string& name) : TomlConfigurable(name) {};
         virtual ~VMlc() = default;
         void ParseTomlConfig() override {};
+        virtual bool IsInField(const G4ThreeVector& vertexPosition) { return false;}
+
     
 };
 #endif // VMLC_HH

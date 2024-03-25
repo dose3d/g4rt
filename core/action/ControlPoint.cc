@@ -296,10 +296,23 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
+
+    // Relative small number of iteration - lambda here will not hurt our performance?
+    auto getMaskPositioning = [&](G4PrimaryVertex* vrtx){
+    G4double x, y, zRatio = 0.;
+    G4double deltaX, deltaY, deltaZ;
+    G4ThreeVector position = vrtx->GetPosition();
+    deltaZ = 1000 - position.getZ();
+    zRatio = deltaZ / position.getZ(); 
+    x = position.getX() + zRatio * position.getX(); // x + deltaX;
+    y = position.getY() + zRatio * position.getY(); // y + deltaY;
+    return G4ThreeVector(x, y, 0);
+    };
+
     auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
-    if(sim_mask_points.size() < 500){
+    if(sim_mask_points.size() < 10000){
         for(const auto& vrtx : p_vrtx){
-            sim_mask_points.push_back(vrtx->GetPosition());
+            sim_mask_points.push_back(getMaskPositioning(vrtx));
         }
     }
 }
@@ -340,7 +353,7 @@ void ControlPoint::FillPlanFieldMask(){
 ///
 void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
     double current_x,current_y, current_z;
-    current_z = -30.25; // MLC Possition at 0 deg beam
+    current_z = 0.0; // MLC Possition at 0 deg beam
     double x_range, y_range;
 
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
@@ -353,6 +366,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
         LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
+
     double min_x = - x_range / 2.;
     double max_x = + x_range / 2.;
     double dx = FIELD_MASK_POINTS_DISTANCE;

@@ -67,7 +67,6 @@ bool LinacGeometry::design() {
       break;
     case EHeadModel::BeamCollimation:
       m_headInstance = BeamCollimation::GetInstance();
-      std::cout << "\n\n\n\n\n\n\n\n\n\n[INFO]:: BeamCollimation::GetInstance()\n\n\n\n\n\n\n\n\n\n" << G4endl;
       bAccExists = true;
       break;
   }

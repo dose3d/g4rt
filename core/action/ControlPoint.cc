@@ -94,7 +94,11 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 
     // Realease memory after merging... we don't need this anymore.
     dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.clear();
-
+    auto& w_sim_mask_points = dynamic_cast<const ControlPointRun*>(worker_run)->m_sim_mask_points;
+    for(const auto& pos : w_sim_mask_points){
+        m_sim_mask_points.push_back(pos);
+    }
+    w_sim_mask_points.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +197,6 @@ ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
     m_rotation = new G4RotationMatrix(*cp.m_rotation);
     m_scoring_types = cp.m_scoring_types;
     m_plan_mask_points = cp.m_plan_mask_points;
-    m_sim_mask_points = cp.m_sim_mask_points;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
     m_mlc_b_positioning = cp.m_mlc_b_positioning;
 }
@@ -205,7 +208,6 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
     m_rotation = cp.m_rotation;
     cp.m_rotation = nullptr;
     m_plan_mask_points = cp.m_plan_mask_points;
-    m_sim_mask_points = cp.m_sim_mask_points;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
     m_mlc_b_positioning = cp.m_mlc_b_positioning;
 }
@@ -281,14 +283,25 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
             LOGSVC_WARN("Returning empty plan mask point vector");
         return m_plan_mask_points;
     } else if(type=="Sim") {
-        if(m_sim_mask_points.Get().empty())
+        if(m_cp_run.Get()->GetSimMaskPoints().empty())
             LOGSVC_WARN("Returning empty sim mask point vector");
-        return m_sim_mask_points.Get();
+        return m_cp_run.Get()->GetSimMaskPoints();
     }
     G4String msg = "Couldn't recognize control point field mask type!";
     LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "GetFieldMask", FatalErrorInArgument , msg);
     return m_plan_mask_points;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
+    auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
+    if(sim_mask_points.size() < 500){
+        for(const auto& vrtx : p_vrtx){
+            sim_mask_points.push_back(vrtx->GetPosition());
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

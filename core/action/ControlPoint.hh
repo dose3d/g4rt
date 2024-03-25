@@ -34,6 +34,8 @@ class ControlPointRun : public G4Run {
   private:
     /// RunCollectionName / ScoringMap
     mutable std::map<G4String,ScoringMap> m_hashed_scoring_map;
+
+    mutable std::vector<G4ThreeVector> m_sim_mask_points;
     
     ///
     void InitializeScoringCollection();
@@ -59,6 +61,10 @@ class ControlPointRun : public G4Run {
 
     ///
     const std::map<G4String,ScoringMap>& GetScoringCollections() const {return m_hashed_scoring_map;}
+
+    ///
+    std::vector<G4ThreeVector>& GetSimMaskPoints() {return m_sim_mask_points;}
+    const std::vector<G4ThreeVector>& GetSimMaskPoints() const {return m_sim_mask_points;}
 
     ///
     void EndOfRun();
@@ -99,6 +105,8 @@ class ControlPoint {
 
     void FillEventCollections(G4HCofThisEvent* evtHC);
 
+    void FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx);
+
     ///
     static std::vector<G4String> GetRunCollectionNames();
     static std::set<G4String> GetHitCollectionNames();
@@ -119,7 +127,6 @@ class ControlPoint {
     std::set<Scoring::Type> m_scoring_types;
 
     std::vector<G4ThreeVector> m_plan_mask_points;
-    G4VectorCache<G4ThreeVector> m_sim_mask_points;
 
     /// Store to kepp raw pointers from ControlPoint::GenerateRun
     std::vector<ControlPointRun*> m_mt_run;

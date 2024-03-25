@@ -70,7 +70,7 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto data_types = cp->DataTypes();
     for(const auto& type : data_types){
         LOGSVC_INFO("Writing field mask (type={}) to CSV...",type);
-        auto field_mask = cp->GetFieldMask(type);
+        const auto& field_mask = cp->GetFieldMask(type);
         if(field_mask.size()>0){
             auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
             std::string header = "X [mm],Y [mm],Z [mm]";

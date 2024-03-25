@@ -129,6 +129,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
     }
   }
   p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
+  Service<RunSvc>()->CurrentControlPoint()->FillSimFieldMask(p_vrtx);
 }
 
 

@@ -7,7 +7,7 @@
 class MlcSimplified : public VMlc {
 
 public:
-    MlcSimplified() : VMlc("MlcGhost"){};
+    MlcSimplified() : VMlc("Simplified"){};
     ~MlcSimplified() override {};	
     bool IsInField(const G4ThreeVector& vertexPosition);
     void Configure() override {};

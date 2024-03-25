@@ -6,7 +6,6 @@
 
 
 bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition){
-
     auto getFieldAB = [=](G4double zPosition) {
         auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
         auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
@@ -23,12 +22,13 @@ bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition){
     auto fieldshape = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "FieldShape");
     if (fieldshape == "Rectangular"){
         if (vertexPosition.x()<=-cutFieldSize_a || vertexPosition.x() >= cutFieldSize_a || vertexPosition.y()<=-cutFieldSize_b || vertexPosition.y() >= cutFieldSize_b ){
-            return false;
+            return true;
         }
     }
     if (fieldshape == "Elipsoidal"){
         if ((pow(vertexPosition.x(),2)/ pow(cutFieldSize_a,2) + pow(vertexPosition.y(),2)/pow(cutFieldSize_b,2))>= 1 ){
-            return false;
+            std::cout << "\n[INFO] MlcSimplified::IsInField and elipsoidal\n" << vertexPosition <<  std::endl;
+            return true;
         }
     }
     if (fieldshape == "RTPlan"){

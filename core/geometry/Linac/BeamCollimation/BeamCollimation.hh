@@ -47,7 +47,13 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
 
   static G4ThreeVector TransformToNewPlane(const G4ThreeVector& momentum, G4ThreeVector& position, G4double finalZ);
 
-  VMlc* GetMlc() const { return m_mlc.get(); }
+  VMlc* GetMlc() const { 
+    if(!m_mlc){
+      std::cout << "[ERROR]:: BeamCollimation::GetMlc():: m_mlc is nullptr" << G4endl;
+      return nullptr;}
+    else{
+      std::cout << "[INFO]:: BeamCollimation::GetMlc():: m_mlc is not nullptr" << G4endl;
+      return m_mlc.get();} }
 
   private:
   ///

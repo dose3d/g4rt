@@ -157,7 +157,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("BuildLinac") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-      thisConfig()->SetTValue<bool>(unit, G4bool(false));
+      thisConfig()->SetTValue<bool>(unit, G4bool(true));
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("BuildPatient") == 0){

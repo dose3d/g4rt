@@ -5,11 +5,12 @@ BeamType = "IAEA"
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
-PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # AGH JH Home File
 PhspEvtVrtxMultiplicityTreshold = 5
 # PhspInputPosition = "s2"
 PrintProgressFrequency = 0.05
-GenerateCT = true
+GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = false
 RunAnalysis = true
@@ -18,6 +19,10 @@ RunAnalysis = true
 FieldShape = "Elipsoidal"
 FieldSizeA = 20 # mm
 FieldSizeB = 20 # mm
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"

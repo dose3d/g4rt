@@ -310,7 +310,7 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     };
 
     auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
-    if(sim_mask_points.size() < 10000){
+    if(sim_mask_points.size() < 2500){
         for(const auto& vrtx : p_vrtx){
             sim_mask_points.push_back(getMaskPositioning(vrtx));
         }

@@ -7,8 +7,8 @@
 class MlcSimplified : public VMlc {
     private:
         std::string m_fieldShape;
-        mutable G4double m_fieldParamA = 0.0;
-        mutable G4double m_fieldParamB = 0.0;
+        G4double m_fieldParamA = 0.0;
+        G4double m_fieldParamB = 0.0;
         bool m_isInitialized = false;
         void Initialize(const G4ThreeVector& vertexPosition);
 public:

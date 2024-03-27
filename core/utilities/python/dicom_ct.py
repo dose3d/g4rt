@@ -78,7 +78,7 @@ class CtSvc():
         logger.info(f"Project root was set to: {project_path}")
 
     def  __set_hounsfield_dictiobnary(self):
-        dictionary = (f"{self.__project_path}dicom/hounsfield_scale_60keV.json")
+        dictionary = (f"{self.__project_path}config/hounsfield_scale_60keV.json")
         with open(dictionary) as jsn_file:
             self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
 # ------------------------------- Priv Class Methods ----------------------------
@@ -110,7 +110,7 @@ class CtSvc():
 
     def __start_Dicom_series(self):
         self.__set_hounsfield_dictiobnary()
-        name = f"{self.__project_path}dicom/ct_slice_template.dcm"
+        name = f"{self.__project_path}config/ct_slice_template.dcm"
         ds = pydicom.dcmread(name)
         
         # --------------- overwrite metadata ----------------

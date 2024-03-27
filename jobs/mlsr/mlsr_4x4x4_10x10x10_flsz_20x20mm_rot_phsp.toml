@@ -49,8 +49,8 @@ CellVoxelisedScorer = true
 
 [RunSvc_Plan]
 PlanInputFile = [
-    "Mlc_3x3.dat",
-    "Mlc_3x3.dat"
+    "custom/rot00deg_stat1e3_3x3.dat",
+    "custom/rot15deg_stat1e3_3x3.dat"
 ]
 nControlPoints = 2
 BeamRotation = [15.0,30.0] # Per Control Point

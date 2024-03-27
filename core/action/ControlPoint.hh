@@ -88,7 +88,7 @@ class ControlPoint {
     G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
     G4ThreeVector TransformToMaskPosition(const G4ThreeVector& position) const;
 
-    const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan") const;
+    const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
     std::string GetSimOutputTFileName(bool workerMT = false) const;
@@ -143,8 +143,8 @@ class ControlPoint {
 
     G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMask();
-    void FillPlanFieldMaskForRegularShapes(const std::string& shape);
-    void FillPlanFieldMaskFromRTPlan();
+    void FillPlanFieldMaskForRegularShapes(const std::string& shape,double current_z);
+    void FillPlanFieldMaskFromRTPlan(double current_z);
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
 

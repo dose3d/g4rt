@@ -188,7 +188,6 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
-    FillPlanFieldMask();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,10 +276,10 @@ std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& type) const {
+const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& type) {
     if(type=="Plan") {
         if(m_plan_mask_points.empty())
-            LOGSVC_WARN("Returning empty plan mask point vector");
+            FillPlanFieldMask(); // World has to be constructed already, TODO: check this with if
         return m_plan_mask_points;
     } else if(type=="Sim") {
         if(m_cp_run.Get()->GetSimMaskPoints().empty())
@@ -297,12 +296,11 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
 ///
 void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
 
-    // Relative small number of iteration - lambda here will not hurt our performance?
     auto getMaskPositioning = [&](G4PrimaryVertex* vrtx){
     G4double x, y, zRatio = 0.;
     G4double deltaX, deltaY, deltaZ;
     G4ThreeVector position = vrtx->GetPosition();
-    deltaZ = 1000 - position.getZ();
+    deltaZ = 1000 - position.getZ();    // TODO get 1000 as ssd from WorldConstruction, store it as this class member
     zRatio = deltaZ / position.getZ(); 
     x = position.getX() + zRatio * position.getX(); // x + deltaX;
     y = position.getY() + zRatio * position.getY(); // y + deltaY;
@@ -310,7 +308,9 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     };
 
     auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
-    if(sim_mask_points.size() < 2500){
+    auto nCPU = int(2);
+    // auto current_z , isocentre...
+    if(sim_mask_points.size() < 1000/nCPU){
         for(const auto& vrtx : p_vrtx){
             sim_mask_points.push_back(getMaskPositioning(vrtx));
         }
@@ -318,7 +318,8 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// The field mask is formed at the isocentre Z position
+/// - at the surface of the patient / isocentre
 void ControlPoint::FillPlanFieldMask(){
     // It should happen once for single control point at the time
     // of the object instantation. See RunSvc::SetSimulationConfiguration
@@ -330,16 +331,18 @@ void ControlPoint::FillPlanFieldMask(){
         LOGSVC_CRITICAL(msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
-
-    std::string shape = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "FieldShape");
+    auto configSvc = Service<ConfigSvc>();
+    std::string shape = configSvc->GetValue<std::string>("RunSvc", "FieldShape");
     LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",shape,GetDegreeRotation());
+
+    double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
 
     if( shape.compare("Rectangular")==0 ||
         shape.compare("Elipsoidal")==0){
-        FillPlanFieldMaskForRegularShapes(shape);
+        FillPlanFieldMaskForRegularShapes(shape,z_position);
     }
     if(shape.compare("RTPlan")==0){
-        FillPlanFieldMaskFromRTPlan();
+        FillPlanFieldMaskFromRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
@@ -351,9 +354,8 @@ void ControlPoint::FillPlanFieldMask(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
-    double current_x,current_y, current_z;
-    current_z = 0.0; // MLC Possition at 0 deg beam
+void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape, double current_z){
+    double current_x,current_y;
     double x_range, y_range;
 
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
@@ -395,7 +397,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillPlanFieldMaskFromRTPlan(){
+void ControlPoint::FillPlanFieldMaskFromRTPlan(double current_z){
     G4String msg = "Field Mask RTPlan type not implemented yet!";
     LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);

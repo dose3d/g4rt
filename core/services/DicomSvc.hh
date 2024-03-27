@@ -13,7 +13,7 @@
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-
+#include "ControlPoint.hh"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -39,6 +39,27 @@ class ICtSvc {
     ///
     void create_ct_series(const std::string& series_csv_path) const{
       m_py_dicom_ct.attr("create_ct_series")(series_csv_path);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// 
+class ICustomPlan {
+  private:
+    static double GetNEvents(const std::string& planFile) {
+      return 1e3; // TODO Read this from planFile
+    }
+    static double GetRotation(const std::string& planFile) {
+      return 0.0; // TODO Read this from planFile
+    }
+
+  public:
+    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) {
+      auto nEvents = GetNEvents(planFile);
+      auto rotation = GetRotation(planFile);
+      auto config = ControlPointConfig(id, nEvents, rotation);
+      config.MlcInputFile = planFile;
+      return std::move(config);
     }
 };
 
@@ -103,6 +124,9 @@ class DicomSvc {
     unsigned GetTotalNumberOfControlPoints() const;
 
     void ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const;
+
+    ///
+    static ICustomPlan CustomPlan;
 };
 
 #endif  // Dose3D_DicomSvcSVC_H

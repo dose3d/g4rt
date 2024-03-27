@@ -385,6 +385,12 @@ void RunSvc::Run() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::ParseTomlConfig(){
+
+  auto criticalError = [&](const G4String& msg){
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
+  };
+  
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
   LOGSVC_INFO("Importing configuration from:\n{}",configFile);
@@ -392,54 +398,55 @@ void RunSvc::ParseTomlConfig(){
   if(!configPrefix.empty() || configPrefix=="None" ){ // It shouldn't be empty!
     configObj.insert(0,configPrefix+"_");
   } 
-  else {
-    G4ExceptionDescription msg;
-    msg << "The configuration PREFIX is not defined";
-    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
-  }
-  auto config = toml::parse_file(configFile);
+  else criticalError("The configuration PREFIX is not defined");
 
+  auto config = toml::parse_file(configFile);
+  
+  // __________________________________________________________________________
   // Reading the plan from files is defined with the highest priority
   if (config[configObj].as_table()->find("PlanInputFile")!= config[configObj].as_table()->end()){
     // Each file is assumed to define single Control Point!
     auto numberOfCP = config[configObj]["PlanInputFile"].as_array()->size();
     for( int i = 0; i < numberOfCP; i++ ){
       std::string planFile = config[configObj]["PlanInputFile"][i].value_or(std::string());
+      if(!svc::checkIfFileExist(planFile)){
+        criticalError("CP#"+std::to_string(i)+" File not found: "+planFile);
+      }
+      // Define the new control point configuration
+      LOGSVC_INFO("Importing control point configuration from file: {}",planFile);
+      m_control_points_config.push_back(DicomSvc::CustomPlan.GetControlPointConfig(i,planFile));
     }
-    LOGSVC_INFO("Importing control points configuration from files:\n{}",numberOfCP);
 
   }
-
+  // __________________________________________________________________________
+  // Reading the plan from custom TOML inteface is defined with the next priority
   G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
-  // auto regularFieldMaskArray = config[configObj].get_table_array("RegularFieldMask");
   if(numberOfCP>0){
+    auto n_fmask = config[configObj]["RegularFieldMask"].as_array()->size();
+    if(n_fmask != numberOfCP)
+      criticalError("The number of field masks is not equal to the number of control points");
+    auto n_beam_rot = config[configObj]["BeamRotation"].as_array()->size();
+    if(n_beam_rot != numberOfCP)
+      criticalError("The number of beam rotations is not equal to the number of control points");
+    auto n_stat = config[configObj]["nParticles"].as_array()->size();
+    if(n_stat != numberOfCP)
+      criticalError("The number of particles statistics is not equal to the number of control points");
+
     for( int i = 0; i < numberOfCP; i++ ){
       rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
-      G4cout << " DEBUG: RunSvc::ParseTomlConfig: rotationInDeg: " << rotationInDeg << G4endl;
       int nEvents = config[configObj]["nParticles"][i].value_or(-1);
       if(nEvents<0)
         nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
       /// _______________________________________________________________________
       /// Define the new control point configuration
       m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
-
-      std::string mlcFile = (config[configObj]["MlcInputFile"][i].value_or(std::string()));
-      if(mlcFile.empty())
-        mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
-      m_control_points_config.back().MlcInputFile = mlcFile;
       m_control_points_config.back().FieldShape = (config[configObj]["RegularFieldMask"][i]["Shape"].value_or(std::string()));
       m_control_points_config.back().FieldSizeA = (config[configObj]["RegularFieldMask"][i]["SizeA"].value_or(G4double(0.0)));
-      // auto size = config[configObj]["RegularFieldMask"][i].as_table()->size();
       m_control_points_config.back().FieldSizeB = (config[configObj]["RegularFieldMask"][i]["SizeB"].value_or(G4double(0.0)));
-      // std::cout << "Size cp no " << i << " : " << size << std::endl;
     }
   }
-  else{
-    G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg.data());
-    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
-  }
+  else criticalError("The configuration PREFIX is not defined");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -48,10 +48,10 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
-PlanInputFile = [
-    "custom/rot00deg_stat1e3_3x3.dat",
-    "custom/rot15deg_stat1e3_3x3.dat"
-]
+# PlanInputFile = [ # paths can be relative (to PROJECT_DATA) or absolute
+#     "plan/custom/rot00deg_stat1e3_3x3.dat",
+#     "plan/custom/rot15deg_stat1e3_3x3.dat"
+# ]
 nControlPoints = 2
 BeamRotation = [15.0,30.0] # Per Control Point
 nParticles = [1e3,1e3] # Per Control Point

@@ -53,7 +53,7 @@ namespace svc {
   std::string createOutputDir(const std::string& userPath=std::string());
 
   ////
-  bool checkIfFileExist(const std::string& file_full_path);
+  bool checkIfFileExist(const std::string& file_full_or_relative_path);
 
   ///
   void deleteFileIfExists(const std::string& file_full_path);

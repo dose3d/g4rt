@@ -99,8 +99,14 @@ std::string svc::createOutputDir(const std::string& userArgPath) {
 
 ////////////////////////////////////////////////////////////////////////////////////
 ///
-bool svc::checkIfFileExist(const std::string& file_full_path){
-	if(fs::exists(fs::path(file_full_path)))
+bool svc::checkIfFileExist(const std::string& file_full_or_relative_path){
+  // try to get file from full path
+	if(fs::exists(fs::path(file_full_or_relative_path)))
+    return true;
+  // try to get file from relative path
+  std::string data_path = PROJECT_DATA_PATH;
+  auto file = data_path+"/"+file_full_or_relative_path;
+  if(fs::exists(fs::path(file)))
     return true;
   return false;
 }

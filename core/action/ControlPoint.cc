@@ -277,9 +277,13 @@ std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& type) {
+    if(!Service<GeoSvc>()->IsWorldBuilt()){
+        LOGSVC_WARN("World not yet built, returning empty sim mask point vector");
+        return m_plan_mask_points;
+    }
     if(type=="Plan") {
         if(m_plan_mask_points.empty())
-            FillPlanFieldMask(); // World has to be constructed already, TODO: check this with if
+            FillPlanFieldMask(); // World has to be constructed already
         return m_plan_mask_points;
     } else if(type=="Sim") {
         if(m_cp_run.Get()->GetSimMaskPoints().empty())
@@ -293,14 +297,16 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// The field mask is formed at the isocentre Z position,
+/// => passed particle position is being propagated to the the plane at Z=0
 void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
-
+    auto configSvc = Service<ConfigSvc>();
     auto getMaskPositioning = [&](G4PrimaryVertex* vrtx){
     G4double x, y, zRatio = 0.;
     G4double deltaX, deltaY, deltaZ;
     G4ThreeVector position = vrtx->GetPosition();
-    deltaZ = 1000 - position.getZ();    // TODO get 1000 as ssd from WorldConstruction, store it as this class member
+    auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID")
+    deltaZ = sid - position.getZ();
     zRatio = deltaZ / position.getZ(); 
     x = position.getX() + zRatio * position.getX(); // x + deltaX;
     y = position.getY() + zRatio * position.getY(); // y + deltaY;
@@ -308,9 +314,8 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     };
 
     auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
-    auto nCPU = int(2);
-    // auto current_z , isocentre...
-    if(sim_mask_points.size() < 1000/nCPU){
+    auto nCPU = configSvc->GetValue<int>("RunSvc", "NumberOfThreads")
+    if(sim_mask_points.size() < 5000./nCPU){
         for(const auto& vrtx : p_vrtx){
             sim_mask_points.push_back(getMaskPositioning(vrtx));
         }
@@ -319,7 +324,6 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The field mask is formed at the isocentre Z position
-/// - at the surface of the patient / isocentre
 void ControlPoint::FillPlanFieldMask(){
     // It should happen once for single control point at the time
     // of the object instantation. See RunSvc::SetSimulationConfiguration

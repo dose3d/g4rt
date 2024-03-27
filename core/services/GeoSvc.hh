@@ -83,7 +83,7 @@ class GeoSvc : public TomlConfigurable, Logable {
   void DefaultConfig(const std::string &unit);
 
   /// \brief Check if the main/top volume world is already built in the Geant4 framework.
-  bool IsWorldBuilt();
+  bool IsWorldBuilt() const;
 
   ///\brief Build the actual main/top volume in the Geant4 framework.
   WorldConstruction *Build();

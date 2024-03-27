@@ -35,6 +35,7 @@ void LinacGeometry::Configure() {
 
   DefineUnit<std::string>("Label");
   DefineUnit<G4ThreeVector>("LinacEnvelopeBoxSize");
+  DefineUnit<G4double>("SID"); // Source to Isocentre Distance
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   Configurable::PrintConfig();
@@ -51,6 +52,9 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("LinacEnvelopeBoxSize") == 0)
     thisConfig()->SetValue(unit, G4ThreeVector(950., 950., 680.)); // [mm]
+
+  if (unit.compare("SID") == 0)
+    thisConfig()->SetValue(unit, G4double(1000.)); // [mm]
 }
 
 ////////////////////////////////////////////////////////////////////////////////

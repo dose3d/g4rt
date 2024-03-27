@@ -11,7 +11,7 @@ FieldSizeA = 25 # mm
 FieldSizeB = 25 # mm
 
 [GeoSvc]
-BuildLinac = false
+BuildLinac = true
 BuildPatient = true
 
 [PatientGeometry]

@@ -42,10 +42,9 @@ enum class EHeadModel {
 ///\brief MLC types
 enum class EMlcModel {
   None,
-  Custom,     // Varian
   Millennium, // Varian
   HD120,       // Varian
-  Ghost
+  Simplified
 };
 
 

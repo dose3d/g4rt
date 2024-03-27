@@ -27,13 +27,15 @@ class ControlPointConfig {
     double RotationInDeg = 0.;
     int NEvts = 0.;
     int Id = 0;
-    std::string RTPlanFile = std::string();
+    std::string MlcPositioninngFile = std::string();
 };
 
 class ControlPointRun : public G4Run {
   private:
     /// RunCollectionName / ScoringMap
     mutable std::map<G4String,ScoringMap> m_hashed_scoring_map;
+
+    mutable std::vector<G4ThreeVector> m_sim_mask_points;
     
     ///
     void InitializeScoringCollection();
@@ -61,6 +63,10 @@ class ControlPointRun : public G4Run {
     const std::map<G4String,ScoringMap>& GetScoringCollections() const {return m_hashed_scoring_map;}
 
     ///
+    std::vector<G4ThreeVector>& GetSimMaskPoints() {return m_sim_mask_points;}
+    const std::vector<G4ThreeVector>& GetSimMaskPoints() const {return m_sim_mask_points;}
+
+    ///
     void EndOfRun();
 };
 
@@ -82,7 +88,7 @@ class ControlPoint {
     G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
     G4ThreeVector TransformToMaskPosition(const G4ThreeVector& position) const;
 
-    const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan") const;
+    const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
     std::string GetSimOutputTFileName(bool workerMT = false) const;
@@ -98,6 +104,8 @@ class ControlPoint {
     const std::vector<std::string>& DataTypes() const { return m_data_types; }
 
     void FillEventCollections(G4HCofThisEvent* evtHC);
+
+    void FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx);
 
     ///
     static std::vector<G4String> GetRunCollectionNames();
@@ -119,7 +127,6 @@ class ControlPoint {
     std::set<Scoring::Type> m_scoring_types;
 
     std::vector<G4ThreeVector> m_plan_mask_points;
-    G4VectorCache<G4ThreeVector> m_sim_mask_points;
 
     /// Store to kepp raw pointers from ControlPoint::GenerateRun
     std::vector<ControlPointRun*> m_mt_run;
@@ -136,8 +143,8 @@ class ControlPoint {
 
     G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMask();
-    void FillPlanFieldMaskForRegularShapes(const std::string& shape);
-    void FillPlanFieldMaskFromRTPlan();
+    void FillPlanFieldMaskForRegularShapes(const std::string& shape,double current_z);
+    void FillPlanFieldMaskFromRTPlan(double current_z);
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
 

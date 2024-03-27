@@ -24,7 +24,7 @@ def plot_scoring_volume_mask_from_csv(mask_path_file, volume_mask_path,slice):
     z_values = df_0['Z [mm]'].unique().tolist()
     z_values.sort()    
     df_1 = df_0[df_0['Z [mm]']==z_values[slice]]
-    df_2 = df_1[df_1['inFieldTag']==1]
+    df_2 = df_1[df_1['MaskTag']==1]
     
     # print(df_2)
     
@@ -94,17 +94,19 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
 
 if __name__=="__main__":
-    job = 31
-    job_name = "flsz_propagation_study_voxelised_cell_dose_cp-0.csv"
-    file = f"/home/g4rt/test/g4rt/output/flsz_propagation_study_{job}/{job_name}"
-    plot_from_csv(file,14,"xz","MaskTag")
+    job = 1
     
-    mask_job_name = "cp-0_field_mask.csv"
-    mask_file = f"/home/g4rt/test/g4rt/output/flsz_propagation_study_{job}/{mask_job_name}"
-    # vol_job_name = "cp-0_scoring_volume_mask.csv"
-    vol_job_name = "cp-0_scoring_volume_voxelised_mask.csv"
-    vol_file_mask = f"/home/g4rt/test/g4rt/output/flsz_propagation_study_{job}/{vol_job_name}"
+    job_name = "cp-0_dose3d_voxel.csv"
+    file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
+    # plot_from_csv(file,14,"xz","MaskTag")
     
-    plot_scoring_volume_mask_from_csv(mask_file, vol_file_mask, 1)
+    mask_job_name = "cp-0_field_mask_sim.csv"
+    # mask_job_name = "cp-0_field_mask_plan.csv"
+    mask_file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{mask_job_name}"
+    # # vol_job_name = "cp-0_scoring_volume_mask.csv"
+    # vol_job_name = "cp-0_scoring_volume_voxelised_mask.csv"
+    # vol_file_mask = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/{vol_job_name}"
+    
+    plot_mask_from_csv(mask_file)
     
     

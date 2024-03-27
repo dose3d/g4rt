@@ -39,6 +39,9 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
   ///
   void DefineSensitiveDetector();
 
+  ///
+  IPhysicalVolume* GetHead() const { return m_headInstance; }
+
   private:
   LinacGeometry();
 

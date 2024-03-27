@@ -88,7 +88,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, G4String("Ghost")); 
+    m_config->SetValue(unit, G4String("Simplified")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -157,7 +157,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("BuildLinac") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-      thisConfig()->SetTValue<bool>(unit, G4bool(false));
+      thisConfig()->SetTValue<bool>(unit, G4bool(true));
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("BuildPatient") == 0){
@@ -483,10 +483,8 @@ EMlcModel GeoSvc::GetMlcModel() const {
     return EMlcModel::Millennium;
   } else if (mlcName.compare("Varian-HD120") == 0) {
     return EMlcModel::HD120;
-  } else if (mlcName.compare("MlcCustom") == 0) {
-    return EMlcModel::Custom;
-  } else if (mlcName.compare("Ghost") == 0) {
-    return EMlcModel::Ghost;
+  } else if (mlcName.compare("Simplified") == 0) {
+    return EMlcModel::Simplified;
   } else if (mlcName.compare("None") == 0) {
     return EMlcModel::None;
   }else {

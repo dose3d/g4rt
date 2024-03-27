@@ -1,6 +1,12 @@
 #include "CsvRunAnalysis.hh"
 #include "Services.hh"
 #include "ControlPoint.hh"
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+using namespace py::literals;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -70,7 +76,7 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto data_types = cp->DataTypes();
     for(const auto& type : data_types){
         LOGSVC_INFO("Writing field mask (type={}) to CSV...",type);
-        auto field_mask = cp->GetFieldMask(type);
+        const auto& field_mask = cp->GetFieldMask(type);
         if(field_mask.size()>0){
             auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
             std::string header = "X [mm],Y [mm],Z [mm]";
@@ -81,6 +87,8 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
                 c_outFile << mp.getX() << "," << mp.getY() << "," << mp.getZ() << std::endl;
             c_outFile.close();
             LOGSVC_INFO("Writing Field Mask to file {} - done!",file);
+            auto writePngCopy = py::module::import("field_mask_png");
+            writePngCopy.attr("save_mask_as_png")(file);
         }
     }
 }

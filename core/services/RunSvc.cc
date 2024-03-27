@@ -75,7 +75,9 @@ void RunSvc::Configure() {
   DefineUnit<double>("FieldSizeA");
   DefineUnit<double>("FieldSizeB");
   DefineUnit<std::string>("FieldShape");
-  DefineUnit<double>("phspShiftZ");
+  DefineUnit<std::string>("MlcInputFileDefault");
+  DefineUnit<std::string>("MlcInputFile"); 
+  DefineUnit<double>("phspShiftZ"); 
   DefineUnit<std::string>("Physics");
   DefineUnit<int>("idEnergy");
 
@@ -86,7 +88,7 @@ void RunSvc::Configure() {
   DefineUnit<bool>("SavePhSp");
   DefineUnit<std::string>("PhspInputFileName");
   DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
-  DefineUnit<std::string>("PhspInputPosition");
+  // DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
 
   // DICOM initial parameters
@@ -171,6 +173,15 @@ void RunSvc::DefaultConfig(const std::string &unit) {
     m_config->SetTValue<std::string>(unit, std::string("Rectangular"));
   }
 
+  if (unit.compare("MlcInputFileDefault") == 0){
+    std::string data_dir = PROJECT_DATA_PATH;
+    m_config->SetValue(unit,std::string(data_dir+"/TrueBeam/MLC/Mlc_3x3.dat") );
+  }
+
+  if (unit.compare("MlcInputFile") == 0){
+    m_config->SetTValue<std::string>(unit, std::string());
+  }
+
   if (unit.compare("PhspEvtVrtxMultiplicityTreshold") == 0){
     m_config->SetTValue<int>(unit, int(1));
   }
@@ -198,11 +209,6 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("PhspInputFileName") == 0){
     m_config->SetTValue<std::string>(unit, std::string("None"));
-  }
-  // if (unit.compare("PhspInputFileName") == 0) thisConfig()->SetValue(unit, G4String("/primo/iaea_clinac2300/s2/field3x3-s2"));
-
-  if (unit.compare("PhspInputPosition") == 0){
-    m_config->SetTValue<std::string>(unit, std::string("s2"));
   }
 
   if (unit.compare("PhspOutputFileName") == 0) 
@@ -402,6 +408,10 @@ void RunSvc::ParseTomlConfig(){
       if(nEvents<0)
         nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
       m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
+      auto mlcFile = (config[configObj]["MlcInputFile"][i].value_or(std::string()));
+      if(mlcFile.empty())
+        mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
+      m_control_points_config.back().MlcPositioninngFile = mlcFile;
     }
   }
   else{
@@ -446,11 +456,13 @@ void RunSvc::ParseDicomInputData(){
   auto dicomSvc = Service<DicomSvc>(); // initialize the DICOM service
   auto nCP = 1; // temp fixed, final version: dicomSvc->GetTotalNumberOfControlPoints();
   LOGSVC_INFO("RT-Plan #ControlPoints: {}",nCP);
+  auto dicomRtPlanFile = thisConfig()->GetValue<std::string>("RTPlanInputFile");
   int nevts = 10000; // temp fixed
   double rot_in_deg = 0;// temp fixed
   for(unsigned i=0;i<nCP;++i){
     m_control_points_config.emplace_back(i,nevts,rot_in_deg);
-    //TODO m_control_points_config.back().RTPlanFile = ...
+    m_control_points_config.back().MlcPositioninngFile = dicomRtPlanFile;
+    //TODO m_current_control_point.back().MlcPositioninngFile = mlcFile;
     
   }
 }
@@ -461,7 +473,8 @@ void RunSvc::SetSimulationDefaultConfig(){
   G4double rotationInDeg = 0.;
   auto nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
   m_control_points_config.emplace_back(0,nEvents,rotationInDeg);
-
+  auto mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
+  m_control_points_config.back().MlcPositioninngFile = mlcFile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

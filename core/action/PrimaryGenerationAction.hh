@@ -40,8 +40,6 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
     static void SetRotation(G4RotationMatrix* rotMatrix) { m_rotation_matrix = rotMatrix; }
 
   private:
-    ///
-    void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
     ///
     PrimaryGeneratorType m_generatorType = PrimaryGeneratorType::PhspIAEA;

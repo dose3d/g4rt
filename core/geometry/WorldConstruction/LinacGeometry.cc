@@ -38,6 +38,7 @@ void LinacGeometry::Configure() {
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   Configurable::PrintConfig();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

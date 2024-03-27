@@ -1,6 +1,7 @@
+#include "LinacGeometry.hh"
 #include "BeamCollimation.hh"
-#include "MlcCustom.hh"
 #include "MlcMillennium.hh"
+#include "MlcSimplified.hh"
 #include "MlcHD120.hh"
 #include "Services.hh"
 
@@ -12,6 +13,10 @@
 #include "G4Tubs.hh"
 #include "G4Box.hh"
 #include "G4Cons.hh"
+
+std::unique_ptr<VMlc> BeamCollimation::m_mlc = nullptr;
+G4double BeamCollimation::AfterMLC = -430.0;
+G4double BeamCollimation::BeforeMLC  = -550.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -105,14 +110,42 @@ void BeamCollimation::Reset() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-G4ThreeVector BeamCollimation::TransformToHeadOuputPlane(const G4ThreeVector& momentum){
-  G4double x, y, z, zRatio = 0.;
-  z = 1000 - 320.;
-  zRatio = z/momentum.getZ();
-  x = zRatio * momentum.getX();
-  y = zRatio * momentum.getY();
-  z = -320;
-  return G4ThreeVector(x,y,z);
+void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
+
+  for(int i=0; i < p_vrtx.size();++i){
+    BeamCollimation::SetParticlePositionTransformedInZ(p_vrtx.at(i), BeforeMLC);
+  }
+
+  auto model = Service<GeoSvc>()->GetMlcModel();
+  if(model != EMlcModel::Simplified)
+    return;
+
+  for(int i=0; i < p_vrtx.size();++i){
+    auto vrtx = p_vrtx.at(i);
+    auto particlePosition = vrtx->GetPosition();
+    if(!m_mlc->IsInField(BeamCollimation::SetParticlePositionTransformedInZ(vrtx, AfterMLC))) {
+      delete vrtx;
+      p_vrtx.at(i) = nullptr;
+    }
+  }
+  p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
+  Service<RunSvc>()->CurrentControlPoint()->FillSimFieldMask(p_vrtx);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector BeamCollimation::SetParticlePositionTransformedInZ(G4PrimaryVertex* vrtx, G4double finalZ) {
+  G4double x, y, zRatio = 0.;
+  G4double deltaX, deltaY, deltaZ;
+  G4ThreeVector position = vrtx->GetPosition();
+  deltaZ = finalZ - position.getZ();
+  G4ThreeVector directionalVersor = vrtx->GetPrimary()->GetMomentum().unit();
+  zRatio = deltaZ / directionalVersor.getZ(); 
+  x = position.getX() + zRatio * directionalVersor.getX(); // x + deltaX;
+  y = position.getY() + zRatio * directionalVersor.getY(); // y + deltaY;
+  vrtx->SetPosition(x, y, finalZ);
+  return G4ThreeVector(x, y, finalZ);
 }
 
 
@@ -275,33 +308,32 @@ bool BeamCollimation::MLC() {
   if(model == EMlcModel::None)
     return true;
 
-  if(!m_mlc){
+  if(!m_mlc.get()){
     G4cout << "[INFO]:: BeamCollimation::MLC: Constructing the MLC model instantiation! " << G4endl;
     switch (model) {
-      case EMlcModel::Custom:
-        m_mlc = std::make_unique<MlcCustom>(m_parentPV);
-        break;
       case EMlcModel::Millennium:
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
         m_mlc = std::make_unique<MlcHd120>(m_parentPV);
         break;
+      case EMlcModel::Simplified:
+        LOGSVC_INFO("Using Simplified type of MLC");
+        m_mlc = std::make_unique<MlcSimplified>();
+        break;
     }
   } else {
     G4cout << "[INFO]:: BeamCollimation::MLC: RESET the MLC model instantiation! " << G4endl;
     switch (model) {
-      case EMlcModel::Custom:
-        m_mlc.reset(new MlcCustom(m_parentPV));
-        break;
       case EMlcModel::Millennium:
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
         m_mlc.reset(new MlcHd120(m_parentPV));
         break;
-      case EMlcModel::Ghost:
-        LOGSVC_INFO("Using Ghost type of MLC")
+      case EMlcModel::Simplified:
+        LOGSVC_INFO("Using Simplified type of MLC");
+        m_mlc.reset(new MlcSimplified());
         break;
     }
 

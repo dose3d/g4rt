@@ -399,19 +399,24 @@ void RunSvc::ParseTomlConfig(){
   }
   auto config = toml::parse_file(configFile);
   G4double rotationInDeg = 0.;
-  auto numberOfCP = config[configObj]["Control_Points_In_Treatment_Plan"].value_or(0);
+  auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
+  //auto regularFieldMaskArray = config[configObj].get_table_array("RegularFieldMask");
   if(numberOfCP>0){
     for( int i = 0; i < numberOfCP; i++ ){
-      rotationInDeg = (config[configObj]["Gantry_Angle_Per_Control_Point"][i].value_or(0.0));
+      rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
       G4cout << " DEBUG: RunSvc::ParseTomlConfig: rotationInDeg: " << rotationInDeg << G4endl;
-      int nEvents = config[configObj]["Particle_Counter_Per_Control_Point"][i].value_or(-1);
+      int nEvents = config[configObj]["nParticles"][i].value_or(-1);
       if(nEvents<0)
         nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
+      /// _______________________________________________________________________
+      /// Define the new control point configuration
       m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
-      auto mlcFile = (config[configObj]["MlcInputFile"][i].value_or(std::string()));
+
+      std::string mlcFile = (config[configObj]["MlcInputFile"][i].value_or(std::string()));
       if(mlcFile.empty())
         mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
-      m_control_points_config.back().MlcPositioninngFile = mlcFile;
+      m_control_points_config.back().MlcInputFile = mlcFile;
+      std::string shape = (config[configObj]["RegularFieldMask"][i].value_or(std::string()));
     }
   }
   else{
@@ -461,8 +466,8 @@ void RunSvc::ParseDicomInputData(){
   double rot_in_deg = 0;// temp fixed
   for(unsigned i=0;i<nCP;++i){
     m_control_points_config.emplace_back(i,nevts,rot_in_deg);
-    m_control_points_config.back().MlcPositioninngFile = dicomRtPlanFile;
-    //TODO m_current_control_point.back().MlcPositioninngFile = mlcFile;
+    m_control_points_config.back().MlcInputFile = dicomRtPlanFile;
+    //TODO m_current_control_point.back().MlcInputFile = mlcFile;
     
   }
 }
@@ -474,7 +479,7 @@ void RunSvc::SetSimulationDefaultConfig(){
   auto nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
   m_control_points_config.emplace_back(0,nEvents,rotationInDeg);
   auto mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
-  m_control_points_config.back().MlcPositioninngFile = mlcFile;
+  m_control_points_config.back().MlcInputFile = mlcFile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

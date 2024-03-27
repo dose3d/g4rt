@@ -48,13 +48,13 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
-nControlPoints = 2
-BeamRotation = [15.0,30.0] # Per Control Point
-nParticles = [1e3,1e3] # Per Control Point
-MlcInputFile = [
+PlanInputFile = [
     "Mlc_3x3.dat",
     "Mlc_3x3.dat"
 ]
+nControlPoints = 2
+BeamRotation = [15.0,30.0] # Per Control Point
+nParticles = [1e3,1e3] # Per Control Point
 RegularFieldMask = [
     {Shape = "Elipsoidal", SizeA = 25.0, SizeB = 50.0 },
     {Shape = "Elipsoidal", SizeA = 10.0, SizeB = 10.0 }

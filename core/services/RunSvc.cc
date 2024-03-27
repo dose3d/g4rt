@@ -400,7 +400,7 @@ void RunSvc::ParseTomlConfig(){
   auto config = toml::parse_file(configFile);
   G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
-  //auto regularFieldMaskArray = config[configObj].get_table_array("RegularFieldMask");
+  // auto regularFieldMaskArray = config[configObj].get_table_array("RegularFieldMask");
   if(numberOfCP>0){
     for( int i = 0; i < numberOfCP; i++ ){
       rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
@@ -418,7 +418,10 @@ void RunSvc::ParseTomlConfig(){
       m_control_points_config.back().MlcInputFile = mlcFile;
       m_control_points_config.back().FieldShape = (config[configObj]["RegularFieldMask"][i]["Shape"].value_or(std::string()));
       m_control_points_config.back().FieldSizeA = (config[configObj]["RegularFieldMask"][i]["SizeA"].value_or(G4double(0.0)));
+      // auto size = config[configObj]["RegularFieldMask"].as_array()->size();
+      // auto size = config[configObj]["RegularFieldMask"][i].as_table()->size();
       m_control_points_config.back().FieldSizeB = (config[configObj]["RegularFieldMask"][i]["SizeB"].value_or(G4double(0.0)));
+      // std::cout << "Size cp no " << i << " : " << size << std::endl;
     }
   }
   else{

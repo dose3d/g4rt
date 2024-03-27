@@ -398,6 +398,18 @@ void RunSvc::ParseTomlConfig(){
     G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
   auto config = toml::parse_file(configFile);
+
+  // Reading the plan from files is defined with the highest priority
+  if (config[configObj].as_table()->find("PlanInputFile")!= config[configObj].as_table()->end()){
+    // Each file is assumed to define single Control Point!
+    auto numberOfCP = config[configObj]["PlanInputFile"].as_array()->size();
+    for( int i = 0; i < numberOfCP; i++ ){
+      std::string planFile = config[configObj]["PlanInputFile"][i].value_or(std::string());
+    }
+    LOGSVC_INFO("Importing control points configuration from files:\n{}",numberOfCP);
+
+  }
+
   G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
   // auto regularFieldMaskArray = config[configObj].get_table_array("RegularFieldMask");
@@ -418,7 +430,6 @@ void RunSvc::ParseTomlConfig(){
       m_control_points_config.back().MlcInputFile = mlcFile;
       m_control_points_config.back().FieldShape = (config[configObj]["RegularFieldMask"][i]["Shape"].value_or(std::string()));
       m_control_points_config.back().FieldSizeA = (config[configObj]["RegularFieldMask"][i]["SizeA"].value_or(G4double(0.0)));
-      // auto size = config[configObj]["RegularFieldMask"].as_array()->size();
       // auto size = config[configObj]["RegularFieldMask"][i].as_table()->size();
       m_control_points_config.back().FieldSizeB = (config[configObj]["RegularFieldMask"][i]["SizeB"].value_or(G4double(0.0)));
       // std::cout << "Size cp no " << i << " : " << size << std::endl;

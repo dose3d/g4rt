@@ -416,7 +416,9 @@ void RunSvc::ParseTomlConfig(){
       if(mlcFile.empty())
         mlcFile = thisConfig()->GetValue<std::string>("MlcInputFileDefault");
       m_control_points_config.back().MlcInputFile = mlcFile;
-      std::string shape = (config[configObj]["RegularFieldMask"][i].value_or(std::string()));
+      m_control_points_config.back().FieldShape = (config[configObj]["RegularFieldMask"][i]["Shape"].value_or(std::string()));
+      m_control_points_config.back().FieldSizeA = (config[configObj]["RegularFieldMask"][i]["SizeA"].value_or(G4double(0.0)));
+      m_control_points_config.back().FieldSizeB = (config[configObj]["RegularFieldMask"][i]["SizeB"].value_or(G4double(0.0)));
     }
   }
   else{

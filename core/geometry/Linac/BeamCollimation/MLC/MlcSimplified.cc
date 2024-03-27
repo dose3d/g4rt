@@ -10,8 +10,8 @@ MlcSimplified::MlcSimplified() : VMlc("Simplified"){
 
 void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
     auto getScaledFieldAB = [=](G4double zPosition) {
-        auto fieldSize_a = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
-        auto fieldSize_b = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+        auto fieldSize_a = Service<RunSvc>()->CurrentControlPoint()->GetFieldSizeA();
+        auto fieldSize_b = Service<RunSvc>()->CurrentControlPoint()->GetFieldSizeB();
         auto ssd = 1000.0;
         if(fieldSize_b == 0)
             fieldSize_b = fieldSize_a;
@@ -30,6 +30,7 @@ bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition) {
     if(!m_isInitialized)
         Initialize(vertexPosition);
 
+    // std::cout << "Field: " << m_fieldParamA << " " << m_fieldParamB << std::endl;
     if (m_fieldShape == "Rectangular"){
         // std::cout << "In field Vertex: " << vertexPosition << " " << m_fieldParamA << " " << m_fieldParamB <<   std::endl;
         if (vertexPosition.x()<=-m_fieldParamA || vertexPosition.x() >= m_fieldParamA || vertexPosition.y()<=-m_fieldParamB || vertexPosition.y() >= m_fieldParamB ){

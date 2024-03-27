@@ -28,6 +28,9 @@ class ControlPointConfig {
     int NEvts = 0.;
     int Id = 0;
     std::string MlcInputFile = std::string();
+    std::string FieldShape = std::string();
+    G4double FieldSizeA = G4double();
+    G4double FieldSizeB = G4double();
 };
 
 class ControlPointRun : public G4Run {
@@ -99,6 +102,10 @@ class ControlPoint {
 
     ControlPointRun* GetRun() {return m_cp_run.Get();}
 
+    G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
+
+    G4double GetFieldSizeB() const { return m_config.FieldSizeB; }
+
     std::string GetOutputFileName() const;
 
     const std::vector<std::string>& DataTypes() const { return m_data_types; }
@@ -143,7 +150,7 @@ class ControlPoint {
 
     G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMask();
-    void FillPlanFieldMaskForRegularShapes(const std::string& shape,double current_z);
+    void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskFromRTPlan(double current_z);
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);

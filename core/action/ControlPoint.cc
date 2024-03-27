@@ -185,9 +185,14 @@ void ControlPointRun::FillDataTagging(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
-    G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << config.RotationInDeg << G4endl;
+    G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << m_config.RotationInDeg << G4endl;
+    G4cout << " DEBUG: ControlPoint:Ctr: FieldShape: " << m_config.FieldShape << G4endl;
+    G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeA: " << m_config.FieldSizeA << G4endl;
+    G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -336,16 +341,15 @@ void ControlPoint::FillPlanFieldMask(){
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
     auto configSvc = Service<ConfigSvc>();
-    std::string shape = configSvc->GetValue<std::string>("RunSvc", "FieldShape");
-    LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",shape,GetDegreeRotation());
+    LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldShape,GetDegreeRotation());
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
 
-    if( shape.compare("Rectangular")==0 ||
-        shape.compare("Elipsoidal")==0){
-        FillPlanFieldMaskForRegularShapes(shape,z_position);
+    if( m_config.FieldShape.compare("Rectangular")==0 ||
+        m_config.FieldShape.compare("Elipsoidal")==0){
+        FillPlanFieldMaskForRegularShapes(z_position);
     }
-    if(shape.compare("RTPlan")==0){
+    if(m_config.FieldShape.compare("RTPlan")==0){
         FillPlanFieldMaskFromRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
@@ -358,15 +362,15 @@ void ControlPoint::FillPlanFieldMask(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape, double current_z){
+void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
     double current_x,current_y;
     double x_range, y_range;
 
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
-    x_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeA");
-    y_range = Service<ConfigSvc>()->GetValue<double>("RunSvc", "FieldSizeB");
+    x_range = m_config.FieldSizeA;
+    y_range = m_config.FieldSizeB;
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
         LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
@@ -386,7 +390,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(const std::string& shape, d
     for(int i = 0; i<n_x; i++){
         current_y = min_y + (0.5 * FIELD_MASK_POINTS_DISTANCE);
         for(int j = 0; j<n_y; j++){
-            if(shape.compare("Elipsoidal")==0){
+            if(m_config.FieldShape.compare("Elipsoidal")==0){
                 if ((pow(current_x,2)/ pow((x_range / 2.),2) + pow(current_y,2)/pow((y_range / 2.),2)) < 1 ){
                     m_plan_mask_points.push_back(rotate(G4ThreeVector(current_x,current_y,current_z)));
                 } 
@@ -525,7 +529,7 @@ void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
             else {
                 auto thisHitsCollPtr = evtHC->GetHC(collID);
                 if(thisHitsCollPtr) // The particular collection is stored at the current event.
-                   FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
+                    FillEventCollection(run_collection.first,dynamic_cast<VoxelHitsCollection*>(thisHitsCollPtr));
             }
         }
     }

@@ -14,6 +14,7 @@ data/*
 !data/Results/
 !data/dose3d/
 !data/gps/
+!data/plan/
 build/
 build-vscode/
 output/

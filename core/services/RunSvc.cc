@@ -416,7 +416,7 @@ void RunSvc::ParseTomlConfig(){
       LOGSVC_INFO("Importing control point configuration from file: {}",planFile);
       m_control_points_config.push_back(DicomSvc::CustomPlan.GetControlPointConfig(i,planFile));
     }
-
+    return;
   }
   // __________________________________________________________________________
   // Reading the plan from custom TOML inteface is defined with the next priority

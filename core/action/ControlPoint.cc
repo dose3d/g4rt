@@ -350,7 +350,9 @@ void ControlPoint::FillPlanFieldMask(){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
     if(m_config.FieldShape.compare("RTPlan")==0){
-        FillPlanFieldMaskFromRTPlan(z_position);
+        FillPlanFieldMaskForRegularShapes(z_position); // temporary
+
+        // FillPlanFieldMaskFromRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";

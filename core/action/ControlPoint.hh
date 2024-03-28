@@ -102,6 +102,8 @@ class ControlPoint {
 
     ControlPointRun* GetRun() {return m_cp_run.Get();}
 
+    std::string GetFieldShape() const { return m_config.FieldShape; } 
+
     G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 
     G4double GetFieldSizeB() const { return m_config.FieldSizeB; }

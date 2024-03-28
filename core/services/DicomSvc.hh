@@ -46,12 +46,47 @@ class ICtSvc {
 /// 
 class ICustomPlan {
   private:
-    static double GetNEvents(const std::string& planFile) {
-      return 1e3; // TODO Read this from planFile
-    }
+  // TODO: "Don't repeat yourself" (DRY)...
+    static int GetNEvents(const std::string& planFile) {
+      std::string svalue;
+      std::string data_path = PROJECT_DATA_PATH;
+      auto plan = data_path+"/"+planFile;
+      std::string line;
+      std::ifstream file(plan.c_str());
+      if (file.is_open()) {
+        while (getline(file, line)){
+          if (line.length() > 0 && (line.rfind("# Particles:",0) == 0)) {
+            std::istringstream ss(line);
+            while (getline(ss, svalue,':')){
+              if(svalue.rfind("#",0)!=0){
+                return static_cast<int>(std::stod(svalue.c_str())); 
+                }
+              }
+            } 
+          }
+        }
+      return 0; 
+      }
     static double GetRotation(const std::string& planFile) {
-      return 0.0; // TODO Read this from planFile
-    }
+      std::string svalue;
+      std::string data_path = PROJECT_DATA_PATH;
+      auto plan = data_path+"/"+planFile;
+      std::string line;
+      std::ifstream file(plan.c_str());
+      if (file.is_open()) {
+        while (getline(file, line)){
+          if (line.length() > 0 && (line.rfind("# Rotation:",0) == 0)) {
+            std::istringstream ss(line);
+            while (getline(ss, svalue,':')){
+              if(svalue.rfind("#",0)!=0){
+                return std::stod(svalue.c_str()); 
+                }
+              }
+            } 
+          }
+        }
+      return 0.; 
+      }
 
   public:
     static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) {
@@ -59,6 +94,9 @@ class ICustomPlan {
       auto rotation = GetRotation(planFile);
       auto config = ControlPointConfig(id, nEvents, rotation);
       config.MlcInputFile = planFile;
+      config.FieldShape = "RTPlan";
+      config.FieldSizeA = 23.0; // Temp
+      config.FieldSizeB = 35.0; // Temp 
       return std::move(config);
     }
 };

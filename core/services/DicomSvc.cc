@@ -50,19 +50,18 @@ DicomSvc *DicomSvc::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double DicomSvc::GetRTPlanJawPossition(const std::string& jawName, int current_beam, int current_controlpoint) const {
-  G4cout << "[INFO]:: Reading the Jaws configuration for "<< jawName<<" jaw; "
-                                                          << current_beam <<" beam; "
-                                                          << current_controlpoint<<" ctrl point;" << G4endl;
+G4double IDicomPlan::GetJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
+  LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
+  LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
     G4Exception("DicomSvc", "GetRTPlanJawPossition", FatalErrorInArgument, "Wrong jaw name input given!");
 
   auto rtplanJawsReader = py::module::import("dicom_rtplan_jaws");
-  auto beams_counter = rtplanJawsReader.attr("return_number_of_beams")(m_rtplan_file);
+  auto beams_counter = rtplanJawsReader.attr("return_number_of_beams")(planFile);
   const int number_of_beams = beams_counter.cast<int>();
-  auto controlpoints_counter = rtplanJawsReader.attr("return_number_of_controlpoints")(m_rtplan_file, number_of_beams);
+  auto controlpoints_counter = rtplanJawsReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
   const int number_of_controlpoints = controlpoints_counter.cast<int>();
-  auto jaws_counter = rtplanJawsReader.attr("return_number_of_jaws")(m_rtplan_file);
+  auto jaws_counter = rtplanJawsReader.attr("return_number_of_jaws")(planFile);
   const int number_of_jaws = jaws_counter.cast<int>();
   std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
             << number_of_jaws << " jaws." << std::endl;
@@ -70,7 +69,7 @@ G4double DicomSvc::GetRTPlanJawPossition(const std::string& jawName, int current
   if (jawName == "X2") jawIdx = 1;
   else if (jawName == "Y1") jawIdx = 2;
   else if (jawName == "Y2") jawIdx = 3;
-  return rtplanJawsReader.attr("return_position")(m_rtplan_file, current_beam, current_controlpoint, jawIdx).cast<double>();
+  return rtplanJawsReader.attr("return_position")(planFile, beamIdx, controlpointIdx, jawIdx).cast<double>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

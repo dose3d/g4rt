@@ -54,6 +54,7 @@ class IPlan {
 class IDicomPlan: public IPlan {
   public:
     ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
+    G4double GetJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const;
 };
 ////////////////////////////////////////////////////////////////////////////////
 /// 
@@ -112,10 +113,6 @@ class DicomSvc {
     bool Initialized() {
       return m_plan.get() ? true : false;
     }
-
-    ///\brief  Mądry opis
-    G4double GetRTPlanJawPossition(const std::string& jawName, int current_beam, int current_controlpoint) const;
-
     ///
     std::vector<G4double> GetRTPlanMlcPossitioning(const std::string& side, int current_beam, int current_controlpoint) const;
 

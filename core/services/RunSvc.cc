@@ -72,11 +72,7 @@ void RunSvc::Configure() {
 
   // PRIMARY GENERATOR
   DefineUnit<std::string>("BeamType");
-  DefineUnit<double>("FieldSizeA");
-  DefineUnit<double>("FieldSizeB");
-  DefineUnit<std::string>("FieldShape");
   DefineUnit<std::string>("MlcInputFileDefault");
-  DefineUnit<std::string>("MlcInputFile"); 
   DefineUnit<double>("phspShiftZ"); 
   DefineUnit<std::string>("Physics");
   DefineUnit<int>("idEnergy");
@@ -90,10 +86,6 @@ void RunSvc::Configure() {
   DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
   // DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
-
-  // DICOM initial parameters
-  DefineUnit<bool>("DICOM"); // the general flag to activate DICOM processing
-  DefineUnit<std::string>("RTPlanInputFile");
 
   // ANALYSIS MANAGEMENT
   DefineUnit<bool>("RunAnalysis");
@@ -161,25 +153,11 @@ void RunSvc::DefaultConfig(const std::string &unit) {
   // default source type
   // Available source types: phaseSpace, gps, phaseSpaceCustom
   if (unit.compare("BeamType") == 0) 
-    thisConfig()->SetTValue<std::string>(unit, std::string("None")); //IAEA or gps 
-
-  if (unit.compare("FieldSizeA") == 0) 
-    thisConfig()->SetTValue<double>(unit, double(-1)); // by default no cut at the level of PrimaryGenerationAction::GeneratePrimaries
-
-  if (unit.compare("FieldSizeB") == 0) 
-    thisConfig()->SetTValue<double>(unit, double(-1)); // by default no cut at the level of PrimaryGenerationAction::GeneratePrimaries
-
-  if (unit.compare("FieldShape") == 0){
-    m_config->SetTValue<std::string>(unit, std::string("Rectangular"));
-  }
+    thisConfig()->SetTValue<std::string>(unit, std::string("None")); //IAEA or gps
 
   if (unit.compare("MlcInputFileDefault") == 0){
     std::string data_dir = PROJECT_DATA_PATH;
     m_config->SetValue(unit,std::string(data_dir+"/TrueBeam/MLC/Mlc_3x3.dat") );
-  }
-
-  if (unit.compare("MlcInputFile") == 0){
-    m_config->SetTValue<std::string>(unit, std::string());
   }
 
   if (unit.compare("PhspEvtVrtxMultiplicityTreshold") == 0){
@@ -456,12 +434,6 @@ void RunSvc::SetSimulationConfiguration(){
     ParseTomlConfig();
   else
     SetSimulationDefaultConfig();
-  
-  // TODO: We have to rethink this logic. Once the dicom file path is passed as an argument
-  // in TOML job file we should be able to remove this DICOM flag.
-  // DefineControlPoints should extract all needed information from the controlPointsConfig
-  if(m_configSvc->GetValue<bool>("RunSvc", "DICOM"))
-    ParseDicomInputData();
     
   DefineControlPoints();
 }
@@ -478,23 +450,6 @@ void RunSvc::DefineControlPoints() {
     G4String msg = "Any control point is created. Verify job definition";
     LOGSVC_CRITICAL(msg.data());
     G4Exception("RunSvc", "DefineControlPoints", FatalErrorInArgument, msg);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void RunSvc::ParseDicomInputData(){
-  auto dicomSvc = Service<DicomSvc>(); // initialize the DICOM service
-  auto nCP = 1; // temp fixed, final version: dicomSvc->GetTotalNumberOfControlPoints();
-  LOGSVC_INFO("RT-Plan #ControlPoints: {}",nCP);
-  auto dicomRtPlanFile = thisConfig()->GetValue<std::string>("RTPlanInputFile");
-  int nevts = 10000; // temp fixed
-  double rot_in_deg = 0;// temp fixed
-  for(unsigned i=0;i<nCP;++i){
-    m_control_points_config.emplace_back(i,nevts,rot_in_deg);
-    m_control_points_config.back().MlcInputFile = dicomRtPlanFile;
-    //TODO m_current_control_point.back().MlcInputFile = mlcFile;
-    
   }
 }
 

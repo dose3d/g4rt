@@ -79,7 +79,6 @@ class RunSvc : public TomlConfigurable, Logable {
   ///
   void SetSimulationConfiguration();
   void SetSimulationDefaultConfig();
-  void ParseDicomInputData();
 
   ///\brief Perform User's configuration within the Geant4 framework.
   void UserG4Initialization();

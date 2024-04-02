@@ -61,6 +61,9 @@ namespace svc {
   ///
   std::vector<std::string> getFilesInDir(const std::string& path, const std::string& extension=std::string());
 
+  ///
+  std::string getFileExtenstion(const std::string& filePath);
+
   ///\brief The number to std::string conversion function.
   ///\param v number to be converted.
   ///\param precision precision to be taken in the conversion.

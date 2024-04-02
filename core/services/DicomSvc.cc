@@ -156,6 +156,21 @@ void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig DicomSvc::GetControlPointConfig(int id, const std::string& planFile){
-  return ICustomPlan::GetControlPointConfig(id, planFile);
+  auto file = planFile;
+  if(file.front() != '/'){ // the path is not absolute
+    std::string data_path = PROJECT_DATA_PATH;
+    file = data_path + "/" + file;
+  }
+  auto fileExt = svc::getFileExtenstion(file);
+  if(fileExt == "dat"){
+    return ICustomPlan::GetControlPointConfig(id, planFile);
+  }
+  // else if(fileExt == "dcm"){
+  //   return IDicomPlan::GetControlPointConfig(id, planFile);
+  // }
+  G4String msg = "Unknown file extension: " + fileExt;
+  LOGSVC_CRITICAL(msg.data());
+  G4Exception("DicomSvc", "GetControlPointConfig", FatalErrorInArgument, msg);
+  return ControlPointConfig();
 }
 

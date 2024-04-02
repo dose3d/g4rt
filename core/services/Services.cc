@@ -180,6 +180,15 @@ std::vector<std::string> svc::getFilesInDir(const std::string& path, const std::
   return files;
 }
 
+std::string svc::getFileExtenstion(const std::string& filePath){
+  // Find the last dot position
+  std::size_t dotPos = filePath.rfind('.');
+  // If there's no dot, or it's the first character (hidden files in Unix), return an empty string
+  if (dotPos == std::string::npos || dotPos == 0)
+      return "";
+  // Extract and return the substring after the last dot
+  return filePath.substr(dotPos + 1);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parsing a String Containing a Number in Scientific Notation

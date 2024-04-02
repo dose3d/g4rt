@@ -143,6 +143,8 @@ unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
   return 100; // dummy number
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const {
 
     // PyGILState_Release(gstate);
@@ -150,3 +152,10 @@ void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::
     m_ct_svc.create_ct_series(series_csv_path);
     m_ct_svc.~ICtSvc();
   }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+ControlPointConfig DicomSvc::GetControlPointConfig(int id, const std::string& planFile){
+  return ICustomPlan::GetControlPointConfig(id, planFile);
+}
+

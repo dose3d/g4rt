@@ -161,10 +161,11 @@ class DicomSvc {
     ///
     unsigned GetTotalNumberOfControlPoints() const;
 
+    ///
     void ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const;
 
     ///
-    static ICustomPlan CustomPlan;
+    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
 };
 
 #endif  // Dose3D_DicomSvcSVC_H

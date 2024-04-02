@@ -414,7 +414,7 @@ void RunSvc::ParseTomlConfig(){
       }
       // Define the new control point configuration
       LOGSVC_INFO("Importing control point configuration from file: {}",planFile);
-      m_control_points_config.push_back(DicomSvc::CustomPlan.GetControlPointConfig(i,planFile));
+      m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i,planFile));
     }
     return;
   }
@@ -457,6 +457,9 @@ void RunSvc::SetSimulationConfiguration(){
   else
     SetSimulationDefaultConfig();
   
+  // TODO: We have to rethink this logic. Once the dicom file path is passed as an argument
+  // in TOML job file we should be able to remove this DICOM flag.
+  // DefineControlPoints should extract all needed information from the controlPointsConfig
   if(m_configSvc->GetValue<bool>("RunSvc", "DICOM"))
     ParseDicomInputData();
     

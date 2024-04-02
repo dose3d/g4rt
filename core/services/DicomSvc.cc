@@ -54,7 +54,7 @@ G4double IDicomPlan::GetJawPossition(const std::string& planFile, const std::str
   LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
   LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
-    G4Exception("DicomSvc", "GetRTPlanJawPossition", FatalErrorInArgument, "Wrong jaw name input given!");
+    G4Exception("IDicomPlan", "GetJawPossition", FatalErrorInArgument, "Wrong jaw name input given!");
 
   auto rtplanJawsReader = py::module::import("dicom_rtplan_jaws");
   auto beams_counter = rtplanJawsReader.attr("return_number_of_beams")(planFile);
@@ -74,30 +74,35 @@ G4double IDicomPlan::GetJawPossition(const std::string& planFile, const std::str
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::vector<G4double> DicomSvc::GetRTPlanMlcPossitioning(const std::string& side, int current_beam, int current_controlpoint) const {
-  G4cout << "[INFO]:: Reading the MLC configuration for "<< side<<" side; "
-                                                         << current_beam <<" beam; "
-                                                         << current_controlpoint<<" ctrl point;" << G4endl;
+std::vector<G4double> IDicomPlan::GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
+  LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
+  LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
   if(side!="Y1" && side!="Y2")
-    G4Exception("DicomSvc", "GetRTPlanMlcPossitioning", FatalErrorInArgument, "Wrong input side given!");
-
+    G4Exception("IDicomPlan", "GetMlcPositioning", FatalErrorInArgument, "Wrong input side given!");
   std::vector<G4double> mlcPositioning;
   auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
-  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(m_rtplan_file);
+  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(planFile);
   const int number_of_beams = beams_counter.cast<int>();
-  auto controlpoints_counter = rtplanMlcReader.attr("return_number_of_controlpoints")(m_rtplan_file, number_of_beams);
+  auto controlpoints_counter = rtplanMlcReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
   const int number_of_controlpoints = controlpoints_counter.cast<int>();
-  auto leaves_counter = rtplanMlcReader.attr("return_number_of_leaves")(m_rtplan_file);
+  auto leaves_counter = rtplanMlcReader.attr("return_number_of_leaves")(planFile);
   const int number_of_leaves = leaves_counter.cast<int>();
-  std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
-            << number_of_leaves << " leaves." << std::endl;
-  auto leavesPositions = rtplanMlcReader.attr("return_possition")(m_rtplan_file, side, current_beam, current_controlpoint, number_of_leaves).cast<py::array_t<double>>();
+  // std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
+  //           << number_of_leaves << " leaves." << std::endl;
+  auto leavesPositions = rtplanMlcReader.attr("return_possition")(planFile, side, beamIdx, controlpointIdx, number_of_leaves).cast<py::array_t<double>>();
   py::buffer_info acceser = leavesPositions.request();
   double *accesableLeavesPositions = (double *) acceser.ptr;
   for (int i = 0; i < acceser.size; i++) {
     mlcPositioning.emplace_back(accesableLeavesPositions[i]);
   }
   return mlcPositioning;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::vector<G4double> ICustomPlan::GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
+  // TODO implement this
+  return std::vector<G4double>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

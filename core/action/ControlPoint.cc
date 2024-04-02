@@ -622,3 +622,18 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 // }
 
 
+const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const{
+    if(side=="Y1"){
+        return m_mlc_a_positioning;
+    }
+    else if(side=="Y2"){
+        return m_mlc_b_positioning;
+    }
+    else{
+        LOGSVC_ERROR("ControlPoint::GetMlcPositioning: Unknown side: {}", side);
+        std::exit(EXIT_FAILURE);
+    }
+    return m_mlc_a_positioning; // never reached, prevent warning
+}
+
+

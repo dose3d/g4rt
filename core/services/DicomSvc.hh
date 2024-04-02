@@ -46,15 +46,17 @@ class ICtSvc {
 /// 
 class IPlan {
   public:
-    virtual ControlPointConfig GetControlPointConfig(int, const std::string&) = 0;
+    virtual ControlPointConfig GetControlPointConfig(int controlpointIdx, const std::string& planFile) = 0;
+    virtual std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 class IDicomPlan: public IPlan {
   public:
-    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
+    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
     G4double GetJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const;
+    std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) override;
 };
 ////////////////////////////////////////////////////////////////////////////////
 /// 
@@ -64,7 +66,8 @@ class ICustomPlan : public IPlan {
     int GetNEvents(const std::string& planFile);
     double GetRotation(const std::string& planFile);
   public:
-    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
+    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
+    std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx=0, int controlpointIdx=0) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,11 +113,11 @@ class DicomSvc {
     void Initialize(const std::string& planFileType);
 
      ///
-    bool Initialized() {
-      return m_plan.get() ? true : false;
+    bool Initialized() const { return m_plan.get() ? true : false; }
+
+    IPlan* GetPlan() {
+      return m_plan.get();
     }
-    ///
-    std::vector<G4double> GetRTPlanMlcPossitioning(const std::string& side, int current_beam, int current_controlpoint) const;
 
     ///\brief  Describe me.
     double GetRTPlanAngle(int current_beam, int current_controlpoint) const;

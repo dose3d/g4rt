@@ -697,9 +697,9 @@ void MlcHd120::SetCustomPositioning(const std::string& fieldSize){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
-    auto dicomSvc = Service<DicomSvc>();
-    auto pos1 = dicomSvc->GetRTPlanMlcPossitioning("Y1",current_beam,current_controlpoint);
-    auto pos2 = dicomSvc->GetRTPlanMlcPossitioning("Y2",current_beam,current_controlpoint);
+    auto contolPoint = Service<RunSvc>()->CurrentControlPoint();
+    const auto& pos1 = contolPoint->GetMlcPositioning("Y1");
+    const auto& pos2 = contolPoint->GetMlcPositioning("Y1");
 
     if(pos1.size()!=pos2.size() || pos1.size()!=60){
         G4cout << "[DEBUG]:: MlcHd120:: posY1.size() " << pos1.size() << G4endl;
@@ -709,12 +709,12 @@ void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
 
     for(int i=0; i<pos1.size(); ++i){
         G4cout << "[DEBUG]:: MlcHd120:: Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
-        // overlap check:
-        if(pos2.at(i)-pos1.at(i)<0){
-            G4cout << "[WARNING]:: MlcHd120:: OVERLAP Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
-            pos1[i] = 0;
-            pos2[i] = 0;
-        }
+        // overlap check: TODO this should be done in filling the positioning vectors?
+        // if(pos2.at(i)-pos1.at(i)<0){
+        //     G4cout << "[WARNING]:: MlcHd120:: OVERLAP Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
+        //     pos1[i] = 0;
+        //     pos2[i] = 0;
+        // }
 
         auto y1_translation = m_y1_leaves[i]->GetTranslation();
         y1_translation.setX(y1_translation.getX()+pos2.at(i) );

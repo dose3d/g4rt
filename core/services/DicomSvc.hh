@@ -44,6 +44,12 @@ class ICtSvc {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
+class IDicomPlan {
+  public:
+    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
+};
+////////////////////////////////////////////////////////////////////////////////
+/// 
 class ICustomPlan {
   private:
   // TODO: "Don't repeat yourself" (DRY)...
@@ -89,16 +95,7 @@ class ICustomPlan {
       }
 
   public:
-    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) {
-      auto nEvents = GetNEvents(planFile);
-      auto rotation = GetRotation(planFile);
-      auto config = ControlPointConfig(id, nEvents, rotation);
-      config.MlcInputFile = planFile;
-      config.FieldShape = "RTPlan";
-      config.FieldSizeA = 23.0; // Temp
-      config.FieldSizeB = 35.0; // Temp 
-      return std::move(config);
-    }
+    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -71,4 +71,12 @@ class GeoComponet {
     virtual void ExportToGateCsv(const std::string& path_to_output_dir) const {};
 };
 
+////////////////////////////////////////////////////////////////////////////////
+///
+enum class FieldShape {
+  Rectangular,
+  Elipsoidal,
+  RTPlan,
+  CustomPlan
+};
 #endif //DOSE3D_TYPES_HH

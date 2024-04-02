@@ -179,9 +179,11 @@ ControlPointConfig DicomSvc::GetControlPointConfig(int id, const std::string& pl
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig IDicomPlan::GetControlPointConfig(int id, const std::string& planFile){
+  // TODO
+  // extract from planFile, below is dummy mockup
   auto config = ControlPointConfig(id, 1000, 0.);
   config.MlcInputFile = planFile;
-  config.FieldShape = "RTPlan";
+  config.FieldShape = "RTPlan"; // TODO FieldShape::RTPlan;
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 
   return std::move(config);
@@ -194,7 +196,7 @@ ControlPointConfig ICustomPlan::GetControlPointConfig(int id, const std::string&
   auto rotation = GetRotation(planFile);
   auto config = ControlPointConfig(id, nEvents, rotation);
   config.MlcInputFile = planFile;
-  config.FieldShape = "RTPlan";
+  config.FieldShape = "RTPlan"; // TODO FieldShape::CustomPlan;
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 
   return std::move(config);

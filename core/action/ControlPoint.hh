@@ -28,6 +28,7 @@ class ControlPointConfig {
     int NEvts = 0.;
     int Id = 0;
     std::string MlcInputFile = std::string();
+    // TODO: introduce here FieldShape as enum type see def in Types.hh
     std::string FieldShape = std::string();
     G4double FieldSizeA = G4double();
     G4double FieldSizeB = G4double();

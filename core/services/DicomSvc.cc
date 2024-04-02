@@ -11,24 +11,28 @@ using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-DicomSvc::DicomSvc() {
-  // Get current RT-Plan file
-  m_rtplan_file = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "RTPlanInputFile");
-  Initialize();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void DicomSvc::Initialize(){
+void DicomSvc::Initialize(const std::string& planFileType){
   LOGSVC_INFO("DicomSvc initalization...");
-  auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
-  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(m_rtplan_file).cast<int>();
-  LOGSVC_INFO("Found #{} beams",beams_counter);
-  for(int i=0; i<beams_counter;++i){
-    unsigned nCP = rtplanMlcReader.attr("return_number_of_controlpoints")(m_rtplan_file,i).cast<unsigned>();
-    m_rtplan_beam_n_control_points.emplace_back(nCP);
-    LOGSVC_INFO("Found #{} control poinst for {} beam",nCP,i);
+  if(planFileType == "dat")
+    m_plan = std::make_unique<ICustomPlan>();
+  else if(planFileType == "dcm")
+    m_plan = std::make_unique<IDicomPlan>();
+  else {
+    G4String msg = "Unknown plan file extension: " + planFileType + "Supported: .dat, .dcm";
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("DicomSvc", "Initialize", FatalErrorInArgument, msg);
   }
+
+  // TODO refacto the following as the context specific code...
+  //
+  // auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
+  // auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(m_rtplan_file).cast<int>();
+  // LOGSVC_INFO("Found #{} beams",beams_counter);
+  // for(int i=0; i<beams_counter;++i){
+  //   unsigned nCP = rtplanMlcReader.attr("return_number_of_controlpoints")(m_rtplan_file,i).cast<unsigned>();
+  //   m_rtplan_beam_n_control_points.emplace_back(nCP);
+  //   LOGSVC_INFO("Found #{} control poinst for {} beam",nCP,i);
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,22 +160,16 @@ void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPointConfig DicomSvc::GetControlPointConfig(int id, const std::string& planFile){
+  auto dicomSvc = DicomSvc::GetInstance();
+  if(!dicomSvc->Initialized()){
+    dicomSvc->Initialize(svc::getFileExtenstion(planFile));
+  }
   auto file = planFile;
   if(file.front() != '/'){ // the path is not absolute
     std::string data_path = PROJECT_DATA_PATH;
     file = data_path + "/" + file;
   }
-  auto fileExt = svc::getFileExtenstion(file);
-  if(fileExt == "dat"){
-    return ICustomPlan::GetControlPointConfig(id, planFile);
-  }
-  else if(fileExt == "dcm"){
-    return IDicomPlan::GetControlPointConfig(id, planFile);
-  }
-  G4String msg = "Unknown file extension: " + fileExt;
-  LOGSVC_CRITICAL(msg.data());
-  G4Exception("DicomSvc", "GetControlPointConfig", FatalErrorInArgument, msg);
-  return ControlPointConfig();
+  return dicomSvc->m_plan->GetControlPointConfig(id, file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,5 +194,50 @@ ControlPointConfig ICustomPlan::GetControlPointConfig(int id, const std::string&
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 
   return std::move(config);
+}
+////////////////////////////////////////////////////////////////////////////////
+///
+int ICustomPlan::GetNEvents(const std::string& planFile) {
+  std::string svalue;
+  std::string data_path = PROJECT_DATA_PATH;
+  auto plan = data_path+"/"+planFile;
+  std::string line;
+  std::ifstream file(plan.c_str());
+  if (file.is_open()) {
+    while (getline(file, line)){
+      if (line.length() > 0 && (line.rfind("# Particles:",0) == 0)) {
+        std::istringstream ss(line);
+        while (getline(ss, svalue,':')){
+          if(svalue.rfind("#",0)!=0){
+            return static_cast<int>(std::stod(svalue.c_str())); 
+            }
+          }
+        } 
+      }
+    }
+  return 0; 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+double ICustomPlan::GetRotation(const std::string& planFile) {
+  std::string svalue;
+  std::string data_path = PROJECT_DATA_PATH;
+  auto plan = data_path+"/"+planFile;
+  std::string line;
+  std::ifstream file(plan.c_str());
+  if (file.is_open()) {
+    while (getline(file, line)){
+      if (line.length() > 0 && (line.rfind("# Rotation:",0) == 0)) {
+        std::istringstream ss(line);
+        while (getline(ss, svalue,':')){
+          if(svalue.rfind("#",0)!=0){
+            return std::stod(svalue.c_str()); 
+            }
+          }
+        } 
+      }
+    }
+  return 0.; 
 }
 

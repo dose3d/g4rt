@@ -185,6 +185,7 @@ void ControlPointRun::FillDataTagging(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
+    G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << m_config.RotationInDeg << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldShape: " << m_config.FieldShape << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeA: " << m_config.FieldSizeA << G4endl;
@@ -622,11 +623,16 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 // }
 
 
-const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const{
+const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) {
+    auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
+        if(m_mlc_a_positioning.empty())
+            m_mlc_a_positioning = dicomSvc->GetPlan()->GetMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_a_positioning;
     }
     else if(side=="Y2"){
+        if(m_mlc_b_positioning.empty())
+            m_mlc_b_positioning = dicomSvc->GetPlan()->GetMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_b_positioning;
     }
     else{

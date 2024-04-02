@@ -115,7 +115,7 @@ class DicomSvc {
      ///
     bool Initialized() const { return m_plan.get() ? true : false; }
 
-    IPlan* GetPlan() {
+    IPlan* GetPlan() const {
       return m_plan.get();
     }
 

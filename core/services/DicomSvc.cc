@@ -95,7 +95,7 @@ std::vector<G4double> IDicomPlan::GetMlcPositioning(const std::string& planFile,
   for (int i = 0; i < acceser.size; i++) {
     mlcPositioning.emplace_back(accesableLeavesPositions[i]);
   }
-  return mlcPositioning;
+  return std::move(mlcPositioning);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,10 +203,8 @@ ControlPointConfig ICustomPlan::GetControlPointConfig(int id, const std::string&
 ///
 int ICustomPlan::GetNEvents(const std::string& planFile) {
   std::string svalue;
-  std::string data_path = PROJECT_DATA_PATH;
-  auto plan = data_path+"/"+planFile;
   std::string line;
-  std::ifstream file(plan.c_str());
+  std::ifstream file(planFile.c_str());
   if (file.is_open()) {
     while (getline(file, line)){
       if (line.length() > 0 && (line.rfind("# Particles:",0) == 0)) {
@@ -226,10 +224,8 @@ int ICustomPlan::GetNEvents(const std::string& planFile) {
 ///
 double ICustomPlan::GetRotation(const std::string& planFile) {
   std::string svalue;
-  std::string data_path = PROJECT_DATA_PATH;
-  auto plan = data_path+"/"+planFile;
   std::string line;
-  std::ifstream file(plan.c_str());
+  std::ifstream file(planFile.c_str());
   if (file.is_open()) {
     while (getline(file, line)){
       if (line.length() > 0 && (line.rfind("# Rotation:",0) == 0)) {

@@ -120,7 +120,7 @@ class ControlPoint {
     static std::vector<G4String> GetRunCollectionNames();
     static std::set<G4String> GetHitCollectionNames();
 
-    const std::vector<double>& GetMlcPositioning(const std::string& side) const;
+    const std::vector<double>& GetMlcPositioning(const std::string& side);
 
   private:
     friend class ControlPointRun;

@@ -47,7 +47,7 @@ class ICtSvc {
 class IPlan {
   public:
     virtual ControlPointConfig GetControlPointConfig(int controlpointIdx, const std::string& planFile) = 0;
-    virtual std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
+    virtual std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,8 +55,8 @@ class IPlan {
 class IDicomPlan: public IPlan {
   public:
     ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
-    G4double GetJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const;
-    std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) override;
+    G4double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const;
+    std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) override;
 };
 ////////////////////////////////////////////////////////////////////////////////
 /// 
@@ -67,7 +67,7 @@ class ICustomPlan : public IPlan {
     double GetRotation(const std::string& planFile);
   public:
     ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
-    std::vector<G4double> GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx=0, int controlpointIdx=0) override;
+    std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx=0, int controlpointIdx=0) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

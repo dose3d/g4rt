@@ -627,12 +627,12 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
     auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
         if(m_mlc_a_positioning.empty())
-            m_mlc_a_positioning = dicomSvc->GetPlan()->GetMlcPositioning(m_config.MlcInputFile,side,0,0);
+            m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_a_positioning;
     }
     else if(side=="Y2"){
         if(m_mlc_b_positioning.empty())
-            m_mlc_b_positioning = dicomSvc->GetPlan()->GetMlcPositioning(m_config.MlcInputFile,side,0,0);
+            m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_b_positioning;
     }
     else{

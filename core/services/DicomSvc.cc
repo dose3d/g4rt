@@ -50,7 +50,7 @@ DicomSvc *DicomSvc::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double IDicomPlan::GetJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
+G4double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
   LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
   LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
@@ -74,7 +74,7 @@ G4double IDicomPlan::GetJawPossition(const std::string& planFile, const std::str
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::vector<G4double> IDicomPlan::GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
+std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
   LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
   LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
   if(side!="Y1" && side!="Y2")
@@ -100,9 +100,37 @@ std::vector<G4double> IDicomPlan::GetMlcPositioning(const std::string& planFile,
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-std::vector<G4double> ICustomPlan::GetMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
-  // TODO implement this
-  return std::vector<G4double>();
+std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
+  LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
+  if(side!="Y1" && side!="Y2"){
+    G4String msg = "Wrong input side given (" + side + ")! Allowed values are 'Y1' and 'Y2'";
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
+  }
+  std::ifstream file(planFile);
+  if (!file.is_open()) {
+    G4String msg = "Could not open file: " + planFile;
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
+  }
+  std::string line;
+  std::vector<double> mlc_y1, mlc_y2;
+
+  while (std::getline(file, line)) {
+    // Skip header lines
+    if (line.empty() || line[0] == '#')
+        continue;
+    std::istringstream iss(line);
+    std::string value_y1, value_y2;
+    // Get the values as strings separated by a comma
+    if (std::getline(iss, value_y1, ',') && std::getline(iss, value_y2)) {
+      // Convert string to double and add to the respective vectors
+      mlc_y1.push_back(std::stod(value_y1));
+      mlc_y2.push_back(std::stod(value_y2));
+    }
+  }
+  file.close();
+  return side=="Y1" ? std::move(mlc_y1) : std::move(mlc_y2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

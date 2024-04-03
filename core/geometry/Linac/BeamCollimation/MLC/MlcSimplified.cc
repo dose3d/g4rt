@@ -2,36 +2,51 @@
 #include "Services.hh"
 #include "BeamCollimation.hh"
 #include "MlcSimplified.hh"
-
+#include "ControlPoint.hh"
 
 MlcSimplified::MlcSimplified() : VMlc("Simplified"){
-    // Odwoływanie się do skonfigurowanego parametru zamiast odczytywanie nieistniejącej wartości. 
-    m_fieldShape = Service<RunSvc>()->CurrentControlPoint()->GetFieldShape();
+    m_control_point = Service<RunSvc>()->CurrentControlPoint();
+    m_fieldShape = m_control_point->GetFieldShape();
 };
 
 void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
+    // Update the control point
+    m_control_point = Service<RunSvc>()->CurrentControlPoint();
+    m_fieldShape = m_control_point->GetFieldShape();
+
     auto getScaledFieldAB = [=](G4double zPosition) {
-        auto fieldSize_a = Service<RunSvc>()->CurrentControlPoint()->GetFieldSizeA();
-        auto fieldSize_b = Service<RunSvc>()->CurrentControlPoint()->GetFieldSizeB();
+        auto fieldSize_a = m_control_point->GetFieldSizeA();
+        auto fieldSize_b = m_control_point->GetFieldSizeB();
         auto ssd = 1000.0;
         if(fieldSize_b == 0)
             fieldSize_b = fieldSize_a;
-        
-        // Kierunki poprawione... 
         return std::make_pair( (((ssd - zPosition )/ ssd ) * fieldSize_a / 2.), (((ssd - zPosition )/ ssd) * fieldSize_b / 2.) );
     };
-
-    auto cutFieldParam = getScaledFieldAB(vertexPosition.getZ());
-    m_fieldParamA = cutFieldParam.first;
-    m_fieldParamB = cutFieldParam.second;
+    if(m_fieldShape == "Rectangular" || m_fieldShape == "Elipsoidal"){
+        auto cutFieldParam = getScaledFieldAB(vertexPosition.getZ());
+        m_fieldParamA = cutFieldParam.first;
+        m_fieldParamB = cutFieldParam.second;
+    } else if (m_fieldShape == "RTPlan"){
+        m_mlc_a_positioning.clear();
+        m_mlc_a_positioning = m_control_point->GetMlcPositioning("Y1");
+        for(const auto& p : m_mlc_a_positioning)
+            std::cout << "Side Y1: " << p << std::endl;
+        m_mlc_b_positioning.clear();
+        m_mlc_b_positioning = m_control_point->GetMlcPositioning("Y2");
+        for(const auto& p : m_mlc_b_positioning)
+            std::cout << "Side Y2: " << p << std::endl;
+        
+    }
     m_isInitialized = true;
 }
 
 
 bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition) {
-    if(!m_isInitialized)
+    if(!m_isInitialized || m_control_point!=Service<RunSvc>()->CurrentControlPoint() )
         Initialize(vertexPosition);
-    // Uproszczenie składni, poprawa czytelności.
+    
+    // TODO Validate if vertexPosition is always at the same Z level!
+
     if (m_fieldShape == "Rectangular"){
         if (abs(vertexPosition.x())<=m_fieldParamA && abs(vertexPosition.y())<= m_fieldParamB)
         return true;

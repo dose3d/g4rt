@@ -10,8 +10,8 @@ class MlcSimplified : public VMlc {
         G4double m_fieldParamA = 0.0;
         G4double m_fieldParamB = 0.0;
         void Initialize(const G4ThreeVector& vertexPosition);
-        std::vector<double> m_mlc_a_positioning;
-        std::vector<double> m_mlc_b_positioning;
+        std::vector<std::pair<double,double>> m_mlc_a_corners;
+        std::vector<std::pair<double,double>> m_mlc_b_corners;
 public:
     MlcSimplified();
     ~MlcSimplified() override {};	

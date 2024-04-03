@@ -27,15 +27,27 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
         m_fieldParamA = cutFieldParam.first;
         m_fieldParamB = cutFieldParam.second;
     } else if (m_fieldShape == "RTPlan"){
-        m_mlc_a_positioning.clear();
-        m_mlc_a_positioning = m_control_point->GetMlcPositioning("Y1");
-        for(const auto& p : m_mlc_a_positioning)
-            std::cout << "Side Y1: " << p << std::endl;
-        m_mlc_b_positioning.clear();
-        m_mlc_b_positioning = m_control_point->GetMlcPositioning("Y2");
-        for(const auto& p : m_mlc_b_positioning)
-            std::cout << "Side Y2: " << p << std::endl;
-        
+        m_mlc_a_corners.clear();
+        m_mlc_b_corners.clear();
+        const auto& mlc_a_positioning = m_control_point->GetMlcPositioning("Y1");
+        double x_half_width = 2.5/2; // mm
+        double x_init = 30 * x_half_width * 2 - x_half_width; // mm
+        for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
+            double leaf_a_pos_y = mlc_a_positioning.at(leaf_idx);
+            double leaf_a_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafAPosition(leaf_idx);
+            m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x - x_half_width);
+            m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x + x_half_width);
+        }
+        const auto& mlc_b_positioning = m_control_point->GetMlcPositioning("Y2");
+        for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
+            double leaf_b_pos_y = mlc_b_positioning.at(leaf_idx);
+            double leaf_b_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafBPosition(leaf_idx);
+            m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x - x_half_width);
+            m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x + x_half_width);
+        }
+        for(const auto& mlc_a_corner : m_mlc_a_corners){
+            std::cout << mlc_a_corner.first << " " << mlc_a_corner.second << std::endl;
+        }
     }
     m_isInitialized = true;
 }

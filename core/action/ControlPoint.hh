@@ -102,6 +102,7 @@ class ControlPoint {
     G4Run* GenerateRun(bool scoring=false);
 
     ControlPointRun* GetRun() {return m_cp_run.Get();}
+    const ControlPointRun* GetRun() const {return m_cp_run.Get();}
 
     std::string GetFieldShape() const { return m_config.FieldShape; } 
 

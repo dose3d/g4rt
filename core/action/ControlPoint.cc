@@ -312,7 +312,7 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     G4double deltaX, deltaY, deltaZ;
     G4ThreeVector position = vrtx->GetPosition();
     auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID");
-    deltaZ = sid - position.getZ();
+    deltaZ = sid - abs(position.getZ());
     zRatio = deltaZ / position.getZ(); 
     x = position.getX() + zRatio * position.getX(); // x + deltaX;
     y = position.getY() + zRatio * position.getY(); // y + deltaY;
@@ -474,14 +474,14 @@ G4ThreeVector ControlPoint::TransformToMaskPosition(const G4ThreeVector& positio
 ///
 G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const {
     // std::cout << "IsInField in..." << std::endl;
-    if(m_plan_mask_points.empty()) 
+    if(GetRun()->GetSimMaskPoints().empty()) 
         return false; // TODO: add exception throw...
     G4ThreeVector pos = position;
     if(transformedToMaskPosition==false)
         pos = TransformToMaskPosition(position);
     auto dist_treshold = FIELD_MASK_POINTS_DISTANCE * mm; //FIELD_MASK_POINTS_DISTANCE*sqrt(2);
     // LOGSVC_INFO("In field distance trehshold {}",dist_treshold);
-    for(const auto& mp : m_plan_mask_points){
+    for(const auto& mp : GetRun()->GetSimMaskPoints()){
         auto dist = sqrt(mp.diff2(pos));
         if(dist < dist_treshold)
             return true;
@@ -504,7 +504,8 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
         return 1;
     }
     else{
-        for(const auto& mp : m_plan_mask_points){
+        // for(const auto& mp : m_plan_mask_points){
+        for(const auto& mp : GetRun()->GetSimMaskPoints()){
             auto current_dist = sqrt(mp.diff2(maskLevelPosition));
             if(current_dist>0){
                 if(closest_dist>current_dist)

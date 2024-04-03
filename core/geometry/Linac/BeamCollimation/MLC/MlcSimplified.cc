@@ -1,4 +1,5 @@
 #include <vector>
+#include <utility>
 #include "Services.hh"
 #include "BeamCollimation.hh"
 #include "MlcSimplified.hh"
@@ -20,8 +21,15 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
         auto ssd = 1000.0;
         if(fieldSize_b == 0)
             fieldSize_b = fieldSize_a;
-        return std::make_pair( (((ssd - zPosition )/ ssd ) * fieldSize_a / 2.), (((ssd - zPosition )/ ssd) * fieldSize_b / 2.) );
+        return std::make_pair( (((abs(ssd-abs(zPosition)))/ ssd )  * fieldSize_a / 2.), (((abs(ssd-abs(zPosition)))/ ssd ) * fieldSize_b / 2.) );
     };
+
+    auto getScaledPair= [=](std::pair<G4double,G4double> pair,G4double zPosition) {
+        auto ssd = 1000.0;
+        return std::make_pair( (((abs(ssd-abs(zPosition)))/ ssd ) * pair.first / 2.), (((abs(ssd-abs(zPosition)))/ ssd) * pair.second / 2.) );
+    };
+
+
     if(m_fieldShape == "Rectangular" || m_fieldShape == "Elipsoidal"){
         auto cutFieldParam = getScaledFieldAB(vertexPosition.getZ());
         m_fieldParamA = cutFieldParam.first;
@@ -29,6 +37,7 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
     } else if (m_fieldShape == "RTPlan"){
         m_mlc_a_corners.clear();
         m_mlc_b_corners.clear();
+        m_mlc_corners.clear();
         const auto& mlc_a_positioning = m_control_point->GetMlcPositioning("Y1");
         double x_half_width = 2.5/2; // mm
         double x_init = 30 * x_half_width * 2 - x_half_width; // mm
@@ -45,8 +54,14 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
             m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x - x_half_width);
             m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x + x_half_width);
         }
-        for(const auto& mlc_a_corner : m_mlc_a_corners){
-            std::cout << mlc_a_corner.first << " " << mlc_a_corner.second << std::endl;
+        std::reverse(m_mlc_b_corners.begin(), m_mlc_b_corners.end());
+        m_mlc_corners.insert(m_mlc_corners.end(), m_mlc_a_corners.begin(), m_mlc_a_corners.end());
+        m_mlc_corners.insert(m_mlc_corners.end(), m_mlc_b_corners.begin(), m_mlc_b_corners.end());
+        for (int i = 0; i < m_mlc_corners.size(); i++) {
+            m_mlc_corners.at(i) = getScaledPair(m_mlc_corners.at(i),vertexPosition.getZ());
+        }
+        for(const auto& m_mlc_corner : m_mlc_corners){
+            std::cout << m_mlc_corner.first << " " << m_mlc_corner.second << std::endl;
         }
     }
     m_isInitialized = true;
@@ -54,10 +69,20 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
 
 
 bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition) {
+
+    auto isPointInPolygon = [&](double x, double y){
+        bool inside = false;
+        for (int i = 0, j = m_mlc_corners.size() - 1; i < m_mlc_corners.size(); j = i++) {
+            if ((m_mlc_corners[i].second > y) != (m_mlc_corners[j].second > y) &&
+                (x < (m_mlc_corners[j].first - m_mlc_corners[i].first) * (y - m_mlc_corners[i].second) / (m_mlc_corners[j].second - m_mlc_corners[i].second) + m_mlc_corners[i].first)) {
+                inside = !inside;
+                    }
+                }
+            return inside;
+    };
+
     if(!m_isInitialized || m_control_point!=Service<RunSvc>()->CurrentControlPoint() )
         Initialize(vertexPosition);
-    
-    // TODO Validate if vertexPosition is always at the same Z level!
 
     if (m_fieldShape == "Rectangular"){
         if (abs(vertexPosition.x())<=m_fieldParamA && abs(vertexPosition.y())<= m_fieldParamB)
@@ -67,32 +92,9 @@ bool MlcSimplified::IsInField(const G4ThreeVector& vertexPosition) {
         if ((pow(vertexPosition.x(),2)/ pow(m_fieldParamA,2) + pow(vertexPosition.y(),2)/pow(m_fieldParamB,2))<= 1)
         return true;        
     }
-    if (m_fieldShape == "RTPlan"){ // TEMP SOLUTION!
-        if (abs(vertexPosition.x())<=m_fieldParamA && abs(vertexPosition.y())<= m_fieldParamB)
-        return true; 
+    if (m_fieldShape == "RTPlan"){ 
 
-        /*
-        #include <vector>
-        #include <utility>
-        bool isPointInPolygon(const std::pair<double, double>& point, const std::vector<std::pair<double, double>>& polygon) {
-            bool inside = false;
-            for (int i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++) {
-                if ((polygon[i].second > point.second) != (polygon[j].second > point.second) &&
-                    (point.first < (polygon[j].first - polygon[i].first) * (point.second - polygon[i].second) / (polygon[j].second - polygon[i].second) + polygon[i].first)) {
-                    inside = !inside;
-                }
-            }
-            return inside;
-        }
-
-        TODO:
-        Calc in 2D plane position of corners in MLC.
-        Each corner as a point in polygon.
-        
-
-        */
-
-
+    return isPointInPolygon(vertexPosition.x(), vertexPosition.y());
     }
     return false;
 }

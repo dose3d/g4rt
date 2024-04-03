@@ -12,6 +12,7 @@ class MlcSimplified : public VMlc {
         void Initialize(const G4ThreeVector& vertexPosition);
         std::vector<std::pair<double,double>> m_mlc_a_corners;
         std::vector<std::pair<double,double>> m_mlc_b_corners;
+        std::vector<std::pair<double,double>> m_mlc_corners;
 public:
     MlcSimplified();
     ~MlcSimplified() override {};	

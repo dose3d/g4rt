@@ -10,7 +10,7 @@ def plot_mask_from_csv(path):
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
 
-    ax1.scatter(x_values, y_values, s=10, c='b', marker="s", label='field mask')
+    ax1.scatter(x_values, y_values, s=3, c='b', marker="s", label='field mask')
     plt.legend(loc='upper left')
     plt.show()
 
@@ -41,9 +41,9 @@ def plot_scoring_volume_mask_from_csv(mask_path_file, volume_mask_path,slice):
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
 
-    ax1.scatter(mx_values,my_values, s=2, c='b', marker="o", label='volume at field mask plane ')
-    ax1.scatter(mx_values_ifield, my_values_ifield, s=2, c='r', marker="o", label='volume mask (inField)')
-    ax1.scatter(mask_x_values,mask_y_values, s=2, c='y', marker="o", label='field mask')
+    ax1.scatter(mx_values,my_values, s=3, c='b', marker="o", label='volume at field mask plane ')
+    ax1.scatter(mx_values_ifield, my_values_ifield, s=3, c='r', marker="o", label='volume mask (inField)')
+    ax1.scatter(mask_x_values,mask_y_values, s=3, c='y', marker="o", label='field mask')
     plt.legend(loc='upper left')
     plt.show()
     
@@ -85,7 +85,7 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
     dose_values = plane.flatten()
 
-    plt.scatter(on_plot_x_coords, on_plot_y_coords, c=dose_values, cmap='viridis', s=55)
+    plt.scatter(on_plot_x_coords, on_plot_y_coords, c=dose_values, cmap='viridis', s=25)
     plt.colorbar()
     plt.xlabel('Y [mm]')
     plt.ylabel('X [mm]')
@@ -94,10 +94,11 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
 
 if __name__=="__main__":
-    job = 19
+    job = 10
     
     job_name = "cp-0_dose3d_voxel.csv"
-    file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
+    # file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
+    file = f"/home/geant4/workspace/github/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
     plot_from_csv(file,19,"xy","MaskTag")
     
     # mask_job_name = "cp-0_field_mask_sim.csv"

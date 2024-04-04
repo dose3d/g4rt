@@ -12,8 +12,9 @@
     #include "G4Threading.hh"
     #include "G4MTRunManager.hh"
 #endif
+#include <random>
 
-double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.5;
+double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.25;
 std::string ControlPoint::m_sim_dir = "sim";
 
 std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collections = std::map<G4String,std::vector<G4String>>();
@@ -311,8 +312,7 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     G4double x, y, zRatio = 0.;
     G4double deltaX, deltaY;
     G4ThreeVector position = vrtx->GetPosition();
-    //auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID");
-    auto sid = 550 * mm;
+    auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID") * mm;
     zRatio = sid / abs(position.getZ()*mm); 
     // std::cout << "zRatio = " << zRatio << std::endl;
     // std::cout << "vrtx pos z = " << position.getZ() << std::endl;
@@ -354,9 +354,7 @@ void ControlPoint::FillPlanFieldMask(){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
     if(m_config.FieldShape.compare("RTPlan")==0){
-        FillPlanFieldMaskForRegularShapes(z_position); // temporary
-
-        // FillPlanFieldMaskFromRTPlan(z_position);
+        FillPlanFieldMaskForRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
@@ -411,10 +409,40 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillPlanFieldMaskFromRTPlan(double current_z){
-    G4String msg = "Field Mask RTPlan type not implemented yet!";
-    LOGSVC_CRITICAL(msg.data());
-    G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
+void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
+    const auto& mlc_a_positioning = GetMlcPositioning("Y1");
+    const auto& mlc_b_positioning = GetMlcPositioning("Y2");
+    auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
+    auto max_a = *std::max_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
+    auto min_b = *std::min_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
+    auto max_b = *std::max_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
+    auto min_y = std::min(min_a, min_b);
+    auto max_y = std::max(max_a, max_b);
+    double min_x = -20*mm; // TODO: get somehow these values
+    double max_x = +20*mm;
+
+    auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
+        return m_rotation ? *m_rotation * position : position;
+    };
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis_x(min_x, max_x);
+    std::uniform_real_distribution<double> dis_y(min_y, max_y);
+
+    // TODO: make available m_mlc_a_corners, m_mlc_b_corners outside 
+    // of MlcSimplified -> VMlc (?) and as static variables, then 
+    // use them here as MlcSimplified::IsInField(G4ThreeVector(x,y,z),"RTPlan")
+
+    for (int i = 0; i < 100000; ++i) {
+        auto x = dis_x(gen);
+        auto y = dis_y(gen);
+        // TODO
+        // if(MlcSimplified::IsInField(G4ThreeVector(x,y,current_z),"RTPlan")){
+        //     m_plan_mask_points.push_back(rotate(G4ThreeVector(x,y,current_z)));
+        // }
+        if(m_plan_mask_points.size()>=1000) break;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -441,7 +469,8 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 ///
 G4ThreeVector ControlPoint::TransformToMaskPosition(const G4ThreeVector& position) const {
     // Build the plane equation
-    auto orign = *m_rotation * G4ThreeVector(0,0,1000);
+    auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID") * mm;
+    auto orign = *m_rotation * G4ThreeVector(0,0,sid);
     auto normalVector = *m_rotation * G4ThreeVector(0,0,1);
     // auto maskPoint = m_plan_mask_points.at(0);
     auto maskPoint = m_cp_run.Get()->GetSimMaskPoints().at(0);

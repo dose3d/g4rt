@@ -26,7 +26,8 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
 
     auto getScaledPair= [=](std::pair<G4double,G4double> pair,G4double zPosition) {
         auto ssd = 1000.0;
-        return std::make_pair( (((abs(ssd-abs(zPosition)))/ ssd ) * pair.first / 2.), (((abs(ssd-abs(zPosition)))/ ssd) * pair.second / 2.) );
+        // std::cout << abs(zPosition)/ ssd << std::endl;
+        return std::make_pair( ((abs(zPosition)/ ssd ) * pair.first), ((abs(zPosition)/ ssd) * pair.second) );
     };
 
 
@@ -59,9 +60,6 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
         m_mlc_corners.insert(m_mlc_corners.end(), m_mlc_b_corners.begin(), m_mlc_b_corners.end());
         for (int i = 0; i < m_mlc_corners.size(); i++) {
             m_mlc_corners.at(i) = getScaledPair(m_mlc_corners.at(i),vertexPosition.getZ());
-        }
-        for(const auto& m_mlc_corner : m_mlc_corners){
-            std::cout << m_mlc_corner.first << " " << m_mlc_corner.second << std::endl;
         }
     }
     m_isInitialized = true;

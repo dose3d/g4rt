@@ -309,13 +309,16 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
     auto configSvc = Service<ConfigSvc>();
     auto getMaskPositioning = [&](G4PrimaryVertex* vrtx){
     G4double x, y, zRatio = 0.;
-    G4double deltaX, deltaY, deltaZ;
+    G4double deltaX, deltaY;
     G4ThreeVector position = vrtx->GetPosition();
-    auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID");
-    deltaZ = sid - abs(position.getZ());
-    zRatio = deltaZ / position.getZ(); 
-    x = position.getX() + zRatio * position.getX(); // x + deltaX;
-    y = position.getY() + zRatio * position.getY(); // y + deltaY;
+    //auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID");
+    auto sid = 550 * mm;
+    zRatio = sid / abs(position.getZ()*mm); 
+    // std::cout << "zRatio = " << zRatio << std::endl;
+    // std::cout << "vrtx pos z = " << position.getZ() << std::endl;
+
+    x = zRatio * position.getX()*mm; // x + deltaX;
+    y = zRatio * position.getY()*mm; // y + deltaY;
     return G4ThreeVector(x, y, 0);
     };
 
@@ -438,9 +441,10 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 ///
 G4ThreeVector ControlPoint::TransformToMaskPosition(const G4ThreeVector& position) const {
     // Build the plane equation
-    auto orign = *m_rotation * G4ThreeVector(0,0,-1000);
+    auto orign = *m_rotation * G4ThreeVector(0,0,1000);
     auto normalVector = *m_rotation * G4ThreeVector(0,0,1);
-    auto maskPoint = m_plan_mask_points.at(0);
+    // auto maskPoint = m_plan_mask_points.at(0);
+    auto maskPoint = m_cp_run.Get()->GetSimMaskPoints().at(0);
     // 
     auto plane_normal_x = normalVector.getX();
     auto plane_normal_y = normalVector.getY();
@@ -463,17 +467,20 @@ G4ThreeVector ControlPoint::TransformToMaskPosition(const G4ThreeVector& positio
                 (plane_normal_x*voxel_centre_x + plane_normal_y*voxel_centre_y + plane_normal_z*voxel_centre_z)) / 
                 (plane_normal_x*voxcel_to_origin_x + plane_normal_y*voxcel_to_origin_y + plane_normal_z*voxcel_to_origin_z);
 
+
     // Find the crosssection of the line from voxel centre to origin laying the plane:
     G4double cp_vox_x = voxel_centre_x + (voxcel_to_origin_x) * t;
     G4double cp_vox_y = voxel_centre_y + (voxcel_to_origin_y) * t;
     G4double cp_vox_z = voxel_centre_z + (voxcel_to_origin_z) * t;
+    if (position.getZ()>10){
+    // std::cout << "t: " << t << ", " << t << ", " << t << std::endl;
+    }
     return G4ThreeVector(cp_vox_x,cp_vox_y,cp_vox_z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const {
-    // std::cout << "IsInField in..." << std::endl;
     if(GetRun()->GetSimMaskPoints().empty()) 
         return false; // TODO: add exception throw...
     G4ThreeVector pos = position;
@@ -483,8 +490,8 @@ G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformed
     // LOGSVC_INFO("In field distance trehshold {}",dist_treshold);
     for(const auto& mp : GetRun()->GetSimMaskPoints()){
         auto dist = sqrt(mp.diff2(pos));
-        if(dist < dist_treshold)
-            return true;
+        if(dist < dist_treshold){
+            return true;}
     }
     return false;
 } 

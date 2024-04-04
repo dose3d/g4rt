@@ -55,7 +55,7 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
     new_df_sorted = df_0.copy()
     new_df_sorted = new_df_sorted.sort_values(by = ['X [mm]', 'Y [mm]', 'Z [mm]'])
     new_df_sorted[observable] = new_df_sorted[observable]/new_df_sorted[observable].max()
-    v = (new_df_sorted[observable].values).reshape(30,30,30)
+    v = (new_df_sorted[observable].values).reshape(40,40,40)
 
     
 
@@ -94,19 +94,19 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
 
 if __name__=="__main__":
-    job = 1
+    job = 19
     
     job_name = "cp-0_dose3d_voxel.csv"
     file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
-    # plot_from_csv(file,14,"xz","MaskTag")
+    plot_from_csv(file,19,"xy","MaskTag")
     
-    mask_job_name = "cp-0_field_mask_sim.csv"
-    # mask_job_name = "cp-0_field_mask_plan.csv"
-    mask_file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{mask_job_name}"
-    # # vol_job_name = "cp-0_scoring_volume_mask.csv"
-    # vol_job_name = "cp-0_scoring_volume_voxelised_mask.csv"
-    # vol_file_mask = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/{vol_job_name}"
+    # mask_job_name = "cp-0_field_mask_sim.csv"
+    # # mask_job_name = "cp-0_field_mask_plan.csv"
+    # mask_file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{mask_job_name}"
+    # # # vol_job_name = "cp-0_scoring_volume_mask.csv"
+    # # vol_job_name = "cp-0_scoring_volume_voxelised_mask.csv"
+    # # vol_file_mask = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/{vol_job_name}"
     
-    plot_mask_from_csv(mask_file)
+    # plot_mask_from_csv(mask_file)
     
     

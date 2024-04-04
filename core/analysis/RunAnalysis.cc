@@ -56,7 +56,7 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
     LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
     // Note: Multithreading merging is being performed before...
-   
+    m_current_cp->GetRun()->EndOfRun();
     if(m_csv_run_analysis){
         m_csv_run_analysis->WriteDoseToCsv(runPtr);
         m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);

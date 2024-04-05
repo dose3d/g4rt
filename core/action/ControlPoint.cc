@@ -309,25 +309,12 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
 /// => passed particle position is being propagated to the the plane at Z=0
 void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
     auto configSvc = Service<ConfigSvc>();
-    auto getMaskPositioning = [&](G4PrimaryVertex* vrtx){
-    G4double x, y, zRatio = 0.;
-    G4double deltaX, deltaY;
-    G4ThreeVector position = vrtx->GetPosition();
-    auto sid = configSvc->GetValue<G4double>("LinacGeometry", "SID") * mm;
-    zRatio = sid / abs(position.getZ()*mm); 
-    // std::cout << "zRatio = " << zRatio << std::endl;
-    // std::cout << "vrtx pos z = " << position.getZ() << std::endl;
-
-    x = zRatio * position.getX()*mm; // x + deltaX;
-    y = zRatio * position.getY()*mm; // y + deltaY;
-    return G4ThreeVector(x, y, 0);
-    };
 
     auto& sim_mask_points = m_cp_run.Get()->GetSimMaskPoints();
     auto nCPU = configSvc->GetValue<int>("RunSvc", "NumberOfThreads");
-    if(sim_mask_points.size() < 5000./nCPU){
+    if(sim_mask_points.size() < 50000./nCPU){
         for(const auto& vrtx : p_vrtx){
-            sim_mask_points.push_back(getMaskPositioning(vrtx));
+            sim_mask_points.push_back(VMlc::GetPositionInMaskPlane(vrtx));
         }
     }
 }

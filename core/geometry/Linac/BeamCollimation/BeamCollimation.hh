@@ -17,7 +17,8 @@
 class G4VPhysicalVolume;
 
 ///\class BeamCollimation
-class BeamCollimation : public IPhysicalVolume, public Configurable {
+class BeamCollimation : public IPhysicalVolume,
+                        public Configurable {
   public:
   ///
   static BeamCollimation *GetInstance();
@@ -45,12 +46,13 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
 
   static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
-  static G4ThreeVector SetParticlePositionTransformedInZ(G4PrimaryVertex* vrtx, G4double finalZ);
+  static G4ThreeVector SetParticlePositionBeforeMLC(G4PrimaryVertex* vrtx, G4double finalZ);
 
   VMlc* GetMlc() const { return m_mlc.get(); }
 
   static G4double AfterMLC;
   static G4double BeforeMLC;
+  VMlc* GetMlc() { return m_mlc.get(); }
 
   private:
   ///
@@ -95,6 +97,8 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
 
   ///
   void DefineSensitiveDetector() {}
+
+
 
 };
 

@@ -1,18 +1,25 @@
 #include "VMlc.hh"
 #include "Services.hh"
 #include "ControlPoint.hh"
+#include "G4PrimaryVertex.hh"
+
+G4ThreeVector VMlc::m_isocentre = G4ThreeVector();
+
+
+VMlc::VMlc(const std::string& name) : TomlConfigurable(name) {
+    m_isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector VMlc::TransformToMaskPosition(const G4ThreeVector& position){
+G4ThreeVector VMlc::GetPositionInMaskPlane(const G4ThreeVector& position){
     // Build the plane equation
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto rotation = cp->GetRotation();
     auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID") * mm;
     auto orign = *rotation * G4ThreeVector(0,0,sid);
     auto normalVector = *rotation * G4ThreeVector(0,0,1);
-    // auto maskPoint = m_plan_mask_points.at(0);
-    auto maskPoint = cp->GetRun()->GetSimMaskPoints().at(0);
+    auto maskPoint = cp->GetPlanMaskPoints().at(0);
     // 
     auto plane_normal_x = normalVector.getX();
     auto plane_normal_y = normalVector.getY();
@@ -45,3 +52,15 @@ G4ThreeVector VMlc::TransformToMaskPosition(const G4ThreeVector& position){
     }
     return G4ThreeVector(cp_vox_x,cp_vox_y,cp_vox_z);
 }
+
+G4ThreeVector VMlc::GetPositionInMaskPlane(const G4PrimaryVertex* vrtx){
+    auto position = vrtx->GetPosition();
+    auto direction = vrtx->GetPrimary()->GetMomentum().unit();
+    G4double z = m_isocentre.z();
+    G4double deltaZ = z - position.getZ();
+    G4double zRatio = deltaZ / direction.getZ(); 
+    G4double x = position.getX() + zRatio * direction.getX(); // x + deltaX;
+    G4double y = position.getY() + zRatio * direction.getY(); // y + deltaY;
+    return G4ThreeVector(x, y, z);
+}
+

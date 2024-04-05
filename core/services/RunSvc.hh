@@ -137,7 +137,11 @@ class RunSvc : public TomlConfigurable, Logable {
   ControlPoint* CurrentControlPoint() const { return m_current_control_point; }
 
   ///
-  ControlPoint* CurrentControlPoint(ControlPoint* cp) { m_current_control_point = cp; return cp; }
+  ControlPoint* CurrentControlPoint(ControlPoint* cp) { 
+    cp->FillPlanFieldMask();
+    m_current_control_point = cp; 
+    return cp; 
+  }
 
   ///
   void ParseTomlConfig() override;

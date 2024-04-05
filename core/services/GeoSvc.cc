@@ -6,7 +6,9 @@
 #include "G4Run.hh"
 #include "D3DDetector.hh"
 #include "PatientGeometry.hh"
+#include "LinacGeometry.hh"
 #include "VPatient.hh"
+#include "BeamCollimation.hh"
 #include "colors.hh"
 #include <TGeoManager.h>
 #include <TFile.h>
@@ -497,6 +499,15 @@ EMlcModel GeoSvc::GetMlcModel() const {
 ///
 VPatient* GeoSvc::Patient(){
   return World()->PatientEnvironment()->GetPatient();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: use enum types!!!
+VMlc* GeoSvc::MLC(){
+  if(thisConfig()->GetValue<G4String>("HeadModel")){
+    return BeamCollimation::GetInstance()->GetMlc();
+  } 
+  return nullptr; // this should never happen, but prevent warning
 }
 
 

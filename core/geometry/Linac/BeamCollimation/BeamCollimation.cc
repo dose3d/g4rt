@@ -113,7 +113,7 @@ void BeamCollimation::Reset() {
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
   for(int i=0; i < p_vrtx.size();++i){
-    BeamCollimation::SetParticlePositionTransformedInZ(p_vrtx.at(i), BeforeMLC);
+    BeamCollimation::SetParticlePositionBeforeMLC(p_vrtx.at(i), BeforeMLC);
   }
 
   auto model = Service<GeoSvc>()->GetMlcModel();
@@ -122,8 +122,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
   for(int i=0; i < p_vrtx.size();++i){
     auto vrtx = p_vrtx.at(i);
-    auto particlePosition = vrtx->GetPosition();
-    if(!m_mlc->IsInField(BeamCollimation::SetParticlePositionTransformedInZ(vrtx, AfterMLC))) {
+    if(!m_mlc->IsInField(vrtx)) {
       delete vrtx;
       p_vrtx.at(i) = nullptr;
     }
@@ -135,7 +134,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector BeamCollimation::SetParticlePositionTransformedInZ(G4PrimaryVertex* vrtx, G4double finalZ) {
+G4ThreeVector BeamCollimation::SetParticlePositionBeforeMLC(G4PrimaryVertex* vrtx, G4double finalZ) {
   G4double x, y, zRatio = 0.;
   G4double deltaX, deltaY, deltaZ;
   G4ThreeVector position = vrtx->GetPosition();

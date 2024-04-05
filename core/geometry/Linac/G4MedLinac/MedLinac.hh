@@ -25,7 +25,6 @@
 #include "Configurable.hh"
 
 #include "ConfigSvc.hh"
-
 ///\class MedLinac
 class MedLinac : public IPhysicalVolume, public Configurable {
   public:

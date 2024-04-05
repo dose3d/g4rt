@@ -12,7 +12,8 @@
 #include "Configurable.hh"
 
 class G4Run;
-class G4VPhysicalVolume;;
+class G4VPhysicalVolume;
+class VMlc;
 
 ///\class LinacGeometry
 ///\brief The linac head level volume construction factory.
@@ -38,9 +39,6 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
 
   ///
   void DefineSensitiveDetector();
-
-  ///
-  IPhysicalVolume* GetHead() const { return m_headInstance; }
 
   private:
   LinacGeometry();

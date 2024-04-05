@@ -355,8 +355,7 @@ void ControlPoint::FillPlanFieldMask(){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
     if(m_config.FieldShape.compare("RTPlan")==0){
-        FillPlanFieldMaskForRegularShapes(z_position);
-        // TODO: FillPlanFieldMaskForRTPlan(z_position);
+        FillPlanFieldMaskForRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
@@ -412,6 +411,8 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
+    if(!m_mlc) 
+        m_mlc = Service<GeoSvc>()->MLC();
     const auto& mlc_a_positioning = GetMlcPositioning("Y1");
     const auto& mlc_b_positioning = GetMlcPositioning("Y2");
     auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
@@ -429,21 +430,16 @@ void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis_x(min_x, max_x);
-    std::uniform_real_distribution<double> dis_y(min_y, max_y);
+    std::uniform_real_distribution<double> dis_x(-100*mm, 100*mm);
+    std::uniform_real_distribution<double> dis_y(-100*mm, 100*mm);
 
-    // TODO: make available m_mlc_a_corners, m_mlc_b_corners outside 
-    // of MlcSimplified -> VMlc (?) and as static variables, then 
-    // use them here as MlcSimplified::IsInField(G4ThreeVector(x,y,z),"RTPlan")
-
-    for (int i = 0; i < 100000; ++i) {
+    for (int i = 0; i < 1000000; ++i) {
         auto x = dis_x(gen);
         auto y = dis_y(gen);
-        // TODO
-        // if(MlcSimplified::IsInField(G4ThreeVector(x,y,current_z),"RTPlan")){
-        //     m_plan_mask_points.push_back(rotate(G4ThreeVector(x,y,current_z)));
-        // }
-        if(m_plan_mask_points.size()>=1000) break;
+        if(m_mlc->IsInField(G4ThreeVector(x,y,current_z))){
+            m_plan_mask_points.push_back(rotate(G4ThreeVector(x,y,current_z)));
+        }
+        if(m_plan_mask_points.size()>=100000) break;
     }
 }
 
@@ -458,7 +454,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
     c_outFile << header << std::endl;
     for(auto& vol : volume_scoring){
         auto pos = vol.second.GetCentre();
-        auto trans_pos = VMlc::TransformToMaskPosition(pos);
+        auto trans_pos = VMlc::GetPositionInMaskPlane(pos);
         auto inFieldTag = vol.second.GetMaskTag();
         // std::cout << "z: " << pos.getZ() << "  trans z: "<< trans_pos.getZ() << std::endl;
         c_outFile << pos.getX() << "," << pos.getY() << "," << pos.getZ();
@@ -475,7 +471,7 @@ G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformed
         return false; // TODO: add exception throw...
     G4ThreeVector pos = position;
     if(transformedToMaskPosition==false)
-        pos = VMlc::TransformToMaskPosition(position);
+        pos = VMlc::GetPositionInMaskPlane(position);
     auto dist_treshold = FIELD_MASK_POINTS_DISTANCE * mm; //FIELD_MASK_POINTS_DISTANCE*sqrt(2);
     // LOGSVC_INFO("In field distance trehshold {}",dist_treshold);
     for(const auto& mp : GetRun()->GetSimMaskPoints()){
@@ -496,7 +492,7 @@ G4bool ControlPoint::IsInField(const G4ThreeVector& position) const {
 ///
 G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     G4double closest_dist{10.e9};
-    auto maskLevelPosition = VMlc::TransformToMaskPosition(position);
+    auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
     if(IsInField(maskLevelPosition, true)){
         return 1;
     }
@@ -622,6 +618,7 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 
 
 const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) {
+    G4AutoLock lock(&CPMutex);
     auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
         if(m_mlc_a_positioning.empty())

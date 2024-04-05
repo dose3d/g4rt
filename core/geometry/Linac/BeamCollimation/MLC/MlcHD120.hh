@@ -90,5 +90,18 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     ///
     void WriteInfo() override;
 
+    ///
+    bool IsInField(const G4ThreeVector& position) override {
+      // TODO implement me
+      return false;
+    }
+
+    bool IsInField(G4PrimaryVertex* vrtx) override {
+      // TODO implement me
+      return false;
+    }
+
+
+
 };
 #endif //DOSE3D_VARIANMLCHD120_HH

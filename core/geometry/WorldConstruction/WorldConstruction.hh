@@ -59,6 +59,7 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   /// 
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
+  LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
 
 
   /// so that the unique_ptr may delete the singleton

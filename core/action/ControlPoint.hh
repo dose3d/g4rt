@@ -19,6 +19,7 @@
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
 class ControlPoint;
+class VMlc;
 
 class ControlPointConfig {
   public:
@@ -122,6 +123,10 @@ class ControlPoint {
 
     const std::vector<double>& GetMlcPositioning(const std::string& side);
 
+    std::vector<G4ThreeVector>& GetPlanMaskPoints() {return m_plan_mask_points;}
+    void FillPlanFieldMask();
+
+
   private:
     friend class ControlPointRun;
     friend class VPatientSD;
@@ -152,8 +157,9 @@ class ControlPoint {
 
     static double FIELD_MASK_POINTS_DISTANCE;
 
+    VMlc* m_mlc = nullptr;
+
     G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
-    void FillPlanFieldMask();
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForRTPlan(double current_z);
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);

@@ -15,6 +15,7 @@
 class WorldConstruction;
 class D3DDetector;
 class VPatient;
+class VMlc;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -89,13 +90,14 @@ class GeoSvc : public TomlConfigurable, Logable {
   WorldConstruction *Build();
 
   ///\brief Get the main/top volume world pointer.
+  WorldConstruction *World() const { return my_world; }
   WorldConstruction *World() { return my_world ? my_world : Build(); }
-
+  
   ///
   VPatient* Patient();
 
   ///
-  WorldConstruction *World() const { return my_world; }
+  VMlc* MLC();
 
   ///\brief Update the geometry.
   WorldConstruction *Update(int runId);

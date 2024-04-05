@@ -90,8 +90,6 @@ class ControlPoint {
     // void SetRotationInDegree(G4double rot_deg) {m_degree = rot_deg;}
     G4bool IsInField(const G4ThreeVector& position) const; 
     G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
-    // G4ThreeVector TransformToMaskPosition(const G4ThreeVector& position) const;
-
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;

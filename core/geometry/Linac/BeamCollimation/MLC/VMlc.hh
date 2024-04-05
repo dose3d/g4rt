@@ -3,7 +3,7 @@
 
 #include "TomlConfigurable.hh"
 #include "G4VPhysicalVolume.hh"
-
+#include "Types.hh"
 class ControlPoint;
 
 class VMlc: public TomlConfigurable {
@@ -19,6 +19,7 @@ class VMlc: public TomlConfigurable {
         virtual ~VMlc() = default;
         void ParseTomlConfig() override {};
         virtual bool IsInField(const G4ThreeVector& vertexPosition) { return false;}
+        static G4ThreeVector TransformToMaskPosition(const G4ThreeVector& position);
 
     
 };

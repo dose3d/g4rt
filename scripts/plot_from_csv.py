@@ -94,7 +94,7 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
 
 if __name__=="__main__":
-    job = 10
+    job = 1
     
     job_name = "cp-0_dose3d_voxel.csv"
     # file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"

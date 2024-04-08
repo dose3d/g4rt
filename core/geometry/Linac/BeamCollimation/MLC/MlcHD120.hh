@@ -91,7 +91,7 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     void WriteInfo() override;
 
     ///
-    bool IsInField(const G4ThreeVector& position) override {
+    bool IsInField(const G4ThreeVector& position, bool transformToIsocentre) override {
       // TODO implement me
       return false;
     }

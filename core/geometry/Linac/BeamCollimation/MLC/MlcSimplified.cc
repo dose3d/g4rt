@@ -57,10 +57,13 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
     m_isInitialized = true;
 }
 
-bool MlcSimplified::IsInField(const G4ThreeVector& position) {
-    if(position.z()!=m_isocentre.z() ){
-        LOGSVC_WARN("Position z not equal to isocentre z. Is in field is not implemented for this position. Returning false.");
+bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIsocentre) {
+    auto maskLevelPosition = position;
+    if((maskLevelPosition.z()!=m_isocentre.z()) && !transformToIsocentre){
+        LOGSVC_WARN("Position z {} not equal to isocentre z {}",maskLevelPosition.z(), m_isocentre.z());
         return false;
+    } else if( transformToIsocentre ) {
+        maskLevelPosition = GetPositionInMaskPlane(position);
     }
 
     auto isPointInPolygon = [&](double x, double y){
@@ -75,18 +78,18 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position) {
     };
 
     if(!m_isInitialized || m_control_point!=Service<RunSvc>()->CurrentControlPoint() )
-        Initialize(position);
+        Initialize(maskLevelPosition);
 
     if (m_fieldShape == "Rectangular"){
-        if (abs(position.x())<=m_fieldParamA && abs(position.y())<= m_fieldParamB)
+        if (abs(maskLevelPosition.x())<=m_fieldParamA && abs(maskLevelPosition.y())<= m_fieldParamB)
         return true;
     }
     if (m_fieldShape == "Elipsoidal"){
-        if ((pow(position.x(),2)/ pow(m_fieldParamA,2) + pow(position.y(),2)/pow(m_fieldParamB,2))<= 1)
+        if ((pow(maskLevelPosition.x(),2)/ pow(m_fieldParamA,2) + pow(maskLevelPosition.y(),2)/pow(m_fieldParamB,2))<= 1)
         return true;        
     }
     if (m_fieldShape == "RTPlan"){ 
-        return isPointInPolygon(position.x(), position.y());
+        return isPointInPolygon(maskLevelPosition.x(), maskLevelPosition.y());
     }
     return false;
 }

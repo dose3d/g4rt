@@ -128,6 +128,9 @@ void ControlPointRun::EndOfRun(){
 ///
 void ControlPointRun::FillDataTagging(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+    // TODO if(current_cp != this->Owner()){
+    //     LOGSVC_ERROR("ControlPointRun::FillDataTagging: current control point mismatch!");
+    // }
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
         auto& hashed_scoring_map = scoring_map.second;
@@ -170,7 +173,7 @@ void ControlPointRun::FillDataTagging(){
             auto& data = scoring.second;
             in_field_scoring_volume.clear();
             for(auto& hit : data){
-                if(current_cp->IsInField(hit.second.GetCentre()))
+                if(current_cp->m_mlc->IsInField(hit.second.GetCentre(),true))
                     in_field_scoring_volume.push_back(&hit.second);
             }
             auto geo_centre = getActivityGeoCentre(false);
@@ -320,10 +323,11 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The field mask is formed at the isocentre Z position
+/// 
 void ControlPoint::FillPlanFieldMask(){
     // It should happen once for single control point at the time
-    // of the object instantation. See RunSvc::SetSimulationConfiguration
+    // when the current control point is set, see RunSvc::CurrentControlPoint
+    // NOTE: The field mask is formed at the isocentre Z position!
     if(m_plan_mask_points.empty()){
         LOGSVC_DEBUG("Filling the field mask points");
     }
@@ -336,6 +340,11 @@ void ControlPoint::FillPlanFieldMask(){
     LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldShape,GetDegreeRotation());
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
+    
+    if(!m_mlc)  // It's needed for IsInField function 
+        m_mlc = Service<GeoSvc>()->MLC();
+        // NOTE: The MLC instance takes care for being set for the current
+        //       control point configuration!
 
     if( m_config.FieldShape.compare("Rectangular")==0 ||
         m_config.FieldShape.compare("Elipsoidal")==0){
@@ -398,8 +407,6 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
-    if(!m_mlc) 
-        m_mlc = Service<GeoSvc>()->MLC();
     const auto& mlc_a_positioning = GetMlcPositioning("Y1");
     const auto& mlc_b_positioning = GetMlcPositioning("Y2");
     auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
@@ -453,6 +460,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/*
 G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const {
     if(GetRun()->GetSimMaskPoints().empty()) 
         return false; // TODO: add exception throw...
@@ -474,18 +482,20 @@ G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformed
 G4bool ControlPoint::IsInField(const G4ThreeVector& position) const {
     return IsInField(position, false);
 } 
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
+    // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
+
     G4double closest_dist{10.e9};
     auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
-    if(IsInField(maskLevelPosition, true)){
+    if(m_mlc->IsInField(maskLevelPosition)){
         return 1;
     }
     else{
-        // for(const auto& mp : m_plan_mask_points){
-        for(const auto& mp : GetRun()->GetSimMaskPoints()){
+        for(const auto& mp : m_plan_mask_points){
+        // for(const auto& mp : GetRun()->GetSimMaskPoints()){
             auto current_dist = sqrt(mp.diff2(maskLevelPosition));
             if(current_dist>0){
                 if(closest_dist>current_dist)

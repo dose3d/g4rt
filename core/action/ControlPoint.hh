@@ -89,7 +89,7 @@ class ControlPoint {
     void SetRotation(double rotationInDegree);
     void SetNEvts(int nevts) { m_config.NEvts = nevts; }
     // void SetRotationInDegree(G4double rot_deg) {m_degree = rot_deg;}
-    G4bool IsInField(const G4ThreeVector& position) const; 
+    // G4bool IsInField(const G4ThreeVector& position) const; 
     G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
@@ -159,7 +159,7 @@ class ControlPoint {
 
     VMlc* m_mlc = nullptr;
 
-    G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
+    // G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForRTPlan(double current_z);
     void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);

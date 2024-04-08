@@ -94,13 +94,13 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
 
 
 if __name__=="__main__":
-    job = 8
+    job = 3
     
     job_name = "cp-0_dose3d_voxel.csv"
     # file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
     file = f"/home/geant4/workspace/github/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
-    # plot_from_csv(file,19,"xy","MaskTag")
-    plot_from_csv(file,1,"xy","Dose")
+    plot_from_csv(file,1,"xy","MaskTag")
+    # plot_from_csv(file,1,"xy","Dose")
     
     # mask_job_name = "cp-0_field_mask_sim.csv"
     # # mask_job_name = "cp-0_field_mask_plan.csv"

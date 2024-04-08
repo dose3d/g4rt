@@ -47,10 +47,7 @@ G4ThreeVector VMlc::GetPositionInMaskPlane(const G4ThreeVector& position){
     G4double cp_vox_x = voxel_centre_x + (voxcel_to_origin_x) * t;
     G4double cp_vox_y = voxel_centre_y + (voxcel_to_origin_y) * t;
     G4double cp_vox_z = voxel_centre_z + (voxcel_to_origin_z) * t;
-    if (position.getZ()>10){
-    // std::cout << "t: " << t << ", " << t << ", " << t << std::endl;
-    }
-    return G4ThreeVector(cp_vox_x,cp_vox_y,cp_vox_z);
+    return svc::round_with_prec(G4ThreeVector(cp_vox_x,cp_vox_y,cp_vox_z),8);
 }
 
 G4ThreeVector VMlc::GetPositionInMaskPlane(const G4PrimaryVertex* vrtx){

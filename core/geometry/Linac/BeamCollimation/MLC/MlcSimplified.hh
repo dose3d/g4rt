@@ -16,7 +16,7 @@ class MlcSimplified : public VMlc {
 public:
     MlcSimplified();
     ~MlcSimplified() override {};	
-    bool IsInField(const G4ThreeVector& position) override;
+    bool IsInField(const G4ThreeVector& position, bool transformToIsocentre = false) override;
     bool IsInField(G4PrimaryVertex* vrtx) override;
     void Configure() override {};
     void DefaultConfig(const std::string &unit) override {};

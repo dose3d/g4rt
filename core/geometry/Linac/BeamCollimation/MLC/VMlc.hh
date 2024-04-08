@@ -20,7 +20,7 @@ class VMlc: public TomlConfigurable {
         explicit VMlc(const std::string& name);
         virtual ~VMlc() = default;
         void ParseTomlConfig() override {};
-        virtual bool IsInField(const G4ThreeVector& position) = 0;
+        virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;
         virtual bool IsInField(G4PrimaryVertex* vrtx) = 0;
         static G4ThreeVector GetPositionInMaskPlane(const G4ThreeVector& position);
         static G4ThreeVector GetPositionInMaskPlane(const G4PrimaryVertex* vrtx);

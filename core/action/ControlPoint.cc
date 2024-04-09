@@ -15,7 +15,7 @@
 #include <random>
 #include "VMlc.hh"
 
-double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.25;
+double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
 
 std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collections = std::map<G4String,std::vector<G4String>>();
@@ -502,7 +502,7 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
                     closest_dist = current_dist;
             }
         }
-        return 1. / (closest_dist/FIELD_MASK_POINTS_DISTANCE);
+        return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
     }
     return 1.;
 }

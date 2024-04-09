@@ -29,7 +29,8 @@ class CtSvc():
     
 # -------------------------------- Init -----------------------------------------
     def __init__(self, label="CT_"):
-        # logger.info("Initialoizing CT scaner.")
+        print("Initialoizing CT scaner.")
+        print()
         self.__label = label # Did I Need that?
         self.__generate_CT = True # Did I Need that?
         self.__output_array = np.zeros((1, 1, 1))
@@ -63,7 +64,7 @@ class CtSvc():
         except FileExistsError:
             # directory already exists
             pass
-        # logger.info(f"Output was set to: {output_path}")
+        print(f"Output was set to: {output_path}")
 
     def set_project_path(cls, project_path):
         # Not as set_hounsfield_dictiobnary cause also it sett path to template CT.dcm
@@ -75,7 +76,7 @@ class CtSvc():
         except FileExistsError:
             # directory already exists
             pass
-        # logger.info(f"Project root was set to: {project_path}")
+        print(f"Project root was set to: {project_path}")
 
     def  __set_hounsfield_dictiobnary(self):
         dictionary = (f"{self.__project_path}config/hounsfield_scale_60keV.json")
@@ -186,7 +187,7 @@ class CtSvc():
         ds.PixelData = image2d.tobytes()
         pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
         ds.save_as(self.__output_path+self.__label+f"{sliceNumber}"+r".dcm")
-        # logger.info(f"I just saved {self.__label}{sliceNumber}.dcm")
+        print(f"I just saved {self.__label}{sliceNumber}.dcm")
 
     def __write_whole_Dicom_ct_from_csv(self):
         # logger.debug("Writing the whole DICOM CT")
@@ -196,7 +197,7 @@ class CtSvc():
         images_paths = Path(images_path_string)
         ser = pd.Series(np.zeros(int(self.__pixel_in_y)))
         iterator = 0
-        # logger.info(f"Start iteration over images")
+        print(f"Start iteration over images")
         for path in images_paths.iterdir():
             ser.iat[iterator] = (path.name)
             iterator +=1

@@ -197,8 +197,6 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
-
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,7 +437,7 @@ void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const {
+void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const { // TODEL? 
     auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "OutputDir");
     const std::string file = output_dir+"/cp-"+std::to_string(GetId())+"_scoring_volume"+scoring_vol_name+"mask.csv";
     std::string header = "X [mm],Y [mm],Z [mm],mX [mm],mY [mm],mZ [mm],inFieldTag";

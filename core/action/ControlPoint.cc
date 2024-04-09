@@ -460,31 +460,6 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/*
-G4bool ControlPoint::IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const {
-    if(GetRun()->GetSimMaskPoints().empty()) 
-        return false; // TODO: add exception throw...
-    G4ThreeVector pos = position;
-    if(transformedToMaskPosition==false)
-        pos = VMlc::GetPositionInMaskPlane(position);
-    auto dist_treshold = FIELD_MASK_POINTS_DISTANCE * mm; //FIELD_MASK_POINTS_DISTANCE*sqrt(2);
-    // LOGSVC_INFO("In field distance trehshold {}",dist_treshold);
-    for(const auto& mp : GetRun()->GetSimMaskPoints()){
-        auto dist = sqrt(mp.diff2(pos));
-        if(dist < dist_treshold){
-            return true;}
-    }
-    return false;
-} 
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4bool ControlPoint::IsInField(const G4ThreeVector& position) const {
-    return IsInField(position, false);
-} 
-*/
-////////////////////////////////////////////////////////////////////////////////
-///
 G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
 
@@ -495,7 +470,6 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     }
     else{
         for(const auto& mp : m_plan_mask_points){
-        // for(const auto& mp : GetRun()->GetSimMaskPoints()){
             auto current_dist = sqrt(mp.diff2(maskLevelPosition));
             if(current_dist>0){
                 if(closest_dist>current_dist)

@@ -84,12 +84,9 @@ class ControlPoint {
     int GetId() const { return m_config.Id; }
     int GetNEvts() const { return m_config.NEvts; }
     G4RotationMatrix* GetRotation() const { return m_rotation; }
-    G4double GetDegreeRotation() const {return m_config.RotationInDeg;} 
-    // void SetRotation(G4RotationMatrix* rot) { m_rotation=rot; }
+    G4double GetDegreeRotation() const {return m_config.RotationInDeg;}
     void SetRotation(double rotationInDegree);
     void SetNEvts(int nevts) { m_config.NEvts = nevts; }
-    // void SetRotationInDegree(G4double rot_deg) {m_degree = rot_deg;}
-    // G4bool IsInField(const G4ThreeVector& position) const; 
     G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
@@ -158,11 +155,8 @@ class ControlPoint {
     static double FIELD_MASK_POINTS_DISTANCE;
 
     VMlc* m_mlc = nullptr;
-
-    // G4bool IsInField(const G4ThreeVector& position, G4bool transformedToMaskPosition) const;
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForRTPlan(double current_z);
-    void FillScoringDataTagging(ScoringMap* scoring_data = nullptr);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
 
 };

@@ -17,7 +17,7 @@ G4ThreeVector VMlc::GetPositionInMaskPlane(const G4ThreeVector& position){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto rotation = cp->GetRotation();
     auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID") * mm;
-    auto orign = *rotation * G4ThreeVector(0,0,sid);
+    auto orign = *rotation * G4ThreeVector(0,0,-sid);
     auto normalVector = *rotation * G4ThreeVector(0,0,1);
     auto maskPoint = cp->GetPlanMaskPoints().at(0);
     // 

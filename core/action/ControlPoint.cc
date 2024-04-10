@@ -45,6 +45,8 @@ void ControlPointRun::InitializeScoringCollection(){
             }
             auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
             scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(run_collection_name,scoring_type);
+            // TODO: scoring_collection[scoring_type] = Service<GeoSvc>()->GetScoringHashedMap(run_collection_name,scoring_type); 
+            // GeoSvc musi szukac po nazwie albo z Patient, albo skądinąd...
             if(scoring_collection[scoring_type].empty()){
                 LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);

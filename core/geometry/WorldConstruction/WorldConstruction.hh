@@ -70,6 +70,11 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   friend class VPatient;
   friend class BeamMonitoring;
 
+  virtual bool Create();
+
+  ///
+  void Configure() override;
+  
   private:
   ///
   WorldConstruction();
@@ -91,12 +96,7 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   /// have to implement pure virtual function
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume
-
   ///
-  bool Create();
-
-  ///
-  void Configure() override;
 
   ///
   PatientGeometry* m_phantomEnv = nullptr;
@@ -109,6 +109,7 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   ///
   BeamMonitoring* m_beamMonitoring = nullptr;
+
 };
 
 #endif  // Dose3D_WORLDCONSTRUCTION_HH

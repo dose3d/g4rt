@@ -469,6 +469,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
   for(const auto& mLayer: m_d3d_layers){
+    // TODO: hashed_map_scoring.insert(mLayer->GetScoringHashedMap(run_collection,type));
     for(const auto& cell: mLayer->GetCells()){
       auto centre = cell->GetGlobalCentre();
       auto cIdX = cell->GetIdX();

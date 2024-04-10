@@ -221,7 +221,10 @@ bool RunSvc::ValidateConfig() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunSvc::Initialize() {
+void RunSvc::Initialize(WorldConstruction* world) {
+  // build a geometry
+  world->Configure();
+  world->Create();
 
   InitializeOutputDir();
   LogSvc::Configure();

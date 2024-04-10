@@ -111,7 +111,7 @@ class RunSvc : public TomlConfigurable, Logable {
   void AppMode(OperationalMode mode) { m_application_mode = mode; }
 
   ///\brief Perform service and global run related configuration initialization.
-  void Initialize();
+  void Initialize(WorldConstruction* world);
 
   ///\brief Perform service and global run related configuration finalization.
   void Finalize();

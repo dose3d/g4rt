@@ -13,9 +13,9 @@
 ///
 WorldConstruction::WorldConstruction()
   :IPhysicalVolume("WorldConstruction"), Configurable("WorldConstruction"),Logable("GeoAndScoring"){
-  Configure();
-  // build a geometry
-  Create();
+  // Configure();
+  // // build a geometry
+  // Create();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

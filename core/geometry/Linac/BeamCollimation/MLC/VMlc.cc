@@ -61,3 +61,9 @@ G4ThreeVector VMlc::GetPositionInMaskPlane(const G4PrimaryVertex* vrtx){
     return G4ThreeVector(x, y, z);
 }
 
+bool VMlc::Initialized(const ControlPoint* control_point) const { 
+    if(m_control_point_id<0) return false;
+    if(m_control_point_id != control_point->Id()) return false;
+    return true; 
+}
+

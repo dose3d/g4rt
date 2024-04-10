@@ -111,7 +111,7 @@ void BeamCollimation::Reset() {
 ///
 
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
-
+  Service<RunSvc>()->CurrentControlPoint()->MLC();
   for(int i=0; i < p_vrtx.size();++i){
     BeamCollimation::SetParticlePositionBeforeMLC(p_vrtx.at(i), BeforeMLC);
   }

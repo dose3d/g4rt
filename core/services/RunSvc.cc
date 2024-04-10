@@ -248,6 +248,7 @@ void RunSvc::Initialize() {
 
     // Define Control Points etc.
     SetSimulationConfiguration();
+    LoadSimulationPlan();
 
     // Add simple scoring
     // if(thisConfig()->GetValue<G4String>("patientName")=="WaterPhantom"){
@@ -455,6 +456,19 @@ void RunSvc::SetSimulationDefaultConfig(){
   LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
   LOGSVC_INFO(" Plan file: {}",planFile);
   m_control_points_config.push_back(DicomSvc::GetControlPointConfig(0,planFile));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void RunSvc::LoadSimulationPlan(){
+  Service<GeoSvc>()->World(); // We does need the world instance being built for the field mask initialization
+  LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINTS *** ",m_control_points.size());
+  for(auto& icp : m_control_points){
+    m_current_control_point = &icp;
+    icp.FillPlanFieldMask();
+  }
+  // Set back the first control point as current
+  m_current_control_point = &m_control_points.at(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

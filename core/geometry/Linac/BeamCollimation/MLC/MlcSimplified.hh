@@ -9,7 +9,6 @@ class MlcSimplified : public VMlc {
         std::string m_fieldShape;
         G4double m_fieldParamA = 0.0;
         G4double m_fieldParamB = 0.0;
-        void Initialize(const G4ThreeVector& vertexPosition);
         std::vector<std::pair<double,double>> m_mlc_a_corners;
         std::vector<std::pair<double,double>> m_mlc_b_corners;
         std::vector<std::pair<double,double>> m_mlc_corners;
@@ -21,6 +20,7 @@ public:
     void Configure() override {};
     void DefaultConfig(const std::string &unit) override {};
     void ParseTomlConfig() override {};
+    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override;
 
 };
 

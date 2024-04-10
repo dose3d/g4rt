@@ -105,6 +105,8 @@ class ControlPoint {
     G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 
     G4double GetFieldSizeB() const { return m_config.FieldSizeB; }
+    
+    int Id() const { return m_config.Id; }
 
     std::string GetOutputFileName() const;
 
@@ -118,11 +120,11 @@ class ControlPoint {
     static std::vector<G4String> GetRunCollectionNames();
     static std::set<G4String> GetHitCollectionNames();
 
-    const std::vector<double>& GetMlcPositioning(const std::string& side);
+    const std::vector<double>& GetMlcPositioning(const std::string& side) const;
 
     std::vector<G4ThreeVector>& GetPlanMaskPoints() {return m_plan_mask_points;}
     void FillPlanFieldMask();
-
+    VMlc* MLC() const;
 
   private:
     friend class ControlPointRun;
@@ -153,8 +155,6 @@ class ControlPoint {
     static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);
 
     static double FIELD_MASK_POINTS_DISTANCE;
-
-    VMlc* m_mlc = nullptr;
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForRTPlan(double current_z);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);

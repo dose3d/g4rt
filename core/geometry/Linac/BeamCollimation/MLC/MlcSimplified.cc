@@ -6,14 +6,15 @@
 #include "ControlPoint.hh"
 
 MlcSimplified::MlcSimplified() : VMlc("Simplified"){
-    m_control_point = Service<RunSvc>()->CurrentControlPoint();
-    m_fieldShape = m_control_point->GetFieldShape();
+    //m_control_point = Service<RunSvc>()->CurrentControlPoint();
+    //m_fieldShape = m_control_point->GetFieldShape();
 };
 
-void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
+void MlcSimplified::Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition){
+    LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", vertexPosition, control_point->Id());
     // Update the control point
-    m_control_point = Service<RunSvc>()->CurrentControlPoint();
-    m_fieldShape = m_control_point->GetFieldShape();
+    m_control_point_id = control_point->Id();
+    m_fieldShape = control_point->GetFieldShape();
 
     auto getTransformToIsocentrePlane = [=](std::pair<G4double,G4double> pair,G4double zPosition) {
         auto ssd = 1000.0; // TODO Get from config
@@ -21,13 +22,14 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
     };
 
     if(m_fieldShape == "Rectangular" || m_fieldShape == "Elipsoidal"){
-        m_fieldParamA = m_control_point->GetFieldSizeA();
-        m_fieldParamB = m_control_point->GetFieldSizeB();
+        m_fieldParamA = control_point->GetFieldSizeA();
+        m_fieldParamB = control_point->GetFieldSizeB();
     } else if (m_fieldShape == "RTPlan"){
+        LOGSVC_INFO("Initializing MLC from RTPlan");
         m_mlc_a_corners.clear();
         m_mlc_b_corners.clear();
         m_mlc_corners.clear();
-        const auto& mlc_a_positioning = m_control_point->GetMlcPositioning("Y1");
+        const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
         double x_half_width = 2.5/2; // mm
         double x_init = 30 * x_half_width * 2 - x_half_width; // mm
         for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
@@ -36,7 +38,7 @@ void MlcSimplified::Initialize(const G4ThreeVector& vertexPosition){
             m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x - x_half_width);
             m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x + x_half_width);
         }
-        const auto& mlc_b_positioning = m_control_point->GetMlcPositioning("Y2");
+        const auto& mlc_b_positioning = control_point->GetMlcPositioning("Y2");
         for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
             double leaf_b_pos_y = mlc_b_positioning.at(leaf_idx);
             double leaf_b_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafBPosition(leaf_idx);
@@ -63,7 +65,9 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
         LOGSVC_WARN("Position z {} not equal to isocentre z {}",maskLevelPosition.z(), m_isocentre.z());
         return false;
     } else if( transformToIsocentre ) {
+        //G4cout << "Transforming position to isocentre plane, before: " << maskLevelPosition;
         maskLevelPosition = GetPositionInMaskPlane(position);
+        //G4cout << " after: " << maskLevelPosition;
     }
 
     auto isPointInPolygon = [&](double x, double y){
@@ -77,8 +81,13 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
             return inside;
     };
 
-    if(!m_isInitialized || m_control_point!=Service<RunSvc>()->CurrentControlPoint() )
-        Initialize(maskLevelPosition);
+    auto current_cp= Service<RunSvc>()->CurrentControlPoint();
+    if(! Initialized(current_cp)){
+        G4String msg = "IsInField is called before MLC initialization for current control point.";
+        msg+="\nThis #CP "+ std::to_string(m_control_point_id) + " #CurrentControlPoint: " + std::to_string(current_cp->Id());
+        LOGSVC_CRITICAL(msg.data());
+        G4Exception("MlcSimplified", "IsInField", FatalErrorInArgument , msg);
+    }
 
     if (m_fieldShape == "Rectangular"){
         if (abs(maskLevelPosition.x())<=m_fieldParamA && abs(maskLevelPosition.y())<= m_fieldParamB)
@@ -89,7 +98,10 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
         return true;        
     }
     if (m_fieldShape == "RTPlan"){ 
-        return isPointInPolygon(maskLevelPosition.x(), maskLevelPosition.y());
+        auto isInside = isPointInPolygon(maskLevelPosition.x(), maskLevelPosition.y());
+        //if(transformToIsocentre)
+         //   G4cout << " isInside: " << isInside << G4endl; 
+        return isInside;
     }
     return false;
 }

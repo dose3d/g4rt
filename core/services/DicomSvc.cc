@@ -101,7 +101,7 @@ std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
-  LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
+  LOGSVC_INFO("Reading the MLC {} side configuration from {}",side,planFile);
   if(side!="Y1" && side!="Y2"){
     G4String msg = "Wrong input side given (" + side + ")! Allowed values are 'Y1' and 'Y2'";
     LOGSVC_CRITICAL(msg.data());

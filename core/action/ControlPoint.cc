@@ -1,5 +1,4 @@
 #include "ControlPoint.hh"
-#include "Services.hh"
 #include "NTupleEventAnalisys.hh"
 #include "RunAnalysis.hh"
 #include "IO.hh"
@@ -14,6 +13,7 @@
 #endif
 #include <random>
 #include "VMlc.hh"
+#include "Services.hh"
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
@@ -173,9 +173,10 @@ void ControlPointRun::FillDataTagging(){
             auto& data = scoring.second;
             in_field_scoring_volume.clear();
             for(auto& hit : data){
-                if(current_cp->m_mlc->IsInField(hit.second.GetCentre(),true))
+                if(current_cp->MLC()->IsInField(hit.second.GetCentre(),true)) // DEBUG !!!!
                     in_field_scoring_volume.push_back(&hit.second);
             }
+            LOGSVC_INFO("Found InField #ScoringVolumes: {}",in_field_scoring_volume.size());
             auto geo_centre = getActivityGeoCentre(false);
             LOGSVC_INFO("Geocentre: {}",geo_centre);
             auto wgeo_centre = getActivityGeoCentre(true);
@@ -197,6 +198,11 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
+    auto dicomSvc = DicomSvc::GetInstance();
+    m_mlc_a_positioning.clear();
+    m_mlc_b_positioning.clear();
+    m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y1",0,0); // file, beamId, cpId
+    m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y2",0,0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,10 +345,8 @@ void ControlPoint::FillPlanFieldMask(){
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
     
-    if(!m_mlc)  // It's needed for IsInField function 
-        m_mlc = Service<GeoSvc>()->MLC();
-        // NOTE: The MLC instance takes care for being set for the current
-        //       control point configuration!
+    // NOTE: The MLC instance takes care for being set for the current
+    //       control point configuration!
 
     if( m_config.FieldShape.compare("Rectangular")==0 ||
         m_config.FieldShape.compare("Elipsoidal")==0){
@@ -428,7 +432,9 @@ void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
     for (int i = 0; i < 1000000; ++i) {
         auto x = dis_x(gen);
         auto y = dis_y(gen);
-        if(m_mlc->IsInField(G4ThreeVector(x,y,current_z))){
+        auto in_field = MLC()->IsInField(G4ThreeVector(x,y,current_z));
+        // std::cout << x << " " << y << " " << current_z << " inField "<< in_field <<  std::endl;
+        if(in_field){
             m_plan_mask_points.push_back(rotate(G4ThreeVector(x,y,current_z)));
         }
         if(m_plan_mask_points.size()>=100000) break;
@@ -460,10 +466,9 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 ///
 G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
     // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
-
     G4double closest_dist{10.e9};
     auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
-    if(m_mlc->IsInField(maskLevelPosition)){
+    if(MLC()->IsInField(maskLevelPosition)){
         return 1;
     }
     else{
@@ -585,18 +590,24 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 //   return total_dose == 0 ? sum : sum / total_dose;
 // }
 
+VMlc* ControlPoint::MLC() const { // It's have to be thread-safe
+    // G4cout << "ControlPoint::MLC:: #{} CP" << Id() << G4endl;
+    auto mlc = Service<GeoSvc>()->MLC();
+    if(!mlc->Initialized(this)){
+        G4cout << "ControlPoint::MLC:: Initialize MLC for #{} CP" << Id() << G4endl;
+        G4AutoLock lock(&CPMutex);
+        auto isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
+        mlc->Initialize(this,isocentre); // G4ThreeVector(0,0,-430*mm)
+    }
+    return mlc;
+}
 
-const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) {
-    G4AutoLock lock(&CPMutex);
+const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const {
     auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
-        if(m_mlc_a_positioning.empty())
-            m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_a_positioning;
     }
     else if(side=="Y2"){
-        if(m_mlc_b_positioning.empty())
-            m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,side,0,0);
         return m_mlc_b_positioning;
     }
     else{
@@ -605,5 +616,6 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
     }
     return m_mlc_a_positioning; // never reached, prevent warning
 }
+
 
 

@@ -79,6 +79,7 @@ class RunSvc : public TomlConfigurable, Logable {
   ///
   void SetSimulationConfiguration();
   void SetSimulationDefaultConfig();
+  void LoadSimulationPlan();
 
   ///\brief Perform User's configuration within the Geant4 framework.
   void UserG4Initialization();
@@ -138,7 +139,7 @@ class RunSvc : public TomlConfigurable, Logable {
 
   ///
   ControlPoint* CurrentControlPoint(ControlPoint* cp) { 
-    cp->FillPlanFieldMask();
+    // cp->FillPlanFieldMask();
     m_current_control_point = cp; 
     return cp; 
   }

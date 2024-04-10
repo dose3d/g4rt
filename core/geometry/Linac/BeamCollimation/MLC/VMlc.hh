@@ -12,7 +12,7 @@ class VMlc: public TomlConfigurable {
     protected:
         std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
         std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves;
-        ControlPoint* m_control_point = nullptr;
+        int m_control_point_id = -1;
         bool m_isInitialized = false;
         static G4ThreeVector m_isocentre;
     public:
@@ -22,6 +22,8 @@ class VMlc: public TomlConfigurable {
         void ParseTomlConfig() override {};
         virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;
         virtual bool IsInField(G4PrimaryVertex* vrtx) = 0;
+        virtual void Initialize(const ControlPoint* control_point,const G4ThreeVector& vertexPosition) = 0;
+        bool Initialized(const ControlPoint* control_point) const;
         static G4ThreeVector GetPositionInMaskPlane(const G4ThreeVector& position);
         static G4ThreeVector GetPositionInMaskPlane(const G4PrimaryVertex* vrtx);
 

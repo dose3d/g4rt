@@ -101,6 +101,11 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
       return false;
     }
 
+    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override{
+      // TODO implement me
+    }
+
+
 
 
 };

@@ -82,6 +82,10 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   ~WorldConstruction();
 
+  /// have to implement pure virtual function
+  G4VPhysicalVolume* Construct() override;      // <- G4VUserDetectorConstruction
+  
+
   private:
   /// Delete the copy and move constructors
   WorldConstruction(const WorldConstruction &) = delete;
@@ -92,8 +96,6 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   WorldConstruction &operator=(WorldConstruction &&) = delete;
 
-  /// have to implement pure virtual function
-  G4VPhysicalVolume* Construct() override;      // <- G4VUserDetectorConstruction
 
   /// have to implement pure virtual function
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume

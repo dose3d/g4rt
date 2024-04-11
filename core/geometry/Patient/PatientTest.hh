@@ -7,6 +7,7 @@
 #include "G4NistManager.hh"
 #include "G4PVPlacement.hh"
 #include "G4Box.hh"
+#include "WorldConstruction.hh"
 
 class PatientTest : public ::testing::Test {
 protected:
@@ -16,7 +17,8 @@ protected:
         runSvc->AppMode(OperationalMode::BuildGeometry);
         configSvc->ParseTomlFile(toml_file);
         configSvc->PrintTomlConfig();
-        runSvc->Initialize();
+        auto world = WorldConstruction::GetInstance();
+        runSvc->Initialize(world);
     }
     G4VPhysicalVolume* WorldSetup() {
         auto testWorldSize = G4ThreeVector(200.0*cm,200.0*cm,200.0*cm);

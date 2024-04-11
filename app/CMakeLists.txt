@@ -35,8 +35,7 @@ add_definitions(${Core_DEFINITIONS}
         ${spdlog_DEFINITIONS}
         ${ROOT_DEFINITIONS})
 
-set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/world/bunker/world_construction/
-                ${PROJECT_SOURCE_DIR}/world/bunker/walls/)
+set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/world/bunker/)
 
 include_directories(${IAEA_INCLUDE_DIR}
         ${Cmd_INCLUDE_DIR}
@@ -48,8 +47,10 @@ include_directories(${IAEA_INCLUDE_DIR}
         ${ROOT_INCLUDE_DIRS}
         ${HEADERS_DIR})
 
+file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/world/bunker/*.cc)
+
 #---------------------------------------------------------------------------
-add_executable(g4rt main.cc)
+add_executable(g4rt ${SOURCES} main.cc)
 target_link_libraries(g4rt IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
 
 #---------------------------------------------------------------------------

@@ -75,13 +75,14 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   void Configure() override;
   
-  private:
+  protected:
   ///
   WorldConstruction();
 
   ///
   ~WorldConstruction();
 
+  private:
   /// Delete the copy and move constructors
   WorldConstruction(const WorldConstruction &) = delete;
 

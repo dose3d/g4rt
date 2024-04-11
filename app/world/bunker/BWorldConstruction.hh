@@ -5,7 +5,7 @@
 
 class D3DTray;
 
-class BBWorldConstruction: public WorldConstruction {
+class BWorldConstruction: public WorldConstruction {
 public:
   static WorldConstruction *GetInstance();
 
@@ -14,10 +14,10 @@ bool Create() override;
 
 private:
     ///
-    BWorldConstruction() = default;
+    BWorldConstruction();
 
     ///
-    ~BWorldConstruction() = default;
+    ~BWorldConstruction();
 
     /// Delete the copy and move constructors
     BWorldConstruction(const BWorldConstruction &) = delete;

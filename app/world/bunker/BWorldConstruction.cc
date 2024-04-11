@@ -1,5 +1,13 @@
 #include "BWorldConstruction.hh"
+#include "Services.hh"
 #include "D3DTray.hh"
+#include "G4Box.hh"
+#include "Types.hh"
+
+BWorldConstruction::BWorldConstruction(){}
+
+    ///
+BWorldConstruction::~BWorldConstruction(){}
 
 WorldConstruction* BWorldConstruction::GetInstance() {
     static auto instance = new BWorldConstruction(); // It's being released by G4GeometryManager
@@ -16,7 +24,7 @@ bool BWorldConstruction::Create() {
     // create an envelope box filled with seleceted medium
     auto envSize = G4ThreeVector(3000.,3000.,2000.);
     G4Box *patientEnv = new G4Box("patientEnvBox", envSize.x(),envSize.y(),envSize.z());
-    G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), "patientEnvLV", 0, 0, 0);
+    G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, Air.get(), "patientEnvLV", 0, 0, 0);
     // TODO 2: Create tray innstances here with pv as a parent
     // auto position = G4ThreeVector(x,y,z);
     // auto halfSize = G4ThreeVector(x,y,z);

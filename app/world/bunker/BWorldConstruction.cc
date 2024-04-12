@@ -36,12 +36,18 @@ bool BWorldConstruction::Create() {
 
 
 
+
+
+    return true;
+}
+
+void BWorldConstruction::InstallTrayDetectors() {
+    auto pv = GetPhysicalVolume();
+    D3DDetector m_tray;
     // TODO 2: Create tray innstances here with pv as a parent
     // auto position = G4ThreeVector(x,y,z);
     // auto halfSize = G4ThreeVector(x,y,z);
     // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
     // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
     // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
-
-    return true;
 }

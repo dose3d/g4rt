@@ -11,6 +11,8 @@ public:
 
 bool Create() override;
 
+void InstallTrayDetectors();
+
 
 private:
     ///

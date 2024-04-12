@@ -129,6 +129,7 @@ int main(int argc, const char *argv[]) {
     } 
     auto world = BWorldConstruction::GetInstance();
     runSvc->Initialize(world);
+    dynamic_cast<BWorldConstruction*>(world)->InstallTrayDetectors();
     runSvc->Run();
     runSvc->Finalize();
   } else {

@@ -25,6 +25,10 @@ D3DDetector::D3DDetector(): VPatient("D3DDetector"){
     AcceptGeoVisitor(Service<GeoSvc>());
 }
 
+
+// TODO:
+// 1. Add support for multiple detectors creation by proper method (constructor with D3DTray(parent pv, "Name", position, halfSize of envelope world if needet))
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 D3DDetector::~D3DDetector() {

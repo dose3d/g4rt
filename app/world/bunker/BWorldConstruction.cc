@@ -1,6 +1,5 @@
 #include "BWorldConstruction.hh"
 #include "Services.hh"
-#include "D3DTray.hh"
 #include "G4Box.hh"
 #include "Types.hh"
 
@@ -43,11 +42,10 @@ bool BWorldConstruction::Create() {
 
 void BWorldConstruction::InstallTrayDetectors() {
     auto pv = GetPhysicalVolume();
-    D3DDetector m_tray;
-    // TODO 2: Create tray innstances here with pv as a parent
-    // auto position = G4ThreeVector(x,y,z);
-    // auto halfSize = G4ThreeVector(x,y,z);
-    // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
-    // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
-    // m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
+
+    auto halfSize = G4ThreeVector(150.,150.,150.);
+    auto position = G4ThreeVector(0.,0.,0.);
+    m_trays.push_back(new D3DTray(pv, "Name", position, halfSize));
+    m_trays.push_back(new D3DTray(pv, "Name1", position+G4ThreeVector(400.,0.,0.), halfSize));
+    m_trays.push_back(new D3DTray(pv, "Name2", position+G4ThreeVector(400.,400.,0.), halfSize));
 }

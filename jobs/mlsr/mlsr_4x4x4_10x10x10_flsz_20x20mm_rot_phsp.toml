@@ -16,21 +16,21 @@ RunAnalysis = true
 
 [GeoSvc]
 BuildLinac = true
-BuildPatient = true
+BuildPatient = false
 
 [PatientGeometry]
 Type = "D3DDetector"
 EnviromentPositionX = 0.0
 EnviromentPositionY = 0.0
-EnviromentPositionZ = 50.0
-EnviromentSizeX = 110.0
-EnviromentSizeY = 110.0
-EnviromentSizeZ = 110.0
+EnviromentPositionZ = 00.0
+EnviromentSizeX = 40.0
+EnviromentSizeY = 40.0
+EnviromentSizeZ = 40.0
 EnviromentMedium = "G4_WATER"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-50.0] # In mm
-Voxelization = [4,4,4] # Number of cels in every direction
+TopPositionInEnv = [0.0,0.0,-20.0] # In mm
+Voxelization = [2,2,2] # Number of cels in every direction
 
 [D3DDetector_Layer]
 MRowShift = false

@@ -2,8 +2,9 @@
 #define TB_BWorldConstruction_HH
 
 #include "WorldConstruction.hh"
+#include "D3DTray.hh"
 
-class D3DTray;
+
 
 class BWorldConstruction: public WorldConstruction {
 public:

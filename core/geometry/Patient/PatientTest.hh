@@ -17,7 +17,7 @@ protected:
         runSvc->AppMode(OperationalMode::BuildGeometry);
         configSvc->ParseTomlFile(toml_file);
         configSvc->PrintTomlConfig();
-        auto world = WorldConstruction::GetInstance();
+        auto world = Service<GeoSvc>()->World();
         runSvc->Initialize(world);
     }
     G4VPhysicalVolume* WorldSetup() {

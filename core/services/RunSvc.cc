@@ -225,7 +225,7 @@ void RunSvc::Initialize(WorldConstruction* world) {
   // build a geometry
   world->Configure();
   world->Create();
-
+  Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
   LogSvc::Configure();
   m_logger = LogSvc::RecreateLogger("RunSvc");

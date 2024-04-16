@@ -73,7 +73,7 @@ void SavePhSpConstruction::DefineSensitiveDetector(){
   /// !!!
 
   G4int id = 0;
-  auto worldConstr = WorldConstruction::GetInstance();
+  auto worldConstr = Service<GeoSvc>()->World();
   auto configSvc = Service<ConfigSvc>();
   const VecG4doubleWPtr& savePhSpUsrWPtr = configSvc->GetValue<VecG4doubleSPtr>("GeoSvc", "SavePhSpUsr");
   const VecG4doubleWPtr& savePhSpHeadWPtr = configSvc->GetValue<VecG4doubleSPtr>("GeoSvc", "SavePhSpHead");

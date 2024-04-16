@@ -82,33 +82,33 @@ void D3DDetector::ParseTomlConfig(){
   auto config = toml::parse_file(configFile);
 
   ///
-  m_top_position_in_env.setX(config[configObjDetector]["TopPositionInEnv"][0].value_or(0.0));
-  m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
-  m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
+  m_config.m_top_position_in_env.setX(config[configObjDetector]["TopPositionInEnv"][0].value_or(0.0));
+  m_config.m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
+  m_config.m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + m_top_position_in_env;
+  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + m_config.m_top_position_in_env;
 
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)
-  m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);
-  m_nY_cells = config[configObjDetector]["Voxelization"][1].value_or(0);
-  m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
+  m_config.m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);
+  m_config.m_nY_cells = config[configObjDetector]["Voxelization"][1].value_or(0);
+  m_config.m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
   ///
-  m_stl_geometry_file_path = config[configObjDetector]["Geomertry"].value_or("None");
+  m_config.m_stl_geometry_file_path = config[configObjDetector]["Geomertry"].value_or("None");
+  m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
   ///
-  m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
-  m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
-  m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
+  m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
+  m_config.m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
   ///
-  m_cell_nX_voxels = config[configObjCell]["Voxelization"][0].value_or(0);
-  m_cell_nY_voxels = config[configObjCell]["Voxelization"][1].value_or(0);
-  m_cell_nZ_voxels = config[configObjCell]["Voxelization"][2].value_or(0);
+  m_config.m_cell_nX_voxels = config[configObjCell]["Voxelization"][0].value_or(0);
+  m_config.m_cell_nY_voxels = config[configObjCell]["Voxelization"][1].value_or(0);
+  m_config.m_cell_nZ_voxels = config[configObjCell]["Voxelization"][2].value_or(0);
   /// 
-  m_cell_medium = config[configObjCell]["Medium"].value_or("");
+  m_config.m_cell_medium = config[configObjCell]["Medium"].value_or("");
 
   m_tracks_analysis = config[configObjCell]["TracksAnalysis"].value_or(false);
 
@@ -122,30 +122,40 @@ void D3DDetector::ParseTomlConfig(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool D3DDetector::LoadDefaultParameterization(){
-  m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
-  m_nX_cells = 4;
-  m_nY_cells = 4;
-  m_nZ_cells = 4;
-  m_cell_nX_voxels = 4;
-  m_cell_nY_voxels = 4;
-  m_cell_nZ_voxels = 4;
-  m_mrow_shift = true;
-  m_mlayer_shift = true;
-  m_cell_medium = "PMMA";
+  m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
+  m_config.m_nX_cells = 4;
+  m_config.m_nY_cells = 4;
+  m_config.m_nZ_cells = 4;
+  m_config.m_cell_nX_voxels = 4;
+  m_config.m_cell_nY_voxels = 4;
+  m_config.m_cell_nZ_voxels = 4;
+  m_config.m_mrow_shift = true;
+  m_config.m_mlayer_shift = true;
+  m_config.m_cell_medium = "PMMA";
+  
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool D3DDetector::LoadParameterization(){
+  if(m_config.m_initialized)
+    return true;
   if(IsTomlConfigExists()){
     ParseTomlConfig();
   }
   else{
     LoadDefaultParameterization();
   }
+  m_config.m_initialized=true;
   return true;
 }
+
+void D3DDetector::SetConfig(const D3DDetector::Config& config) {
+  m_config = config; 
+  m_config.m_initialized = true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -159,14 +169,14 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
 
   if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
     std::string path = PROJECT_DATA_PATH;
-    path = path + "/" + m_stl_geometry_file_path;
+    path = path + "/" + m_config.m_stl_geometry_file_path;
     auto mesh = CADMesh::TessellatedMesh::FromSTL(path);
     G4VSolid* solid = mesh->GetSolid();
     auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
     auto dose3dCellLV = new G4LogicalVolume(solid, Medium.get(), "LVStl");
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-    SetPhysicalVolume(new G4PVPlacement(nullptr, m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
+    SetPhysicalVolume(new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
     // auto pv = GetPhysicalVolume();
 
 
@@ -176,12 +186,12 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       G4cout << " Istantiate new layer..." << i_layer << G4endl;
       auto label = "D3D_Layer_"+std::to_string(i_layer);
       G4cout << " No of cells in layer..." << cells_in_layer_positioning.size() << G4endl; 
-      m_d3d_layers.push_back(new D3DMLayer(label, m_cell_medium, cells_in_layer_positioning));
+      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
-      m_d3d_layers.back()->SetPosition(m_top_position_in_env);
-      m_d3d_layers.back()->SetCellNVoxels('x',m_cell_nX_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('y',m_cell_nY_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('z',m_cell_nZ_voxels);
+      m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
+      m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
 
@@ -193,12 +203,12 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
       G4cout << " Istantiate new layer..." << i_layer << G4endl;
       auto label = "D3D_Layer_"+std::to_string(i_layer);
-      m_d3d_layers.push_back(new D3DMLayer(label, m_cell_medium, cells_in_layer_positioning));
+      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
-      m_d3d_layers.back()->SetPosition(m_top_position_in_env);
-      m_d3d_layers.back()->SetCellNVoxels('x',m_cell_nX_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('y',m_cell_nY_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('z',m_cell_nZ_voxels);
+      m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
+      m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
     }
@@ -211,29 +221,29 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
 
     auto rotation = parentWorld->GetObjectRotation();
 
-    G4double init_y = m_top_position_in_env.getY() - (m_nY_cells-1) * layer_width/2. ; 
-    for(int i_layer = 0; i_layer < m_nY_cells; ++i_layer ){
+    G4double init_y = m_config.m_top_position_in_env.getY() - (m_config.m_nY_cells-1) * layer_width/2. ; 
+    for(int i_layer = 0; i_layer < m_config.m_nY_cells; ++i_layer ){
       auto label = "D3D_Layer_"+std::to_string(i_layer);
-      G4double init_x = m_top_position_in_env.getX() - (m_nX_cells-1) * layer_width/2.;
-      G4double init_z = m_top_position_in_env.getZ() + layer_width/2.;
+      G4double init_x = m_config.m_top_position_in_env.getX() - (m_config.m_nX_cells-1) * layer_width/2.;
+      G4double init_z = m_config.m_top_position_in_env.getZ() + layer_width/2.;
       G4cout << "[DEBUG]:: >>> >>> D3DDetector:: Z translation: " << init_z << G4endl;
       //_______________________________________
       // Take into account shifts related to layerss parity  
       // within the detector assembly 
       if (i_layer>0)
         init_y+= layer_width;
-      if(m_mrow_shift && i_layer%2)
+      if(m_config.m_mrow_shift && i_layer%2)
         init_x += layer_width/2.;
       m_d3d_layers.push_back(new D3DMLayer(label,
-                  m_cell_medium,
-                  m_mlayer_shift));
+                  m_config.m_cell_medium,
+                  m_config.m_mlayer_shift));
       m_d3d_layers.back()->SetId(i_layer);
-      m_d3d_layers.back()->SetNCells('x',m_nX_cells);
-      m_d3d_layers.back()->SetNCells('z',m_nZ_cells);
+      m_d3d_layers.back()->SetNCells('x',m_config.m_nX_cells);
+      m_d3d_layers.back()->SetNCells('z',m_config.m_nZ_cells);
       ///
-      m_d3d_layers.back()->SetCellNVoxels('x',m_cell_nX_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('y',m_cell_nY_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('z',m_cell_nZ_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
+      m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       ///
       m_d3d_layers.back()->SetPosition('x',init_x);
       m_d3d_layers.back()->SetPosition('y',init_y);
@@ -298,8 +308,8 @@ void D3DDetector::AcceptGeoVisitor(GeoSvc *visitor) const {
 ////////////////////////////////////////////////////////////////////////////////
 /// TO BE REPAIRED
 void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) const {
-  std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
-  size += "_"+std::to_string(m_cell_nX_voxels)+"x"+std::to_string(m_cell_nY_voxels)+"x"+std::to_string(m_cell_nZ_voxels);
+  std::string size = std::to_string(m_config.m_nX_cells)+"x"+std::to_string(m_config.m_nY_cells)+"x"+std::to_string(m_config.m_nZ_cells);
+  size += "_"+std::to_string(m_config.m_cell_nX_voxels)+"x"+std::to_string(m_config.m_cell_nY_voxels)+"x"+std::to_string(m_config.m_cell_nZ_voxels);
   std::string file = path_to_out_dir + "/detector_scoring_volume_positioning.root";
   auto tfile = IO::CreateOutputTFile(file,"Geometry");
 
@@ -368,7 +378,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
     auto nvx = cell_sv->m_nVoxelsX;
     auto nvy = cell_sv->m_nVoxelsY;
     auto nvz = cell_sv->m_nVoxelsZ;
-    std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
+    std::string size = std::to_string(m_config.m_nX_cells)+"x"+std::to_string(m_config.m_nY_cells)+"x"+std::to_string(m_config.m_nZ_cells);
     size += "_"+std::to_string(nvx)+"x"+std::to_string(nvy)+"x"+std::to_string(nvz);
     std::string file = path_to_out_dir + "/detector_"+run_collection +"_"+size+"_voxel_positioning.csv";
     std::ofstream outFile;
@@ -415,7 +425,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
 
   // Export CellId to Placement mapping
   std::string sep = ",";
-  std::string size = std::to_string(m_nX_cells)+"x"+std::to_string(m_nY_cells)+"x"+std::to_string(m_nZ_cells);
+  std::string size = std::to_string(m_config.m_nX_cells)+"x"+std::to_string(m_config.m_nY_cells)+"x"+std::to_string(m_config.m_nZ_cells);
   std::string file = "/detector_" + size + "_cell_positioning.csv";
   file = path_to_out_dir + file;
   std::ofstream outFile;
@@ -471,7 +481,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
   G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
-  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_cell_medium);
   for(const auto& mLayer: m_d3d_layers){
     // TODO: hashed_map_scoring.insert(mLayer->GetScoringHashedMap(run_collection,type));
     for(const auto& cell: mLayer->GetCells()){
@@ -540,11 +550,11 @@ void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
   LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
 
     auto global_cell_id = [&](int idX, int idY, int idZ) -> int {
-        return (idX * m_nY_cells + idY) * m_nZ_cells + idZ;
+        return (idX * m_config.m_nY_cells + idY) * m_config.m_nZ_cells + idZ;
     };
 
     auto global_vox_id_in_layer = [&](int idCellX, int idCellZ, int idX, int idZ) -> int {
-        return ( ( idCellX * m_nZ_cells + idCellZ) * m_cell_nX_voxels + idX) * m_cell_nZ_voxels + idZ;
+        return ( ( idCellX * m_config.m_nZ_cells + idCellZ) * m_config.m_cell_nX_voxels + idX) * m_config.m_cell_nZ_voxels + idZ;
 
     };
 
@@ -671,21 +681,21 @@ std::string D3DDetector::SetGeometrySource(){
 
   std::cout << "1" << std::endl;
 
-  if((m_stl_geometry_file_path.compare("None")==0)&&(m_in_layer_positioning_module.compare("None")==0)){
+  if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
     return geo_type = "Standard";
   }
 
-  else if((m_stl_geometry_file_path.compare("None")!=0)&&(m_in_layer_positioning_module.compare("None")==0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
     LOGSVC_ERROR("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
     return geo_type;
   }
 
-  else if((m_stl_geometry_file_path.compare("None")==0)&&(m_in_layer_positioning_module.compare("None")!=0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")!=0)){
     ReadCellsInLayersPositioning();
     return geo_type = "PositioningFromCsv";
   }
 
-  else if((m_stl_geometry_file_path.compare("None")!=0)&&(m_in_layer_positioning_module.compare("None")!=0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_in_layer_positioning_module.compare("None")!=0)){
     ReadCellsInLayersPositioning();
     return geo_type = "StlDetectorWithPositioningFromCsv";
   }
@@ -698,11 +708,11 @@ void D3DDetector::ReadCellsInLayersPositioning(){
   
   std::vector<G4ThreeVector> cells_in_layer;
   std::string line;
-  if(m_in_layer_positioning_module.at(0)!='/'){
+  if(m_config.m_in_layer_positioning_module.at(0)!='/'){
     std::string path = PROJECT_DATA_PATH;
-    m_in_layer_positioning_module=path+"/"+m_in_layer_positioning_module;
+    m_config.m_in_layer_positioning_module=path+"/"+m_config.m_in_layer_positioning_module;
   }
-  std::ifstream file(m_in_layer_positioning_module.data());
+  std::ifstream file(m_config.m_in_layer_positioning_module.data());
   bool is_first_layer = true;
   if (file.is_open()) {  // check if file exists
     while (getline(file, line)) {
@@ -733,7 +743,7 @@ void D3DDetector::ReadCellsInLayersPositioning(){
     m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
     cells_in_layer.clear();
   } else {
-    G4String description = "The " + m_in_layer_positioning_module + " not found";
+    G4String description = "The " + m_config.m_in_layer_positioning_module + " not found";
     G4Exception("D3DDetector", "FILE", FatalErrorInArgument, description.data());
   }
 

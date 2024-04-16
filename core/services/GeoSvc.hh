@@ -93,6 +93,9 @@ class GeoSvc : public TomlConfigurable, Logable {
   WorldConstruction *World() const { return my_world; }
   WorldConstruction *World() { return my_world ? my_world : Build(); }
   
+  /// 
+  void SetWorld(WorldConstruction *world) { my_world = world; }
+
   ///
   VPatient* Patient();
 

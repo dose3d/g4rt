@@ -253,7 +253,7 @@ void PatientGeometry::DefineSensitiveDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
-  auto worldInstance = WorldConstruction::GetInstance();
+  auto worldInstance = Service<GeoSvc>()->World();
   auto patientInstance = worldInstance->PatientEnvironment()->GetPatient();
 
   auto g4Navigator = std::make_unique<G4Navigator>();

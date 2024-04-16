@@ -74,6 +74,10 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   ///
   void Configure() override;
+
+  virtual std::vector<VPatient*> GetCostomDetectors() const {
+    return std::vector<VPatient*>();
+  }
   
   protected:
   ///

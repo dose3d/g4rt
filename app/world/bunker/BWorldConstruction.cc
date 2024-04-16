@@ -49,3 +49,18 @@ void BWorldConstruction::InstallTrayDetectors() {
     m_trays.push_back(new D3DTray(pv, "Tray2", position+G4ThreeVector(400.,0.,0.), halfSize));
     m_trays.push_back(new D3DTray(pv, "Tray3", position+G4ThreeVector(400.,400.,0.), halfSize));
 }
+
+void BWorldConstruction::ConstructSDandField() {
+    WorldConstruction::ConstructSDandField();
+    for(auto& tray : m_trays){
+    tray->DefineSensitiveDetector();
+    }
+}
+
+std::vector<VPatient*> BWorldConstruction::GetCostomDetectors() const {
+    std::vector<VPatient*> customDetectors;
+    for(const auto& tray : m_trays){
+        customDetectors.push_back(tray->GetDetector());
+    }
+    return std::move(customDetectors);
+}

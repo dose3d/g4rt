@@ -31,6 +31,11 @@ class D3DTray : public IPhysicalVolume{
     ///
     void WriteInfo() override {}
 
+    ///
+    void DefineSensitiveDetector();
+
+
+    VPatient* GetDetector() const { return m_detector; }
 
     private:
     ///
@@ -42,7 +47,7 @@ class D3DTray : public IPhysicalVolume{
     std::string m_tray_config_file;
 
     ///
-    VPatient* m_patient;
+    VPatient* m_detector;
 
 };
 

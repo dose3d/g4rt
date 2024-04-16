@@ -122,7 +122,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
 
     // Region for cuts
-  G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
+  //G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
 
   auto regVol = new G4Region(label+"_G4RegionCuts");
   auto cuts = new G4ProductionCuts;
@@ -179,7 +179,12 @@ void D3DCell::DefineSensitiveDetector(){
       nvy = m_cell_voxelization_y;
       nvz = m_cell_voxelization_z;
     }
-    patientSD->AddScoringVolume("Dose3D",hcName,*envBox,nvx,nvy,nvz);
+    std::string name = GetName();
+    // TEMPORARY METHOD TO GET RUN COLLECTION NAME:
+    // TODO: extract this from Detector::name scope
+    std::string runCollName = name.substr(0, name.find('_', 0));
+    //G4cout << "[DEBUG]:: D3DCell::DefineSensitiveDetector name " << name << " runCollName " << runCollName << G4endl;
+    patientSD->AddScoringVolume(runCollName,hcName,*envBox,nvx,nvy,nvz);
 
 
     // ________________________________________________________________________

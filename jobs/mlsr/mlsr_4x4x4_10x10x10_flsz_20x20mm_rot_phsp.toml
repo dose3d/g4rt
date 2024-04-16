@@ -11,7 +11,7 @@ PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = false
+NTupleAnalysis = true
 RunAnalysis = true
 
 [GeoSvc]

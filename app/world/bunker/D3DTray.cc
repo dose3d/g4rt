@@ -7,7 +7,7 @@
 
 D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize)
 :IPhysicalVolume(name), m_global_centre(position), m_tray_world_halfSize(halfSize), m_tray_name(name) {
-    m_patient = new D3DDetector(m_tray_name);
+    m_detector = new D3DDetector(m_tray_name);
     auto config = D3DDetector::Config();
 
     config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
@@ -26,7 +26,7 @@ D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4T
     config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 
 
-    dynamic_cast<D3DDetector*>(m_patient)->SetConfig(config);
+    dynamic_cast<D3DDetector*>(m_detector)->SetConfig(config);
     Construct(parentPV);
 } 
 
@@ -45,6 +45,10 @@ void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
     
     auto pv = GetPhysicalVolume();
 
-    m_patient->Construct(pv);
-    m_patient->WriteInfo();
+    m_detector->Construct(pv);
+    m_detector->WriteInfo();
+}
+
+void D3DTray::DefineSensitiveDetector() {
+    m_detector->DefineSensitiveDetector();
 }

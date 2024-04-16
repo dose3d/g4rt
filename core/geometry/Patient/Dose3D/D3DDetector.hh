@@ -16,7 +16,7 @@
 
 ///\class D3DDetector
 ///\brief The Phantom constructed on top of Dose3D cells
-class D3DDetector : public VPatient, public GeoComponet{
+class D3DDetector : public VPatient, public GeoComponet {
   public:
     ///
     D3DDetector(const std::string& label = "D3DDetector");

@@ -44,9 +44,22 @@ void ControlPointRun::InitializeScoringCollection(){
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
             }
             auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
-            scoring_collection[scoring_type] = Service<GeoSvc>()->Patient()->GetScoringHashedMap(run_collection_name,scoring_type);
-            // TODO: scoring_collection[scoring_type] = Service<GeoSvc>()->GetScoringHashedMap(run_collection_name,scoring_type); 
-            // GeoSvc musi szukac po nazwie albo z Patient, albo skądinąd...
+            // Try to get scoring collection from any scoring volume in the world..
+            std::map<std::size_t, VoxelHit> sc; 
+            if(Service<GeoSvc>()->Patient())
+                sc = Service<GeoSvc>()->Patient()->GetScoringHashedMap(run_collection_name,scoring_type);
+            if(sc.empty()){
+                auto customDetectors = Service<GeoSvc>()->CustomDetectors();
+                for(auto& cd : customDetectors){
+                    sc = cd->GetScoringHashedMap(run_collection_name,scoring_type);
+                    if (!sc.empty())
+                        break;
+                }
+            }
+            if(sc.empty()){
+                LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
+            }
+            scoring_collection[scoring_type] = sc;
             if(scoring_collection[scoring_type].empty()){
                 LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);

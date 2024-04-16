@@ -498,7 +498,15 @@ EMlcModel GeoSvc::GetMlcModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatient* GeoSvc::Patient(){
-  return World()->PatientEnvironment()->GetPatient();
+  if(World()->PatientEnvironment())
+    return World()->PatientEnvironment()->GetPatient();
+  return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::vector<VPatient*> GeoSvc::CustomDetectors(){
+  return World()->GetCostomDetectors();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -100,6 +100,9 @@ class GeoSvc : public TomlConfigurable, Logable {
   VPatient* Patient();
 
   ///
+  std::vector<VPatient*> CustomDetectors();
+
+  ///
   VMlc* MLC();
 
   ///\brief Update the geometry.

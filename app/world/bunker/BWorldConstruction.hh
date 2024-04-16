@@ -14,6 +14,9 @@ bool Create() override;
 
 void InstallTrayDetectors();
 
+void ConstructSDandField() override;
+
+std::vector<VPatient*> GetCostomDetectors() const override;
 
 private:
     ///

@@ -478,6 +478,9 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
+  if(!m_label.contains(run_collection))
+    return std::map<std::size_t, VoxelHit>(); // return empty map
+    
   G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;

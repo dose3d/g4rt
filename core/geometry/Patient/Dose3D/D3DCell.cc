@@ -122,7 +122,9 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
 
     // Region for cuts
-  auto regVol = new G4Region(label+"Cuts");
+  G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
+
+  auto regVol = new G4Region(label+"_G4RegionCuts");
   auto cuts = new G4ProductionCuts;
   cuts->SetProductionCut(0.1 * mm);
   regVol->SetProductionCuts(cuts);

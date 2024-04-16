@@ -19,7 +19,7 @@
 class D3DDetector : public VPatient, public GeoComponet{
   public:
     ///
-    D3DDetector();
+    D3DDetector(const std::string& label = "D3DDetector");
 
     ///
     ~D3DDetector();

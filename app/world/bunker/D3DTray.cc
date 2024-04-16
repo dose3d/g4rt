@@ -7,7 +7,7 @@
 
 D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize)
 :IPhysicalVolume(name), m_global_centre(position), m_tray_world_halfSize(halfSize), m_tray_name(name) {
-    m_patient = new D3DDetector();
+    m_patient = new D3DDetector(m_tray_name);
     auto config = D3DDetector::Config();
 
     config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);

@@ -141,7 +141,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
         G4int iy = m_id;
         if (row.at(ix)){
           auto current_centre = G4ThreeVector(current_x, current_y, current_z);
-          auto label = "D3D_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
+          auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
           m_d3d_cells.push_back(new D3DCell(label,current_centre,m_cell_medium_name));
           m_d3d_cells.back()->SetIDs(ix,iy,iz);
           m_d3d_cells.back()->SetNVoxels('x',m_cell_voxelization_x);
@@ -160,8 +160,9 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
     idx = 0;
     idz = 0;
     for(const auto& cell_positioning : m_cells_in_layer_positioning){
-      auto label = "D3D_"+std::to_string(idx)+"_"+std::to_string(idy)+"_"+std::to_string(idz);
+      auto label = m_label+"_Cell_"+std::to_string(idx)+"_"+std::to_string(idy)+"_"+std::to_string(idz);
       auto cell_position = cell_positioning+m_init_possition;
+      G4cout << "[DEBUG]:: D3DMLayer:: creating cell " << label << G4endl;
       m_d3d_cells.push_back(new D3DCell(label,cell_position,m_cell_medium_name));
       m_d3d_cells.back()->SetIDs(idx++,idy,idz);
       m_d3d_cells.back()->SetNVoxels('x',m_cell_voxelization_x);

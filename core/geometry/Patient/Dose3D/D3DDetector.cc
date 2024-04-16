@@ -21,7 +21,7 @@ std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_sco
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-D3DDetector::D3DDetector(): VPatient("D3DDetector"){
+D3DDetector::D3DDetector(const std::string& label): VPatient(label), m_label(label) {
     AcceptGeoVisitor(Service<GeoSvc>());
 }
 
@@ -184,7 +184,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     int i_layer = 0;
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
       G4cout << " Istantiate new layer..." << i_layer << G4endl;
-      auto label = "D3D_Layer_"+std::to_string(i_layer);
+      auto label = m_label+"_Layer_"+std::to_string(i_layer);
       G4cout << " No of cells in layer..." << cells_in_layer_positioning.size() << G4endl; 
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
@@ -202,7 +202,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     int i_layer = 0;
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
       G4cout << " Istantiate new layer..." << i_layer << G4endl;
-      auto label = "D3D_Layer_"+std::to_string(i_layer);
+      auto label = m_label+"_Layer_"+std::to_string(i_layer);
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
       m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
@@ -223,7 +223,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
 
     G4double init_y = m_config.m_top_position_in_env.getY() - (m_config.m_nY_cells-1) * layer_width/2. ; 
     for(int i_layer = 0; i_layer < m_config.m_nY_cells; ++i_layer ){
-      auto label = "D3D_Layer_"+std::to_string(i_layer);
+      auto label = m_label+"_Layer_"+std::to_string(i_layer);
       G4double init_x = m_config.m_top_position_in_env.getX() - (m_config.m_nX_cells-1) * layer_width/2.;
       G4double init_z = m_config.m_top_position_in_env.getZ() + layer_width/2.;
       G4cout << "[DEBUG]:: >>> >>> D3DDetector:: Z translation: " << init_z << G4endl;

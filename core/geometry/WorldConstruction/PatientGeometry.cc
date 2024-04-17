@@ -253,10 +253,14 @@ void PatientGeometry::DefineSensitiveDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
-  auto worldInstance = Service<GeoSvc>()->World();
-  auto patientInstance = worldInstance->PatientEnvironment()->GetPatient();
+  auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
+  if (!patientEnv) {
+    return;
+  }
+  auto patientInstance = patientEnv->GetPatient();
 
   auto g4Navigator = std::make_unique<G4Navigator>();
+  auto worldInstance = Service<GeoSvc>()->World();
   g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
   
   IO::CreateDirIfNotExits(path_to_output_dir);

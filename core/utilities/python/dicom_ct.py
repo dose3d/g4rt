@@ -14,10 +14,10 @@ import json
 from pathlib import Path
 
 # def CtSvc():
-#     logger.info("Initialoizing CT scaner.")
+#     logger.info("Initializing CT scaner.")
 
 # def create_ct_series():
-#     logger.info("Initialoizing CT series.")
+#     logger.info("Initializing CT series.")
     
 # def set_output_path():
 #     logger.info("Setting path for CT series.")
@@ -29,7 +29,7 @@ class CtSvc():
     
 # -------------------------------- Init -----------------------------------------
     def __init__(self, label="CT_"):
-        print("Initialoizing CT scaner.")
+        print("Initializing CT scaner.")
         print()
         self.__label = label # Did I Need that?
         self.__generate_CT = True # Did I Need that?

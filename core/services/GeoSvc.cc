@@ -13,6 +13,7 @@
 #include <TGeoManager.h>
 #include <TFile.h>
 #include "IO.hh"
+#include "G4GDMLParser.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -650,6 +651,7 @@ void GeoSvc::WriteWorldToTFile() {
   // Environment visibility
   setNodesVisByMaterial("G4_Galactic",-1);
   setNodesVisByMaterial("G4_WATER",38,50);
+  setNodesVisByMaterial("BaritesConcrete",12,50);
 
   // Dose3D visibility 
   setNodesVisByName("D3D",49);

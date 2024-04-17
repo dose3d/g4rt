@@ -23,7 +23,7 @@ D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4T
     config.m_in_layer_positioning_module = "dose3d/geo/Tray/4x5x1_tray.csv";
     config.m_stl_geometry_file_path = "dose3d/geo/Tray/tray.stl";
 
-    config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
+    config.m_top_position_in_env = G4ThreeVector(-85.,0.0,0.0); // "centre" of the trey is not in the geometrical centre
 
 
     dynamic_cast<D3DDetector*>(m_detector)->SetConfig(config);

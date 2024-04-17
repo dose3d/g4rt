@@ -34,6 +34,10 @@ private:
     ///
     std::vector<D3DTray*> m_trays;
 
+    ///
+    G4VPhysicalVolume* m_bunker_wall = nullptr;
+    G4VPhysicalVolume* m_bunker_inside = nullptr;
+
 };
 
 #endif

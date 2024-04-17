@@ -14,6 +14,10 @@
 #include <vector>
 #include "Services.hh"
 
+namespace {
+    G4Mutex CellMutex = G4MUTEX_INITIALIZER;
+}
+
 G4double D3DCell::SIZE = 10.4 * mm;
 // G4double D3DCell::SIZE = 5.4 * mm;
 // G4double D3DCell::SIZE = 2 * cm;
@@ -153,9 +157,11 @@ bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collecti
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::DefineSensitiveDetector(){
+  G4AutoLock lock(&CellMutex);
   if(m_patientSD.Get()==0){
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre; // wrap this to VPatient::GetGlobalTranslation

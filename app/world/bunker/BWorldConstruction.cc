@@ -57,7 +57,7 @@ void BWorldConstruction::ConstructSDandField() {
     }
 }
 
-std::vector<VPatient*> BWorldConstruction::GetCostomDetectors() const {
+std::vector<VPatient*> BWorldConstruction::GetCustomDetectors() const {
     std::vector<VPatient*> customDetectors;
     for(const auto& tray : m_trays){
         customDetectors.push_back(tray->GetDetector());

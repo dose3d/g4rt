@@ -16,7 +16,7 @@ void InstallTrayDetectors();
 
 void ConstructSDandField() override;
 
-std::vector<VPatient*> GetCostomDetectors() const override;
+std::vector<VPatient*> GetCustomDetectors() const override;
 
 private:
     ///

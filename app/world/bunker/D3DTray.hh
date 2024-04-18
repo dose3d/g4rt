@@ -11,7 +11,7 @@ class VPatient;
 class D3DTray : public IPhysicalVolume{
     public:
     ///
-    D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize);
+    D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize);
 
     ///
     ~D3DTray() {};
@@ -30,6 +30,9 @@ class D3DTray : public IPhysicalVolume{
 
     ///
     void WriteInfo() override {}
+    
+    
+    void Rotate(G4RotationMatrix& rotMatrix); 
 
     ///
     void DefineSensitiveDetector();
@@ -45,6 +48,7 @@ class D3DTray : public IPhysicalVolume{
     G4ThreeVector m_tray_world_halfSize;
     std::string m_tray_name;
     std::string m_tray_config_file;
+    G4RotationMatrix m_rot;
 
     ///
     VPatient* m_detector;

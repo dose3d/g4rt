@@ -5,8 +5,8 @@
 #include "G4Box.hh"
 
 
-D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize)
-:IPhysicalVolume(name), m_global_centre(position), m_tray_world_halfSize(halfSize), m_tray_name(name) {
+D3DTray::D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize)
+:IPhysicalVolume(name), m_rot(rotMatrix), m_global_centre(position), m_tray_world_halfSize(halfSize), m_tray_name(name) {
     m_detector = new D3DDetector(m_tray_name);
     auto config = D3DDetector::Config();
 
@@ -41,7 +41,7 @@ void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
     G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), LVName, 0, 0, 0);
     
     auto PVName = m_tray_name + "EnvPV";
-    SetPhysicalVolume(new G4PVPlacement(0, m_global_centre, PVName, patientEnvLV, parentPV, false, 0));
+    SetPhysicalVolume(new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0));
     
     auto pv = GetPhysicalVolume();
 
@@ -51,4 +51,9 @@ void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
 
 void D3DTray::DefineSensitiveDetector() {
     m_detector->DefineSensitiveDetector();
+}
+
+void D3DTray::Rotate(G4RotationMatrix& rotMatrix) {
+    auto pv = GetPhysicalVolume();
+    pv->SetRotation(&rotMatrix);
 }

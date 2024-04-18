@@ -369,7 +369,7 @@ void RunSvc::ParseTomlConfig(){
   
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
-  LOGSVC_INFO("Importing configuration from:\n{}",configFile);
+  LOGSVC_INFO("Importing configuration from: {}",configFile);
   std::string configObj("Plan");
   if(!configPrefix.empty() || configPrefix=="None" ){ // It shouldn't be empty!
     configObj.insert(0,configPrefix+"_");
@@ -389,7 +389,7 @@ void RunSvc::ParseTomlConfig(){
         criticalError("CP#"+std::to_string(i)+" File not found: "+planFile);
       }
       // Define the new control point configuration
-      LOGSVC_INFO("Importing control point configuration from file: {}",planFile);
+      LOGSVC_INFO("Importing control point from plan file: {}",planFile);
       m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i,planFile));
     }
     return;

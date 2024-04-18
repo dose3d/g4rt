@@ -213,11 +213,13 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
-    auto dicomSvc = DicomSvc::GetInstance();
-    m_mlc_a_positioning.clear();
-    m_mlc_b_positioning.clear();
-    m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y1",0,0); // file, beamId, cpId
-    m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y2",0,0);
+    if(m_config.FieldShape=="RTPlan"){
+        auto dicomSvc = DicomSvc::GetInstance();
+        m_mlc_a_positioning.clear();
+        m_mlc_b_positioning.clear();
+        m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y1",0,0); // file, beamId, cpId
+        m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y2",0,0);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

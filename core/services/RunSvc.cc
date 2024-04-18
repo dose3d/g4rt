@@ -400,7 +400,7 @@ void RunSvc::ParseTomlConfig(){
   G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
   if(numberOfCP>0){
-    auto n_fmask = config[configObj]["RegularFieldMask"].as_array()->size();
+    auto n_fmask = config[configObj]["FieldMask"].as_array()->size();
     if(n_fmask != numberOfCP)
       criticalError("The number of field masks is not equal to the number of control points");
     auto n_beam_rot = config[configObj]["BeamRotation"].as_array()->size();
@@ -418,9 +418,9 @@ void RunSvc::ParseTomlConfig(){
       /// _______________________________________________________________________
       /// Define the new control point configuration
       m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
-      m_control_points_config.back().FieldShape = (config[configObj]["RegularFieldMask"][i]["Shape"].value_or(std::string()));
-      m_control_points_config.back().FieldSizeA = (config[configObj]["RegularFieldMask"][i]["SizeA"].value_or(G4double(0.0)));
-      m_control_points_config.back().FieldSizeB = (config[configObj]["RegularFieldMask"][i]["SizeB"].value_or(G4double(0.0)));
+      m_control_points_config.back().FieldType = (config[configObj]["FieldMask"][i]["Type"].value_or(std::string()));
+      m_control_points_config.back().FieldSizeA = (config[configObj]["FieldMask"][i]["SizeA"].value_or(G4double(0.0)));
+      m_control_points_config.back().FieldSizeB = (config[configObj]["FieldMask"][i]["SizeB"].value_or(G4double(0.0)));
     }
   }
   else criticalError("nControlPoints not found or set to zero!");

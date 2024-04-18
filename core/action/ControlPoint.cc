@@ -208,12 +208,12 @@ void ControlPointRun::FillDataTagging(){
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << m_config.RotationInDeg << G4endl;
-    G4cout << " DEBUG: ControlPoint:Ctr: FieldShape: " << m_config.FieldShape << G4endl;
+    G4cout << " DEBUG: ControlPoint:Ctr: FieldType: " << m_config.FieldType << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeA: " << m_config.FieldSizeA << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
-    if(m_config.FieldShape=="RTPlan"){
+    if(m_config.FieldType=="RTPlan"){
         auto dicomSvc = DicomSvc::GetInstance();
         m_mlc_a_positioning.clear();
         m_mlc_b_positioning.clear();
@@ -358,18 +358,18 @@ void ControlPoint::FillPlanFieldMask(){
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
     auto configSvc = Service<ConfigSvc>();
-    LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldShape,GetDegreeRotation());
+    LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldType,GetDegreeRotation());
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
     
     // NOTE: The MLC instance takes care for being set for the current
     //       control point configuration!
 
-    if( m_config.FieldShape.compare("Rectangular")==0 ||
-        m_config.FieldShape.compare("Elipsoidal")==0){
+    if( m_config.FieldType.compare("Rectangular")==0 ||
+        m_config.FieldType.compare("Elipsoidal")==0){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
-    if(m_config.FieldShape.compare("RTPlan")==0){
+    if(m_config.FieldType.compare("RTPlan")==0){
         FillPlanFieldMaskForRTPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
@@ -410,7 +410,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
     for(int i = 0; i<n_x; i++){
         current_y = min_y + (0.5 * FIELD_MASK_POINTS_DISTANCE);
         for(int j = 0; j<n_y; j++){
-            if(m_config.FieldShape.compare("Elipsoidal")==0){
+            if(m_config.FieldType.compare("Elipsoidal")==0){
                 if ((pow(current_x,2)/ pow((x_range / 2.),2) + pow(current_y,2)/pow((y_range / 2.),2)) < 1 ){
                     m_plan_mask_points.push_back(rotate(G4ThreeVector(current_x,current_y,current_z)));
                 } 

@@ -11,8 +11,8 @@ PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3
 
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true 
-# FieldShape = "Rectangular"
-FieldShape = "Elipsoidal"
+# FieldType = "Rectangular"
+FieldType = "Elipsoidal"
 FieldSizeA = 10 # mm
 FieldSizeB = 30 # mm
 

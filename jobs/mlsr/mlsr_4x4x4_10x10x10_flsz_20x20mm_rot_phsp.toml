@@ -49,6 +49,6 @@ CellVoxelisedScorer = true
 nControlPoints = 1
 BeamRotation = [0.0] # Per Control Point
 nParticles = [1e3] # Per Control Point
-RegularFieldMask = [
-    {Shape = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }
+FieldMask = [
+    {Type = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }
 ]

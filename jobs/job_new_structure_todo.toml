@@ -1,6 +1,6 @@
 [RunSvc]
 JobName = "Test job with imports"
-FieldShape = "Elipsoidal" # "Rectangular" # "Elipsoidal", "RTPlan"
+FieldType = "Elipsoidal" # "Rectangular" # "Elipsoidal", "RTPlan"
 FieldSizeA = 18 # mm
 FieldSizeB = 18 # mm
 PrintProgressFrequency = 0.001

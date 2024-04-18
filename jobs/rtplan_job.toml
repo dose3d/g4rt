@@ -12,7 +12,7 @@ PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Pr
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true
 DICOM = true 
-FieldShape = "Elipsoidal" # "Rectangular"
+FieldType = "Elipsoidal" # "Rectangular"
 FieldSizeA = 10 # mm
 FieldSizeB = 30 # mm
 

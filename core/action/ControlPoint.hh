@@ -29,8 +29,8 @@ class ControlPointConfig {
     int NEvts = 0.;
     int Id = 0;
     std::string MlcInputFile = std::string();
-    // TODO: introduce here FieldShape as enum type see def in Types.hh
-    std::string FieldShape = std::string();
+    // TODO: introduce here FieldType as enum type see def in Types.hh
+    std::string FieldType = std::string();
     G4double FieldSizeA = G4double();
     G4double FieldSizeB = G4double();
 };
@@ -100,7 +100,7 @@ class ControlPoint {
     ControlPointRun* GetRun() {return m_cp_run.Get();}
     const ControlPointRun* GetRun() const {return m_cp_run.Get();}
 
-    std::string GetFieldShape() const { return m_config.FieldShape; } 
+    std::string GetFieldShape() const { return m_config.FieldType; } 
 
     G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 

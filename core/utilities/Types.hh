@@ -73,7 +73,7 @@ class GeoComponet {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-enum class FieldShape {
+enum class FieldType {
   Rectangular,
   Elipsoidal,
   RTPlan,

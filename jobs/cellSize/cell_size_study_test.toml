@@ -7,8 +7,8 @@ PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-
 # GpsMacFileName = "/home/g4rt/test/g4rt/scripts/gps/gpsCLiniac_but_parallel.mac"
 PrintProgressFrequency = 0.005
 NTupleAnalysis = true 
-# FieldShape = "Rectangular" # "Elipsoidal", "RTPlan"
-FieldShape = "Elipsoidal" 
+# FieldType = "Rectangular" # "Elipsoidal", "RTPlan"
+FieldType = "Elipsoidal" 
 FieldSizeA = 40 # mm
 FieldSizeB = 70 # mm
 

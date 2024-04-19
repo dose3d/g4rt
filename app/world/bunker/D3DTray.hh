@@ -2,13 +2,15 @@
 #define Dose3D_TRAYCONSTRUCTION_HH
 
 #include "IPhysicalVolume.hh"
+#include "TomlConfigurable.hh"
 #include "Services.hh"
 
 class VPatient;
 
 ///\class PatientGeometry
 ///\brief The liniac Phantom volume construction.
-class D3DTray : public IPhysicalVolume{
+class D3DTray : public IPhysicalVolume, 
+                public TomlConfigurable {
     public:
     ///
     D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize);
@@ -40,9 +42,16 @@ class D3DTray : public IPhysicalVolume{
 
     VPatient* GetDetector() const { return m_detector; }
 
-    private:
     ///
-    void Configure();
+
+    ///
+    void DefaultConfig(const std::string &unit) override;
+
+    ///
+    void ParseTomlConfig() override;
+
+    private:
+    void Configure() override;
 
     G4ThreeVector m_global_centre;
     G4ThreeVector m_tray_world_halfSize;

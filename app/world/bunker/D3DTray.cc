@@ -4,9 +4,11 @@
 #include "Services.hh"
 #include "G4Box.hh"
 
+D3DTray::TConfigurarable D3DTray::m_tconfigurable = D3DTray::TConfigurarable("D3DTray");
 
-D3DTray::D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize)
-:IPhysicalVolume(name), TomlConfigurable("D3DTray"), m_rot(rotMatrix), m_global_centre(position), m_tray_world_halfSize(halfSize), m_tray_name(name) {
+
+D3DTray::D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position)
+:IPhysicalVolume(name), m_rot(rotMatrix), m_global_centre(position), m_tray_world_halfSize(G4ThreeVector(130.,130.,50.)), m_tray_name(name) {
     m_detector = new D3DDetector(m_tray_name);
     auto config = D3DDetector::Config();
 
@@ -27,12 +29,11 @@ D3DTray::D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const
 
 
     dynamic_cast<D3DDetector*>(m_detector)->SetConfig(config);
-    Configure();
     Construct(parentPV);
 } 
 
 void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
-
+    m_tconfigurable.ParseTomlConfig();
     auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
     
     auto boxName = m_tray_name + "EnvBox";
@@ -54,30 +55,16 @@ void D3DTray::DefineSensitiveDetector() {
     m_detector->DefineSensitiveDetector();
 }
 
-void D3DTray::Rotate(G4RotationMatrix& rotMatrix) {
-    auto pv = GetPhysicalVolume();
-    pv->SetRotation(&rotMatrix);
-}
-
-void D3DTray::Configure() {
-    LOGSVC_INFO("D3DTray configuration");
-    DefineUnit<std::string>("D3DTrayConfigFile");
-
-    Configurable::DefaultConfig();
-    ParseTomlConfig();
-}
-
-
-void D3DTray::DefaultConfig(const std::string &unit) {
-
-    if (unit.compare("D3DTrayConfigFile") == 0)
-        thisConfig()->SetTValue<std::string>(unit, std::string("None"));
-}
-
-///
-void D3DTray::ParseTomlConfig() {
+void D3DTray::TConfigurarable::ParseTomlConfig(){
+    SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();
-    auto configPrefix = GetTomlConfigPrefix();
-    LOGSVC_INFO("Importing configuration from: {}",configFile);
+    if (!svc::checkIfFileExist(configFile)) {
+        LOGSVC_CRITICAL("D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
+        exit(1);
+    }
 
+
+    auto configPrefix = GetTomlConfigPrefix();
+    LOGSVC_INFO("D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
 }
+

@@ -100,6 +100,8 @@ std::string svc::createOutputDir(const std::string& userArgPath) {
 ////////////////////////////////////////////////////////////////////////////////////
 ///
 bool svc::checkIfFileExist(const std::string& file_full_or_relative_path){
+  if(file_full_or_relative_path.empty()) 
+    return false;
   // try to get file from full path
 	if(fs::exists(fs::path(file_full_or_relative_path)))
     return true;

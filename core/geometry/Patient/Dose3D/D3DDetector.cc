@@ -183,9 +183,8 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     //
     int i_layer = 0;
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-      G4cout << " Istantiate new layer..." << i_layer << G4endl;
+      G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: " << cells_in_layer_positioning.size() << G4endl;
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      G4cout << " No of cells in layer..." << cells_in_layer_positioning.size() << G4endl; 
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
       m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
@@ -201,7 +200,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   if(geo_type.compare("PositioningFromCsv")==0){
     int i_layer = 0;
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-      G4cout << " Istantiate new layer..." << i_layer << G4endl;
+      G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: " << cells_in_layer_positioning.size() << G4endl;
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
@@ -734,7 +733,7 @@ void D3DDetector::ReadCellsInLayersPositioning(){
           cells_in_layer.emplace_back(xyz.at(0),xyz.at(1),xyz.at(2));
         }
         else if(!is_first_layer) {
-          G4cout << " Adding new layer with No cells " << cells_in_layer.size() << G4endl;
+          LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
           m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
           cells_in_layer.clear();
         }
@@ -742,7 +741,7 @@ void D3DDetector::ReadCellsInLayersPositioning(){
       }
     } 
     // Add last read-in layer
-    G4cout << " Adding new layer with No cells " << cells_in_layer.size() << G4endl;
+    LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
     m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
     cells_in_layer.clear();
   } else {

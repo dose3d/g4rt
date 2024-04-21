@@ -36,7 +36,7 @@ private:
 
     ///
     G4VPhysicalVolume* m_bunker_wall = nullptr;
-    G4VPhysicalVolume* m_bunker_inside = nullptr;
+    G4VPhysicalVolume* m_bunker_inside_pv = nullptr;
 
 };
 

@@ -9,11 +9,21 @@ class VPatient;
 
 ///\class PatientGeometry
 ///\brief The liniac Phantom volume construction.
-class D3DTray : public IPhysicalVolume, 
-                public TomlConfigurable {
+class D3DTray : public IPhysicalVolume {
+    private:
+        // Extra wrapper to make single TOML-like configuration for all instances of Trays,
+        // Typpically, each D3DTray would inherit from TomlConfigModule.
+        class TConfigurarable: public TomlConfigModule {
+            public:
+                TConfigurarable(const std::string& name):TomlConfigModule(name){}
+                void ParseTomlConfig() override;
+        };
+
+        static TConfigurarable m_tconfigurable;
+
     public:
     ///
-    D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position, const G4ThreeVector& halfSize);
+    D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position);
 
     ///
     ~D3DTray() {};
@@ -33,25 +43,11 @@ class D3DTray : public IPhysicalVolume,
     ///
     void WriteInfo() override {}
     
-    
-    void Rotate(G4RotationMatrix& rotMatrix); 
-
     ///
     void DefineSensitiveDetector();
 
 
     VPatient* GetDetector() const { return m_detector; }
-
-    ///
-
-    ///
-    void DefaultConfig(const std::string &unit) override;
-
-    ///
-    void ParseTomlConfig() override;
-
-    private:
-    void Configure() override;
 
     G4ThreeVector m_global_centre;
     G4ThreeVector m_tray_world_halfSize;

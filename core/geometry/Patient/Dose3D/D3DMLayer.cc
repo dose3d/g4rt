@@ -123,7 +123,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
   if(m_cells_in_layer_positioning.size()==0){
     LoadParameterization();
     if (m_init_x!=-999&&m_init_y!=-999&&m_init_z!=-999){
-      LOGSVC_DEBUG("Layer {} translation: {}", GetName(), G4ThreeVector(m_init_x,m_init_y,m_init_z) );
+      G4cout << "D3DMLayer: \""<< GetName() << "\" translation: " << G4ThreeVector(m_init_x,m_init_y,m_init_z) << G4endl;
     } else { // 
       G4String msg = "Initial position of the layer hasn't been set properly";
       LOGSVC_CRITICAL(msg.data());
@@ -154,7 +154,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
     }
   }
   else{
-    G4cout << "[DEBUG]:: D3DMLayer:: From CSV Configuration: " << G4endl;
+    G4cout << "D3DMLayer:: \"" << GetName() << "\" initialization based on CSV positioning..." << G4endl;
     int idx,idy,idz;
     idy = m_id;
     idx = 0;

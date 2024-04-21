@@ -4,22 +4,20 @@
 #include "IPhysicalVolume.hh"
 #include "TomlConfigurable.hh"
 #include "Services.hh"
-
-class VPatient;
+#include "D3DDetector.hh"
 
 ///\class PatientGeometry
 ///\brief The liniac Phantom volume construction.
-class D3DTray : public IPhysicalVolume {
+class D3DTray : public IPhysicalVolume, public TomlConfigModule {
     private:
-        // Extra wrapper to make single TOML-like configuration for all instances of Trays,
-        // Typpically, each D3DTray would inherit from TomlConfigModule.
-        class TConfigurarable: public TomlConfigModule {
-            public:
-                TConfigurarable(const std::string& name):TomlConfigModule(name){}
-                void ParseTomlConfig() override;
-        };
+        ///
+        void ParseTomlConfig() override;
 
-        static TConfigurarable m_tconfigurable;
+        ///
+        void LoadConfiguration();
+
+        ///
+        D3DDetector::Config m_det_config;
 
     public:
     ///

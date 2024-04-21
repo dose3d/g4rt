@@ -42,6 +42,12 @@ Voxelization = [2,2,2]
 TracksAnalysis = false
 CellVoxelisedScorer = true
 
+[Tray001]
+RotationY = 180 # in deg
+Position = [-390.0, 390.0, 0.0] # relative to global (0,0,0)
+CellMedium = "RMPS470"
+CellVoxelization = [2,2,2]
+
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 # PlanInputFile = [
 #     "plan/custom/rot00deg_10x10.dat"

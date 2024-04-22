@@ -46,7 +46,7 @@ void D3DTray::LoadConfiguration(){
     m_rot.rotateY(180.*deg);
     m_tray_world_halfSize = G4ThreeVector(130.,130.,50.);
     
-    m_global_centre += G4ThreeVector(- 390., 390., 0.); // TEMP FIXED
+    m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
     m_det_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 
@@ -79,7 +79,14 @@ void D3DTray::ParseTomlConfig(){
         LOGSVC_CRITICAL("D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
         exit(1);
     }
+    auto config = toml::parse_file(configFile);
     auto configPrefix = GetTomlConfigPrefix();
     LOGSVC_INFO("D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
+
+    m_global_centre.setX(config[configPrefix]["Position"][0].value_or(0.0));
+    m_global_centre.setY(config[configPrefix]["Position"][1].value_or(0.0));
+    m_global_centre.setZ(config[configPrefix]["Position"][2].value_or(0.0));
+    // G4cout << "global_centre: " << m_global_centre << G4endl;
+
 }
 

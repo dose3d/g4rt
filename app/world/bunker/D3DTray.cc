@@ -5,8 +5,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position)
-:IPhysicalVolume(name), TomlConfigModule(name), m_global_centre(position), m_tray_name(name) {
+D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name)
+:IPhysicalVolume(name), TomlConfigModule(name), m_tray_name(name) {
     m_detector = new D3DDetector(m_tray_name);
     LoadConfiguration();
     Construct(parentPV);
@@ -45,6 +45,8 @@ void D3DTray::LoadConfiguration(){
     // Deafult configuration
     m_rot.rotateY(180.*deg);
     m_tray_world_halfSize = G4ThreeVector(130.,130.,50.);
+    
+    m_global_centre += G4ThreeVector(- 390., 390., 0.); // TEMP FIXED
 
     m_det_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 

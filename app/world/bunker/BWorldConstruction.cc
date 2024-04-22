@@ -35,8 +35,7 @@ bool BWorldConstruction::Create() {
 
 void BWorldConstruction::InstallTrayDetectors() {
     
-    auto position = G4ThreeVector(0.,0.,0.);
-    m_trays.push_back(new D3DTray(m_bunker_inside_pv, "Tray001",  position+G4ThreeVector(- 390., 390., 0.)));
+    m_trays.push_back(new D3DTray(m_bunker_inside_pv, "Tray001")); // position+G4ThreeVector(- 390., 390., 0.)
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray002",  position+G4ThreeVector(- 390., 130., 0.)));
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray003",  position+G4ThreeVector(- 390., -130., 0.)));
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray004",  position+G4ThreeVector(- 390., -390., 0.)));

@@ -43,7 +43,7 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [Tray001]
-RotationY = 180 # in deg
+Rotation = [0.0, 180.0, 0.0] # in deg
 Position = [-390.0, 390.0, 0.0] # relative to global (0,0,0)
 CellVoxelization = [2,2,2]
 

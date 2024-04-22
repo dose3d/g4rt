@@ -43,7 +43,7 @@ void D3DTray::DefineSensitiveDetector() {
 void D3DTray::LoadConfiguration(){
 
     // Deafult configuration
-    m_rot.rotateY(180.*deg);
+    m_rot = G4RotationMatrix(); //.rotateY(180.*deg);
     m_tray_world_halfSize = G4ThreeVector(130.,130.,50.);
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
@@ -97,6 +97,17 @@ void D3DTray::ParseTomlConfig(){
     auto vox_nZ = config[configPrefix]["CellVoxelization"][2].value_or(0);
     if(vox_nZ > 0 ) 
         m_det_config.m_cell_nZ_voxels = vox_nZ;
+
+    auto rotX = config[configPrefix]["Rotation"][0].value_or(0);
+    if(rotX > 0 ) 
+        m_rot.rotateX(rotX*deg);
+    auto rotY = config[configPrefix]["Rotation"][1].value_or(0);
+    if(rotY > 0 ) 
+        m_rot.rotateY(rotY*deg);
+    auto rotZ = config[configPrefix]["Rotation"][2].value_or(0);
+    if(rotZ > 0 )           
+        m_rot.rotateZ(rotZ*deg);
+
 
 }
 

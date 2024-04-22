@@ -88,5 +88,15 @@ void D3DTray::ParseTomlConfig(){
     m_global_centre.setZ(config[configPrefix]["Position"][2].value_or(0.0));
     // G4cout << "global_centre: " << m_global_centre << G4endl;
 
+    auto vox_nX = config[configPrefix]["CellVoxelization"][0].value_or(0);
+    if(vox_nX > 0 ) 
+        m_det_config.m_cell_nX_voxels = vox_nX;
+    auto vox_nY = config[configPrefix]["CellVoxelization"][1].value_or(0);
+    if(vox_nY > 0 ) 
+        m_det_config.m_cell_nY_voxels = vox_nY;
+    auto vox_nZ = config[configPrefix]["CellVoxelization"][2].value_or(0);
+    if(vox_nZ > 0 ) 
+        m_det_config.m_cell_nZ_voxels = vox_nZ;
+
 }
 

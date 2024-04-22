@@ -21,7 +21,7 @@ class D3DTray : public IPhysicalVolume, public TomlConfigModule {
 
     public:
     ///
-    D3DTray(G4RotationMatrix& rotMatrix, G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position);
+    D3DTray(G4VPhysicalVolume *parentPV, const std::string& name, const G4ThreeVector& position);
 
     ///
     ~D3DTray() {};

@@ -1,10 +1,10 @@
 [RunSvc]
 JobName = "tray_basic_setup"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # AGH JH Home File
 PhspEvtVrtxMultiplicityTreshold = 10

@@ -48,7 +48,7 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     void Configure() override;
 
     ///
-    void SetCustomPositioning(const std::string& fieldSize);
+    void SetCustomPositioning(const ControlPoint* control_point);
 
     ///
     void SetRTPlanPositioning(int current_beam, int current_controlpoint);
@@ -92,20 +92,14 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
 
     ///
     bool IsInField(const G4ThreeVector& position, bool transformToIsocentre) override {
-      // TODO implement me
-      return false;
+      return true;
     }
 
     bool IsInField(G4PrimaryVertex* vrtx) override {
-      // TODO implement me
-      return false;
+      return true;
     }
 
-    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override{
-      // TODO implement me
-    }
-
-
+    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override;
 
 
 };

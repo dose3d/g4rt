@@ -26,6 +26,12 @@ MlcHd120::~MlcHd120() {
     configSvc()->Unregister(thisConfig()->GetName());
 }
 
+void MlcHd120::Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) {
+    m_control_point_id = control_point->Id();
+    m_isInitialized = true;    
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void MlcHd120::Configure() {
@@ -85,7 +91,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     auto air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
     G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, -269. * mm);
+    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 269. * mm);
     auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
     auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
     auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
@@ -638,8 +644,8 @@ void MlcHd120::SetRunConfig(){
     G4cout << "[INFO]:: MlcHd120:: the run configuration type: "<< inputType << G4endl;
 
     if(inputType=="Custom"){
-        auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
-        SetCustomPositioning(flsz);
+        auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+        SetCustomPositioning(current_cp);
     }
     else if(inputType=="RTPlan"){
         auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
@@ -650,47 +656,18 @@ void MlcHd120::SetRunConfig(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void MlcHd120::SetCustomPositioning(const std::string& fieldSize){
-    std::string data_path = PROJECT_DATA_PATH;
-    auto customPositioningFile = data_path+"/TrueBeam/MLC/Mlc_"+fieldSize+".dat";
-    G4cout << "[INFO]:: Reading the MLC configuration file :: " << customPositioningFile << G4endl;
-    std::string line;
-    std::ifstream file(customPositioningFile.c_str());
-    int leafsCounter = 0;
-    if (file.is_open()) {  // check if file exists
-        while (getline(file, line)){
-            // get rid of commented out or empty lines:
-            if (line.length() > 0 && line.at(0) != '#') {
-                std::istringstream ss(line);
-                std::string svalue;
-                std::vector<double> y1y2_position;
-                while (getline(ss, svalue,',')){
-                    y1y2_position.emplace_back(std::strtod(svalue.c_str(),nullptr)*mm);
-
-                    //G4cout << "[DEBUG]:: MlcHd120:: config value ("<<count<<")"<< svalue << G4endl;
-                }
-                //
-                // Input data file should contain 2 columns with comma separation, verify it:
-                if(y1y2_position.size()>2)
-                    G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "Wrong input data format!");
-
-                if(leafsCounter>59)
-                    G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "To many leafs configuration!");
-
-                auto y1_translation = m_y1_leaves[leafsCounter]->GetTranslation();
-                y1_translation.setX(y1_translation.getX()+y1y2_position.at(1));
-                m_y1_leaves[leafsCounter]->SetTranslation(y1_translation);
-
-                auto y2_translation = m_y2_leaves[leafsCounter]->GetTranslation();
-                y2_translation.setX(y2_translation.getX()+y1y2_position.at(0));
-                m_y2_leaves[leafsCounter]->SetTranslation(y2_translation);
-
-                ++leafsCounter;
-
-            }
-        }
-        if(leafsCounter<59)
-            G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "To less leafs configuration!");
+void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
+    const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
+    const auto& mlc_b_positioning = control_point->GetMlcPositioning("Y2");
+    for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
+        auto y1_translation = m_y1_leaves[leaf_idx]->GetTranslation();
+        y1_translation.setX(y1_translation.getX()-mlc_a_positioning.at(leaf_idx));
+        m_y1_leaves[leaf_idx]->SetTranslation(y1_translation);
+    }
+    for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
+        auto y2_translation = m_y2_leaves[leaf_idx]->GetTranslation();
+        y2_translation.setX(y2_translation.getX()-mlc_b_positioning.at(leaf_idx));
+        m_y2_leaves[leaf_idx]->SetTranslation(y2_translation);
     }
 }
 

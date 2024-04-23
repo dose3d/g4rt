@@ -128,8 +128,9 @@ int main(int argc, const char *argv[]) {
       std::exit(EXIT_FAILURE);
     } 
     auto world = BWorldConstruction::GetInstance();
+    // auto world = WorldConstruction::GetInstance();
     runSvc->Initialize(world);
-    dynamic_cast<BWorldConstruction*>(world)->InstallTrayDetectors();
+    //dynamic_cast<BWorldConstruction*>(world)->InstallTrayDetectors();
     runSvc->Run();
     runSvc->Finalize();
   } else {

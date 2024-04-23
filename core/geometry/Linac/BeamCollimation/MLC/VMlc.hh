@@ -22,7 +22,7 @@ class VMlc: public TomlConfigurable {
         void ParseTomlConfig() override {};
         virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;
         virtual bool IsInField(G4PrimaryVertex* vrtx) = 0;
-        virtual void Initialize(const ControlPoint* control_point,const G4ThreeVector& vertexPosition) = 0;
+        virtual void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) = 0;
         bool Initialized(const ControlPoint* control_point) const;
         static G4ThreeVector GetPositionInMaskPlane(const G4ThreeVector& position);
         static G4ThreeVector GetPositionInMaskPlane(const G4PrimaryVertex* vrtx);

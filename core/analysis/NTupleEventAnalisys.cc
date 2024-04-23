@@ -103,7 +103,7 @@ void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
   auto treeName = treeColl.m_name+m_treeNamePostfix;
   auto treeDescription = treeColl.m_description;
-  G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree "<< treeDescription << G4endl;
+  G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree: "<< treeName << ":"  << treeDescription << G4endl;
   auto analysisManager =  G4AnalysisManager::Instance();
   m_ntuple_collection.Insert(treeName,TTreeEventCollection());
   auto& evtNTupleColl = m_ntuple_collection.Get(treeName);
@@ -243,6 +243,9 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
+
+    G4cout << "cellDose: " << cellDose << G4endl;
+
 
     evtColl.m_VoxelIdX.push_back(hit->GetID(0));
     evtColl.m_VoxelIdY.push_back(hit->GetID(1));
@@ -408,12 +411,15 @@ void NTupleEventAnalisys::FillNTupleEvent(){
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from EventAction::EndOfEventAction
 void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
+  // G4cout << "NTupleEventAnalisys::EndOfEventAction" << G4endl;
   auto hCofThisEvent = evt->GetHCofThisEvent();
   if(hCofThisEvent){
     auto nColl = hCofThisEvent->GetNumberOfCollections();
     ClearEventCollections();
   for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
     for(const auto& hc : tree.m_hc_names){
+      //G4cout << "NTupleEventAnalisys::filling: " << tree.m_name+m_treeNamePostfix << " / " << hc << G4endl;
+
       // Related SensitiveDetector collection ID (Geant4 architecture)
       // collID==-1 the collection is not found
       // collID==-2 the collection name is ambiguous

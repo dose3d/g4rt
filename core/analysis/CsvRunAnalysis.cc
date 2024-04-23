@@ -27,6 +27,8 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
         auto vzId = hit.GetID(2);
         auto volume_centre = hit.GetCentre();
         auto dose = hit.GetDose();
+        if(dose>0)
+            std::cout << "dose: " << dose << std::endl;
         auto geoTag = hit.GetGeoTag();
         auto wgeoTag = hit.GetWeigthedGeoTag();
         auto inField = hit.GetMaskTag();

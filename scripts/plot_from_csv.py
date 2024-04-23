@@ -55,7 +55,7 @@ def plot_from_csv(path, slice, plane, observable="Dose"):
     new_df_sorted = df_0.copy()
     new_df_sorted = new_df_sorted.sort_values(by = ['X [mm]', 'Y [mm]', 'Z [mm]'])
     new_df_sorted[observable] = new_df_sorted[observable]/new_df_sorted[observable].max()
-    v = (new_df_sorted[observable].values).reshape(40,40,40)
+    v = (new_df_sorted[observable].values).reshape(8,10,2)
 
     
 
@@ -98,8 +98,8 @@ if __name__=="__main__":
     
     job_name = "cp-2_dose3d_voxel.csv"
     # file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
-    file = f"/home/geant4/workspace/github/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
-    plot_from_csv(file,1,"xy","MaskTag")
+    file = f"/home/g4rt/workDir/develop/g4rt/output/tray_basic_setup_6/sim/cp-0_tray001_voxel.csv"
+    plot_from_csv(file,0,"xy","Dose")
     # plot_from_csv(file,1,"xy","Dose")
     
     # mask_job_name = "cp-0_field_mask_sim.csv"

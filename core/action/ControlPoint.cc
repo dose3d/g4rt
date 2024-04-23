@@ -40,7 +40,7 @@ void ControlPointRun::InitializeScoringCollection(){
         auto run_collection_name = run_collection.first;
         for(const auto& scoring_type: scoring_types){
             if(m_hashed_scoring_map.find(run_collection_name)==m_hashed_scoring_map.end()){
-                LOGSVC_INFO("Initializing new run collection map: {}/{}",run_collection_name,Scoring::to_string(scoring_type));
+                LOGSVC_INFO("Initializing new run collection map: {}",run_collection_name);
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
             }
             auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
@@ -59,13 +59,14 @@ void ControlPointRun::InitializeScoringCollection(){
             if(sc.empty()){
                 LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
             }
+            LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
             scoring_collection[scoring_type] = sc;
             if(scoring_collection[scoring_type].empty()){
                 LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);
             }
             else
-                LOGSVC_INFO("Scoring collection size: {}",scoring_collection.at(scoring_type).size());
+                LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
         }
         G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }

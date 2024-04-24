@@ -177,7 +177,7 @@ void D3DCell::DefineSensitiveDetector(){
     G4String hcName;
     // Scoring in the centre of the cell
     // ________________________________________________________________________
-    hcName = label+"_Cell";
+    hcName = label+"_HC";
     G4cout << "Current cell hcName: " << hcName << G4endl;
     G4int nvx(1), nvy(1), nvz(1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
     if(D3DCell::m_set_cell_voxelised_scorer){

@@ -12,7 +12,7 @@ public:
 
 bool Create() override;
 
-void InstallTrayDetectors();
+void ConstructTrayDetectors(G4VPhysicalVolume *parentPV);
 
 void ConstructSDandField() override;
 

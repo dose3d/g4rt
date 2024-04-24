@@ -88,8 +88,10 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   /// have to implement pure virtual function
   G4VPhysicalVolume* Construct() override;      // <- G4VUserDetectorConstruction
-  
 
+  ///
+  bool ConstructWorldModules(G4VPhysicalVolume *parentPV);
+  
   private:
   /// Delete the copy and move constructors
   WorldConstruction(const WorldConstruction &) = delete;

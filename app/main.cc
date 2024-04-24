@@ -127,10 +127,7 @@ int main(int argc, const char *argv[]) {
       std::cout << "Error parsing options: " << e.what() << std::endl;
       std::exit(EXIT_FAILURE);
     } 
-    auto world = BWorldConstruction::GetInstance();
-    // auto world = WorldConstruction::GetInstance();
-    runSvc->Initialize(world);
-    //dynamic_cast<BWorldConstruction*>(world)->InstallTrayDetectors();
+    runSvc->Initialize(BWorldConstruction::GetInstance());
     runSvc->Run();
     runSvc->Finalize();
   } else {

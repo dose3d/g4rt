@@ -244,7 +244,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
 
-    G4cout << "cellDose: " << cellDose << G4endl;
+    G4cout << hitsColl->GetName() << " dose: " << cellDose << G4endl;
 
 
     evtColl.m_VoxelIdX.push_back(hit->GetID(0));

@@ -15,32 +15,35 @@ WorldConstruction* BWorldConstruction::GetInstance() {
 
 bool BWorldConstruction::Create() {
     
-    WorldConstruction::Create();
-    // TODO:: create whole world HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // todo:: configSvc()->GetValue<G4ThreeVector>("WorldConstruction", "WorldSize");
-    
-    // auto world_pv = WorldConstruction::Construct();
+     // create the world box
+    auto worldSize = configSvc()->GetValue<G4ThreeVector>("WorldConstruction", "WorldSize");
+    auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
+    auto worldB = new G4Box("worldG", worldSize.getX(), worldSize.getY(), worldSize.getZ());
+    auto worldLV = new G4LogicalVolume(worldB, Air.get(), "worldLV", 0, 0, 0);
+    auto isocentre = thisConfig()->GetValue<G4ThreeVector>("Isocentre");
+    SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
 
-    // auto envSize = G4ThreeVector(3000.*mm,3000.*mm,2000.*mm);
-
-    // // auto myMedium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "BaritesConcrete");
-    // // G4Box *bunkerWallBox = new G4Box("bunkerWallBox",750.*mm + envSize.getX(), 750.*mm + envSize.getY(),750.*mm + envSize.getZ());
-    // // G4LogicalVolume *bunkerWallBoxLV = new G4LogicalVolume(bunkerWallBox, myMedium.get(), "bunkerWallBoxLV", 0, 0, 0);
-    // // m_bunker_wall = new G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0.), "bunkerWallBoxPV", bunkerWallBoxLV, world_pv, false, 0);
+    auto world_pv = GetPhysicalVolume();
+    auto envSize = G4ThreeVector(3000.*mm,3000.*mm,2000.*mm);
+    auto concrete = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "BaritesConcrete");
+    G4Box *bunkerWallBox = new G4Box("bunkerWallBox",750.*mm + envSize.getX(), 750.*mm + envSize.getY(),750.*mm + envSize.getZ());
+    G4LogicalVolume *bunkerWallBoxLV = new G4LogicalVolume(bunkerWallBox, concrete.get(), "bunkerWallBoxLV", 0, 0, 0);
+    m_bunker_wall = new G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0.), "bunkerWallBoxPV", bunkerWallBoxLV, world_pv, false, 0);
     
-    // auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
-    // G4Box *bunkerEnv = new G4Box("bunkerEnvBox", envSize.x(),envSize.y(),envSize.z());
-    // G4LogicalVolume *bunkerEnvLV = new G4LogicalVolume(bunkerEnv, Air.get(), "bunkerEnvLV", 0, 0, 0);
+    G4Box *bunkerEnv = new G4Box("bunkerEnvBox", envSize.x(),envSize.y(),envSize.z());
+    G4LogicalVolume *bunkerEnvLV = new G4LogicalVolume(bunkerEnv, Air.get(), "bunkerEnvLV", 0, 0, 0);
     // m_bunker_inside_pv = new G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0.), "bunkerEnvBoxPV", bunkerEnvLV, world_pv, false, 0);
-    // m_bunker_inside_pv = new G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0.), "bunkerEnvBoxPV", bunkerEnvLV, m_bunker_wall, false, 0);
+    m_bunker_inside_pv = new G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0.), "bunkerEnvBoxPV", bunkerEnvLV, m_bunker_wall, false, 0);
 
+    ConstructWorldModules(m_bunker_inside_pv);
+    ConstructTrayDetectors(m_bunker_inside_pv);
     return true;
 }
 
-void BWorldConstruction::InstallTrayDetectors() {
+void BWorldConstruction::ConstructTrayDetectors(G4VPhysicalVolume *parentPV) {
     
-    m_trays.push_back(new D3DTray(m_bunker_inside_pv, "Tray001")); // position+G4ThreeVector(- 390., 390., 0.)
-    m_trays.push_back(new D3DTray(m_bunker_inside_pv, "Tray002")); // position+G4ThreeVector(- 390., 130., 0.))
+    m_trays.push_back(new D3DTray(parentPV, "Tray001")); // position+G4ThreeVector(- 390., 390., 0.)
+    m_trays.push_back(new D3DTray(parentPV, "Tray002")); // position+G4ThreeVector(- 390., 130., 0.))
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray003",  position+G4ThreeVector(- 390., -130., 0.)));
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray004",  position+G4ThreeVector(- 390., -390., 0.)));
     // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray005",  position+G4ThreeVector(- 130., 390., 0.)));

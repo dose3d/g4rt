@@ -156,42 +156,7 @@ bool WorldConstruction::Create() {
   auto isocentre = thisConfig()->GetValue<G4ThreeVector>("Isocentre");
   SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
 
-  // ___________________________________________________________________
-  // create the gantry-world box
-  if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildLinac")){
-    m_gantryEnv = LinacGeometry::GetInstance();
-    if (m_gantryEnv) {
-      m_gantryEnv->Construct(GetPhysicalVolume());
-    }
-  } else {
-    LOGSVC_DEBUG('WorldConstruction:: The gantry geometry is switched off...')
-  }
-
-  // ___________________________________________________________________
-  // create the phantom-world box
-  if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildPatient")){
-    m_phantomEnv = PatientGeometry::GetInstance();
-    if (m_phantomEnv) {
-      m_phantomEnv->Construct(GetPhysicalVolume());
-    }
-  } else {
-    LOGSVC_DEBUG("[DEBUG]::WorldConstruction:: The patient geometry is switched off... ")
-  }
-
-  // ___________________________________________________________________
-  // create user-defined PhSp planes
-  if (configSvc()->GetValue<bool>("RunSvc", "SavePhSp")) {
-    m_savePhSpEnv = SavePhSpConstruction::GetInstance();
-    if (m_savePhSpEnv) {
-      m_savePhSpEnv->Construct(GetPhysicalVolume());
-    }
-  }
-
-  // create beam monitoring planes
-  if (configSvc()->GetValue<bool>("RunSvc", "BeamAnalysis")) {
-    m_beamMonitoring = new BeamMonitoring();
-    m_beamMonitoring->Construct(GetPhysicalVolume());
-  }
+  ConstructWorldModules(GetPhysicalVolume());
 
   // auto treeDepth = GetWorldVolumesTreeDepth();
   // G4cout << "[DEBUG]::  WorldConstruction the tree depth " << treeDepth << G4endl;
@@ -213,6 +178,48 @@ bool WorldConstruction::Create() {
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
+  // ___________________________________________________________________
+  // create the gantry-world box
+  if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildLinac")){
+    m_gantryEnv = LinacGeometry::GetInstance();
+    if (m_gantryEnv) {
+      m_gantryEnv->Construct(parentPV);
+    }
+  } else {
+    LOGSVC_DEBUG('WorldConstruction:: The gantry geometry is switched off...')
+  }
+
+  // ___________________________________________________________________
+  // create the phantom-world box
+  if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildPatient")){
+    m_phantomEnv = PatientGeometry::GetInstance();
+    if (m_phantomEnv) {
+      m_phantomEnv->Construct(parentPV);
+    }
+  } else {
+    LOGSVC_DEBUG("[DEBUG]::WorldConstruction:: The patient geometry is switched off... ")
+  }
+
+  // ___________________________________________________________________
+  // create user-defined PhSp planes
+  if (configSvc()->GetValue<bool>("RunSvc", "SavePhSp")) {
+    m_savePhSpEnv = SavePhSpConstruction::GetInstance();
+    if (m_savePhSpEnv) {
+      m_savePhSpEnv->Construct(parentPV);
+    }
+  }
+
+  // ___________________________________________________________________
+  // create beam monitoring planes
+  if (configSvc()->GetValue<bool>("RunSvc", "BeamAnalysis")) {
+    m_beamMonitoring = new BeamMonitoring();
+    m_beamMonitoring->Construct(parentPV);
+  }
+  return true;
+}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void WorldConstruction::ConstructSDandField() {

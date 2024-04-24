@@ -91,8 +91,8 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    // m_config->SetValue(unit, G4String("Varian-HD120")); 
-    m_config->SetValue(unit, G4String("Simplified")); 
+    m_config->SetValue(unit, G4String("Varian-HD120")); 
+    // m_config->SetValue(unit, G4String("Simplified")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -137,25 +137,25 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
-  G4double jawAper = 5.*cm;
+  G4double jawAper = 10.*cm;
   if (unit.compare("jaw1XAperture") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, -jawAper);
+    m_config->SetValue(unit, -jawAper*6);
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("jaw2XAperture") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, jawAper);
+    m_config->SetValue(unit, jawAper*6);
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("jaw1YAperture") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, -jawAper);
+    m_config->SetValue(unit, -jawAper*2.5);
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
   if (unit.compare("jaw2YAperture") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, jawAper);
+    m_config->SetValue(unit, jawAper*2.5);
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 

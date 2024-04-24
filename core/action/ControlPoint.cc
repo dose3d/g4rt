@@ -96,7 +96,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
                     total_dose += hashed_voxel.second.GetDose();
                 }
             }
-            LOGSVC_INFO("Total dose: {}",total_dose);
+            // LOGSVC_INFO("Total dose: {}",total_dose);
         } 
     };
 

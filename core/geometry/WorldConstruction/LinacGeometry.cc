@@ -115,7 +115,7 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto accWorldLV = new G4LogicalVolume(accWorldB, medium.get(), "linacWorldLV", 0, 0, 0);
 
   // The centre of this PV is always 0,0,0, hence we need to only do the isoToSim translation
-  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-630), "acceleratorBox", accWorldLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-730), "acceleratorBox", accWorldLV, parentPV, false, 0));
 
   // create the actual accelerator
   m_headInstance->Construct(GetPhysicalVolume());

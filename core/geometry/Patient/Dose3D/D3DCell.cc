@@ -122,7 +122,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
   
 
-  SetGlobalCentre(m_centre + m_parentPV->GetTranslation());
+  SetGlobalCentre((m_centre.transform( *m_parentPV->GetRotation())) + m_parentPV->GetTranslation());
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
 
     // Region for cuts
@@ -178,7 +178,7 @@ void D3DCell::DefineSensitiveDetector(){
     // Scoring in the centre of the cell
     // ________________________________________________________________________
     hcName = label+"_HC";
-    G4cout << "Current cell hcName: " << hcName << G4endl;
+    // G4cout << "Current cell hcName: " << hcName << G4endl;
     G4int nvx(1), nvy(1), nvz(1); // Scoring resolution: nVoxelsX, nVoxelsY, nVoxelsZ
     if(D3DCell::m_set_cell_voxelised_scorer){
       nvx = m_cell_voxelization_x;

@@ -42,89 +42,15 @@ bool BWorldConstruction::Create() {
 
 void BWorldConstruction::ConstructTrayDetectors(G4VPhysicalVolume *parentPV) {
     
-    m_trays.push_back(new D3DTray(parentPV, "Tray001")); // position+G4ThreeVector(- 390., 390., 0.)
-    m_trays.push_back(new D3DTray(parentPV, "Tray002")); // position+G4ThreeVector(- 390., 130., 0.))
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray003",  position+G4ThreeVector(- 390., -130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray004",  position+G4ThreeVector(- 390., -390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray005",  position+G4ThreeVector(- 130., 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray006",  position+G4ThreeVector(- 130., 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray007",  position+G4ThreeVector(- 130., -130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray008",  position+G4ThreeVector(- 130., -390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray101",  position+G4ThreeVector(1000. - 390., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray102",  position+G4ThreeVector(1000. - 390., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray103",  position+G4ThreeVector(1000. - 390., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray104",  position+G4ThreeVector(1000. - 390., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray105",  position+G4ThreeVector(1000. - 130., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray106",  position+G4ThreeVector(1000. - 130., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray107",  position+G4ThreeVector(1000. - 130., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray108",  position+G4ThreeVector(1000. - 130., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray201",  position+G4ThreeVector(- 1000. - 390., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray202",  position+G4ThreeVector(- 1000. - 390., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray203",  position+G4ThreeVector(- 1000. - 390., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray204",  position+G4ThreeVector(- 1000. - 390., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray205",  position+G4ThreeVector(- 1000. - 130., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray206",  position+G4ThreeVector(- 1000. - 130., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray207",  position+G4ThreeVector(- 1000. - 130., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray208",  position+G4ThreeVector(- 1000. - 130., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray301",  position+G4ThreeVector(1000. - 390., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray302",  position+G4ThreeVector(1000. - 390., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray303",  position+G4ThreeVector(1000. - 390., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray304",  position+G4ThreeVector(1000. - 390., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray305",  position+G4ThreeVector(1000. - 130., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray306",  position+G4ThreeVector(1000. - 130., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray307",  position+G4ThreeVector(1000. - 130., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray308",  position+G4ThreeVector(1000. - 130., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray401",  position+G4ThreeVector(-1000. -390., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray402",  position+G4ThreeVector(-1000. -390., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray403",  position+G4ThreeVector(-1000. -390., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray404",  position+G4ThreeVector(-1000. -390., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray405",  position+G4ThreeVector(-1000. -130., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray406",  position+G4ThreeVector(-1000. -130., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray407",  position+G4ThreeVector(-1000. -130., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray408",  position+G4ThreeVector(-1000. -130., - 1000. - 390., 0.)));
-
-    // rot.rotateZ(180. * deg);
-
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray009", position+G4ThreeVector(390., 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray010", position+G4ThreeVector(390., 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray011", position+G4ThreeVector(390., -130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray012", position+G4ThreeVector(390., -390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray013", position+G4ThreeVector(130., 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray014", position+G4ThreeVector(130., 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray015", position+G4ThreeVector(130., -130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray016", position+G4ThreeVector(130., -390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray109", position+G4ThreeVector(1000. + 390., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray110", position+G4ThreeVector(1000. + 390., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray111", position+G4ThreeVector(1000. + 390., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray112", position+G4ThreeVector(1000. + 390., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray113", position+G4ThreeVector(1000. + 130., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray114", position+G4ThreeVector(1000. + 130., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray115", position+G4ThreeVector(1000. + 130., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray116", position+G4ThreeVector(1000. + 130., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray209", position+G4ThreeVector(-1000. + 390., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray210", position+G4ThreeVector(-1000. + 390., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray211", position+G4ThreeVector(-1000. + 390., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray212", position+G4ThreeVector(-1000. + 390., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray213", position+G4ThreeVector(-1000. + 130., 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray214", position+G4ThreeVector(-1000. + 130., 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray215", position+G4ThreeVector(-1000. + 130., 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray216", position+G4ThreeVector(-1000. + 130., 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray309", position+G4ThreeVector(1000. + 390., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray310", position+G4ThreeVector(1000. + 390., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray311", position+G4ThreeVector(1000. + 390., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray312", position+G4ThreeVector(1000. + 390., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray313", position+G4ThreeVector(1000. + 130., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray314", position+G4ThreeVector(1000. + 130., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray315", position+G4ThreeVector(1000. + 130., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray316", position+G4ThreeVector(1000. + 130., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray409", position+G4ThreeVector(-1000. + 390., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray410", position+G4ThreeVector(-1000. + 390., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray411", position+G4ThreeVector(-1000. + 390., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray412", position+G4ThreeVector(-1000. + 390., - 1000. - 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray413", position+G4ThreeVector(-1000. + 130., - 1000. + 390., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray414", position+G4ThreeVector(-1000. + 130., - 1000. + 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray415", position+G4ThreeVector(-1000. + 130., - 1000. - 130., 0.)));
-    // m_trays.push_back(new D3DTray(rot,m_bunker_inside_pv, "Tray416", position+G4ThreeVector(-1000. + 130., - 1000. - 390., 0.)));
+    m_trays.push_back(new D3DTray(parentPV, "Tray001")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray002")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray003")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray004"));
+    m_trays.push_back(new D3DTray(parentPV, "Tray005")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray006")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray007")); 
+    m_trays.push_back(new D3DTray(parentPV, "Tray008"));
+    m_trays.push_back(new D3DTray(parentPV, "Tray009"));
 
     // m_trays.back()->Rotate(rot);
 }

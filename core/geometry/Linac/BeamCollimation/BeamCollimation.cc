@@ -16,7 +16,7 @@
 
 std::unique_ptr<VMlc> BeamCollimation::m_mlc = nullptr;
 G4double BeamCollimation::AfterMLC = -430.0;
-G4double BeamCollimation::BeforeMLC  = -550.0;
+G4double BeamCollimation::BeforeMLC  = -870.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -94,10 +94,10 @@ void BeamCollimation::Destroy() {
 ///
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
   m_parentPV = parentWorld;
-  // Jaw1X();
-  // Jaw2X();
-  // Jaw1Y();
-  // Jaw2Y();
+  Jaw1X();
+  Jaw2X();
+  Jaw1Y();
+  Jaw2Y();
   MLC();
 }
 
@@ -198,7 +198,7 @@ bool BeamCollimation::Jaw1X() {
   G4String name = "Jaws1X";
 
   auto cRotation = new G4RotationMatrix();
-  G4ThreeVector centre(0., 0., (320. + 80. / 2.) * mm);
+  G4ThreeVector centre(0., 0., (105.) * mm);
   //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
   G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
@@ -224,7 +224,7 @@ bool BeamCollimation::Jaw2X() {
   G4String name = "Jaws2X";
 
   auto cRotation = new G4RotationMatrix();
-  G4ThreeVector centre(0., 0., (320. + 80. / 2.) * mm);
+  G4ThreeVector centre(0., 0., (105.) * mm);
   //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
   G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
@@ -251,7 +251,7 @@ bool BeamCollimation::Jaw1Y() {
 
   auto cRotation = new G4RotationMatrix();
   //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
-  G4ThreeVector centre(0., 0., (230. + 80. / 2. -6) * mm);
+  G4ThreeVector centre(0., 0., (205.) * mm);
   //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
   G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
 
@@ -279,7 +279,7 @@ bool BeamCollimation::Jaw2Y() {
 
   auto cRotation = new G4RotationMatrix();
   //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
-  G4ThreeVector centre(0., 0., (230. + 80. / 2. -6) * mm);
+  G4ThreeVector centre(0., 0., (205.) * mm);
   //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
   G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());

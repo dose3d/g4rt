@@ -91,7 +91,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     auto air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
     G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 269. * mm);
+    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 290. * mm);
     auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
     auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
     auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);

@@ -24,9 +24,8 @@ void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
     G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), LVName, 0, 0, 0);
     
     auto PVName = m_tray_name + "EnvPV";
-    SetPhysicalVolume(new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0));
-    
-    auto pv = GetPhysicalVolume();
+    auto pv = new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0);
+
 
     m_detector->Construct(pv);
     m_detector->WriteInfo();
@@ -44,7 +43,7 @@ void D3DTray::LoadConfiguration(){
 
     // Deafult configuration
     m_rot = G4RotationMatrix(); //.rotateY(180.*deg);
-    m_tray_world_halfSize = G4ThreeVector(130.,130.,50.);
+    m_tray_world_halfSize = G4ThreeVector(102.,111.,9.2);
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
@@ -61,7 +60,7 @@ void D3DTray::LoadConfiguration(){
     m_det_config.m_in_layer_positioning_module = "dose3d/geo/Tray/4x5x1_tray.csv";
     m_det_config.m_stl_geometry_file_path = "dose3d/geo/Tray/tray.stl";
 
-    m_det_config.m_top_position_in_env = G4ThreeVector(-85.,0.0,0.0); // "centre" of the trey is not in the geometrical centre
+    m_det_config.m_top_position_in_env = G4ThreeVector(-85.,0.0,-7.0); // "centre" of the trey is not in the geometrical centre
 
     // Any config value is being replaced by the one existing in TOML config 
     ParseTomlConfig();

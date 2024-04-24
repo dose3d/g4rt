@@ -8,9 +8,9 @@ BeamType = "IAEA"
 PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # AGH JH Home File
 PhspEvtVrtxMultiplicityTreshold = 10
-PrintProgressFrequency = 0.05
+PrintProgressFrequency = 0.001
 GenerateCT = false
-PrimariesAnalysis = false
+PrimariesAnalysis = true
 NTupleAnalysis = true
 RunAnalysis = true
 
@@ -44,12 +44,49 @@ CellVoxelisedScorer = true
 
 [Tray001]
 Rotation = [0.0, 180.0, 90.0] # in deg
-Position = [0.0, 0.0, 200.0] # relative to global (0,0,0)
+Position = [0.0, 0.0, 0.0] # relative to global (0,0,0)
 CellVoxelization = [2,2,2]
 
 [Tray002]
 Rotation = [0.0, 180.0, 90.0] # in deg
-Position = [-20.0, 20.0, 240.0]
+Position = [0.0, 206.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray003]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 412.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray004]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 618.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray005]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 824.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray006]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 1030.0, 0.0]
+CellVoxelization = [2,2,2]
+
+[Tray007]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 1236.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray008]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 1432.0, 0.0]
+CellVoxelization = [2,2,2]
+
+[Tray009]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 1628.0, 0.0] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
 
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute

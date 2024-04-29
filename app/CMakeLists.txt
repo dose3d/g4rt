@@ -35,7 +35,8 @@ add_definitions(${Core_DEFINITIONS}
         ${spdlog_DEFINITIONS}
         ${ROOT_DEFINITIONS})
 
-set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/world/bunker/)
+set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/basic
+                ${PROJECT_SOURCE_DIR}/bworld/src)
 
 include_directories(${IAEA_INCLUDE_DIR}
         ${Cmd_INCLUDE_DIR}
@@ -47,11 +48,16 @@ include_directories(${IAEA_INCLUDE_DIR}
         ${ROOT_INCLUDE_DIRS}
         ${HEADERS_DIR})
 
-file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/world/bunker/*.cc)
+        
+#---------------------------------------------------------------------------
+file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
+add_executable(g4rt ${SOURCES} basic/main.cc)
+target_link_libraries(g4rt IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
 
 #---------------------------------------------------------------------------
-add_executable(g4rt ${SOURCES} main.cc)
-target_link_libraries(g4rt IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
+add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
+target_link_libraries(g4rt_bworld IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
 
 #---------------------------------------------------------------------------
 # install definitions
@@ -59,7 +65,7 @@ install(TARGETS g4rt
         RUNTIME DESTINATION "${PROJECT_INSTALL_DIR}"
         DESTINATION "${PROJECT_INSTALL_DIR}")
 install(DIRECTORY "${PROJECT_DATA_PATH}" DESTINATION "${PROJECT_INSTALL_DIR}/")
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/g4rt.sh" DESTINATION "/etc/profile.d/")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/..scripts/g4rt.sh" DESTINATION "/etc/profile.d/")
 
 # deb package definitions
 SET(CPACK_GENERATOR "DEB")

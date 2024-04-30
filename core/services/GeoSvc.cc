@@ -137,7 +137,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
-  G4double jawAper = 10.*cm;
+  G4double jawAper = 0.5*cm;
   if (unit.compare("jaw1XAperture") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
     m_config->SetValue(unit, -jawAper*6);

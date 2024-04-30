@@ -24,7 +24,7 @@ bool BWorldConstruction::Create() {
     SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
 
     auto world_pv = GetPhysicalVolume();
-    auto envSize = G4ThreeVector(3000.*mm,3000.*mm,2000.*mm);
+    auto envSize = G4ThreeVector(4500.*mm,4500.*mm,2000.*mm);
     auto concrete = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "BaritesConcrete");
     G4Box *bunkerWallBox = new G4Box("bunkerWallBox",750.*mm + envSize.getX(), 750.*mm + envSize.getY(),750.*mm + envSize.getZ());
     G4LogicalVolume *bunkerWallBoxLV = new G4LogicalVolume(bunkerWallBox, concrete.get(), "bunkerWallBoxLV", 0, 0, 0);

@@ -48,11 +48,11 @@ class BeamCollimation : public IPhysicalVolume,
 
   static G4ThreeVector SetParticlePositionBeforeMLC(G4PrimaryVertex* vrtx, G4double finalZ);
 
-  VMlc* GetMlc() const { return m_mlc.get(); }
+  VMlc* GetMlc() const { return m_mlc; }
 
   static G4double AfterMLC;
   static G4double BeforeMLC;
-  VMlc* GetMlc() { return m_mlc.get(); }
+  VMlc* GetMlc() { return m_mlc; }
 
   private:
   ///
@@ -93,7 +93,7 @@ class BeamCollimation : public IPhysicalVolume,
   bool MLC();
 
   ///
-  static std::unique_ptr<VMlc> m_mlc;
+  static VMlc* m_mlc;
 
   ///
   void DefineSensitiveDetector() {}

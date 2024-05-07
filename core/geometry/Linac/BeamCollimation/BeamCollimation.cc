@@ -14,7 +14,7 @@
 #include "G4Box.hh"
 #include "G4Cons.hh"
 
-std::unique_ptr<VMlc> BeamCollimation::m_mlc = nullptr;
+VMlc* BeamCollimation::m_mlc = nullptr;
 G4double BeamCollimation::AfterMLC = -430.0;
 G4double BeamCollimation::BeforeMLC  = -870.0;
 
@@ -88,6 +88,8 @@ void BeamCollimation::Destroy() {
       ivolume.second = nullptr;
     }
   }
+  delete m_mlc;
+  m_mlc = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,18 +309,18 @@ bool BeamCollimation::MLC() {
   if(model == EMlcModel::None)
     return true;
 
-  if(!m_mlc.get()){
+  if(!m_mlc){
     G4cout << "[INFO]:: BeamCollimation::MLC: Constructing the MLC model instantiation! " << G4endl;
     switch (model) {
       case EMlcModel::Millennium:
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
-        m_mlc = std::make_unique<MlcHd120>(m_parentPV);
+        m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
         LOGSVC_INFO("Using Simplified type of MLC");
-        m_mlc = std::make_unique<MlcSimplified>();
+        m_mlc = new MlcSimplified;
         break;
     }
   } else {
@@ -328,11 +330,13 @@ bool BeamCollimation::MLC() {
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
-        m_mlc.reset(new MlcHd120(m_parentPV));
+        delete m_mlc;
+        m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
+        delete m_mlc;
         LOGSVC_INFO("Using Simplified type of MLC");
-        m_mlc.reset(new MlcSimplified());
+        m_mlc = new MlcSimplified();
         break;
     }
 

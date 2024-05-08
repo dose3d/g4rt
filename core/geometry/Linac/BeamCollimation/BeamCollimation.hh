@@ -73,14 +73,8 @@ class BeamCollimation : public IPhysicalVolume {
 
   ///
   bool Jaws();
-  // bool Jaw1X();
 
-  // bool Jaw2X();
-
-  // bool Jaw1Y();
-
-  // bool Jaw2Y();
-
+  /// 
   bool MLC();
 
   ///

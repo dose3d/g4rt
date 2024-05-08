@@ -40,11 +40,11 @@ BeamCollimation *BeamCollimation::GetInstance() {
 void BeamCollimation::WriteInfo() {
   G4cout << "\n\n\tnominal beam energy: " << Service<ConfigSvc>()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
   G4cout << "\tJaw X aperture: 1) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1XAperture") / cm << "[cm]\t2) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2XAperture") / cm << " [cm]" << G4endl;
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw1XAperture") / cm << "[cm]\t2) "
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw2XAperture") / cm << " [cm]" << G4endl;
   G4cout << "\tJaw Y aperture: 1) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1YAperture") / cm << "[cm]\t2) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2YAperture") / cm << " [cm]\n" << G4endl;
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw1YAperture") / cm << "[cm]\t2) "
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw2YAperture") / cm << " [cm]\n" << G4endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

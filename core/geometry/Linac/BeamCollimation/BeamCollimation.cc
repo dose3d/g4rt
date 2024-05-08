@@ -64,10 +64,7 @@ void BeamCollimation::Destroy() {
 ///
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
   m_parentPV = parentWorld;
-  Jaw1X();
-  Jaw2X();
-  Jaw1Y();
-  Jaw2Y();
+  Jaws();
   MLC();
 }
 
@@ -119,152 +116,167 @@ G4ThreeVector BeamCollimation::SetParticlePositionBeforeMLC(G4PrimaryVertex* vrt
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void BeamCollimation::SetJawAperture(G4int idJaw, G4ThreeVector &centre, G4ThreeVector halfSize,
+void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize,
                                       G4RotationMatrix *cRotation) {
-  using namespace std;
-  G4double theta, x, y, z, dx, dy, dz, aperture = 0.;
-  x = centre.getX();
-  y = centre.getY();
-  z = centre.getZ();
-  if (idJaw == 1) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1XAperture");
-  if (idJaw == 2) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2XAperture");
-  if (idJaw == 3) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1YAperture");
-  if (idJaw == 4) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2YAperture");
+  G4double x = centre.getX();
+  G4double y = centre.getY();
+  G4double z = centre.getZ();
+  G4double dx = halfSize.getX();
+  G4double dy = halfSize.getY();
+  G4double dz = halfSize.getZ();
+  G4double aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", name+"Aperture");
+  G4double theta = fabs(atan(aperture / Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "isoCentre")));
 
-  theta = fabs(atan(aperture / Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "isoCentre")));
-  dx = halfSize.getX();
-  dy = halfSize.getY();
-  dz = halfSize.getZ();
-
-  switch (idJaw) {
-    case 1:  // idJaw1XV2100:
+  if (name=="Jaw1X") { // idJaw1XV2100:
       centre.set(z * sin(theta) + dx * cos(theta), y, z * cos(theta) - dx * sin(theta));
       cRotation->rotateY(-theta);
       halfSize.set(fabs(dx * cos(theta) + dz * sin(theta)), fabs(dy), fabs(dz * cos(theta) + dx * sin(theta)));
-      break;
-    case 2:  // idJaw2XV2100:
+  } else if (name=="Jaw2X") {  // idJaw2XV2100:
       centre.set(-(z * sin(theta) + dx * cos(theta)), y, z * cos(theta) - dx * sin(theta));
       cRotation->rotateY(theta);
       halfSize.set(fabs(dx * cos(theta) + dz * sin(theta)), fabs(dy), fabs(dz * cos(theta) + dx * sin(theta)));
-      break;
-    case 3:  // idJaw1YV2100:
+  } else if (name=="Jaw1Y") {  // idJaw1YV2100:
       centre.set(x, z * sin(theta) + dy * cos(theta), z * cos(theta) - dy * sin(theta));
       cRotation->rotateX(theta);
       halfSize.set(fabs(dx), fabs(dy * cos(theta) + dz * sin(theta)), fabs(dz * cos(theta) + dy * sin(theta)));
-      break;
-    case 4:  // idJaw2YV2100:
+  } else if (name=="Jaw2Y") {  // idJaw2YV2100:
       centre.set(x, -(z * sin(theta) + dy * cos(theta)), z * cos(theta) - dy * sin(theta));
       cRotation->rotateX(-theta);
       halfSize.set(fabs(dx), fabs(dy * cos(theta) + dz * sin(theta)), fabs(dz * cos(theta) + dy * sin(theta)));
-      break;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool BeamCollimation::Jaw1X() {
-  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
-  G4String name = "Jaws1X";
+bool BeamCollimation::Jaws() {
+  auto jaw = [&](const std::string& name, G4ThreeVector centre, const G4ThreeVector& halfSize) {
+    auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+    auto cRotation = new G4RotationMatrix();
+    auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
+    auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+    SetJawAperture(name, centre, halfSize, cRotation);
+    m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
 
-  auto cRotation = new G4RotationMatrix();
-  G4ThreeVector centre(0., 0., (105.) * mm);
-  //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
-  G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
-  auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
-  auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
-  SetJawAperture(1, centre, halfSize, cRotation);
-  m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+    // Region for cuts
+    auto regVol = new G4Region(name + "R");
+    auto *cuts = new G4ProductionCuts;
+    cuts->SetProductionCut(0.001 * mm);
+    regVol->SetProductionCuts(cuts);
+    logVol->SetRegion(regVol);
+    regVol->AddRootLogicalVolume(logVol);
+  };
 
-  // Region for cuts
-  auto regVol = new G4Region(name + "R");
-  auto *cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.001 * mm);
-  regVol->SetProductionCuts(cuts);
-  logVol->SetRegion(regVol);
-  regVol->AddRootLogicalVolume(logVol);
-
+  jaw("Jaw1X",G4ThreeVector(0., 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw2X",G4ThreeVector(0., 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw1Y",G4ThreeVector(0., 0., 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
+  jaw("Jaw2Y",G4ThreeVector(0., 0., 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
   return true;
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+// bool BeamCollimation::Jaw1X() {
+//   auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+//   G4String name = "Jaws1X";
+
+//   auto cRotation = new G4RotationMatrix();
+//   G4ThreeVector centre(0., 0., (105.) * mm);
+//   //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
+//   G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
+//   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
+//   auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+//   SetJawAperture(1, centre, halfSize, cRotation);
+//   m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+
+//   // Region for cuts
+//   auto regVol = new G4Region(name + "R");
+//   auto *cuts = new G4ProductionCuts;
+//   cuts->SetProductionCut(0.001 * mm);
+//   regVol->SetProductionCuts(cuts);
+//   logVol->SetRegion(regVol);
+//   regVol->AddRootLogicalVolume(logVol);
+
+//   return true;
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool BeamCollimation::Jaw2X() {
-  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
-  G4String name = "Jaws2X";
+// bool BeamCollimation::Jaw2X() {
+//   auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+//   G4String name = "Jaws2X";
 
-  auto cRotation = new G4RotationMatrix();
-  G4ThreeVector centre(0., 0., (105.) * mm);
-  //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
-  G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
-  auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
-  auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
-  SetJawAperture(2, centre, halfSize, cRotation);
-  m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+//   auto cRotation = new G4RotationMatrix();
+//   G4ThreeVector centre(0., 0., (105.) * mm);
+//   //G4ThreeVector halfSize(45. * mm, 93. * mm, 78. / 2. * mm);
+//   G4ThreeVector halfSize(55. * mm, 100. * mm, 90. / 2. * mm);
+//   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
+//   auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+//   SetJawAperture(2, centre, halfSize, cRotation);
+//   m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
 
-  // Region for cuts
-  auto regVol = new G4Region(name + "R");
-  auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.001 * mm);
-  regVol->SetProductionCuts(cuts);
-  logVol->SetRegion(regVol);
-  regVol->AddRootLogicalVolume(logVol);
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-bool BeamCollimation::Jaw1Y() {
-  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
-  G4String name = "Jaws1Y";
-
-  auto cRotation = new G4RotationMatrix();
-  //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
-  G4ThreeVector centre(0., 0., (205.) * mm);
-  //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
-  G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
-
-  auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
-  auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
-  SetJawAperture(3, centre, halfSize, cRotation);
-  m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
-
-  // Region for cuts
-  auto regVol = new G4Region(name + "R");
-  auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.001 * mm);
-  regVol->SetProductionCuts(cuts);
-  logVol->SetRegion(regVol);
-  regVol->AddRootLogicalVolume(logVol);
-
-  return true;
-}
+//   // Region for cuts
+//   auto regVol = new G4Region(name + "R");
+//   auto cuts = new G4ProductionCuts;
+//   cuts->SetProductionCut(0.001 * mm);
+//   regVol->SetProductionCuts(cuts);
+//   logVol->SetRegion(regVol);
+//   regVol->AddRootLogicalVolume(logVol);
+//   return true;
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool BeamCollimation::Jaw2Y() {
-  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
-  G4String name = "Jaws2Y";
+// bool BeamCollimation::Jaw1Y() {
+//   auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+//   G4String name = "Jaws1Y";
 
-  auto cRotation = new G4RotationMatrix();
-  //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
-  G4ThreeVector centre(0., 0., (205.) * mm);
-  //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
-  G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
-  auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
-  auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
-  SetJawAperture(4, centre, halfSize, cRotation);
-  m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+//   auto cRotation = new G4RotationMatrix();
+//   //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
+//   G4ThreeVector centre(0., 0., (205.) * mm);
+//   //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
+//   G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
 
-  // Region for cuts
-  auto regVol = new G4Region(name + "R");
-  auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.001 * mm);
-  regVol->SetProductionCuts(cuts);
-  logVol->SetRegion(regVol);
-  regVol->AddRootLogicalVolume(logVol);
+//   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
+//   auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+//   SetJawAperture(3, centre, halfSize, cRotation);
+//   m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
 
-  return true;
-}
+//   // Region for cuts
+//   auto regVol = new G4Region(name + "R");
+//   auto cuts = new G4ProductionCuts;
+//   cuts->SetProductionCut(0.001 * mm);
+//   regVol->SetProductionCuts(cuts);
+//   logVol->SetRegion(regVol);
+//   regVol->AddRootLogicalVolume(logVol);
+
+//   return true;
+// }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+// bool BeamCollimation::Jaw2Y() {
+//   auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+//   G4String name = "Jaws2Y";
+
+//   auto cRotation = new G4RotationMatrix();
+//   //G4ThreeVector centre(0., 0., (230. + 80. / 2.) * mm);
+//   G4ThreeVector centre(0., 0., (205.) * mm);
+//   //G4ThreeVector halfSize(93. * mm, 35. * mm, 78. / 2. * mm);
+//   G4ThreeVector halfSize(100. * mm, 45. * mm, 90. / 2. * mm);
+//   auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
+//   auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+//   SetJawAperture(4, centre, halfSize, cRotation);
+//   m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+
+//   // Region for cuts
+//   auto regVol = new G4Region(name + "R");
+//   auto cuts = new G4ProductionCuts;
+//   cuts->SetProductionCut(0.001 * mm);
+//   regVol->SetProductionCuts(cuts);
+//   logVol->SetRegion(regVol);
+//   regVol->AddRootLogicalVolume(logVol);
+
+//   return true;
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

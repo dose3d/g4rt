@@ -69,15 +69,17 @@ class BeamCollimation : public IPhysicalVolume {
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;
 
   ///
-  void SetJawAperture(G4int idJaw, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
+  void SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
 
-  bool Jaw1X();
+  ///
+  bool Jaws();
+  // bool Jaw1X();
 
-  bool Jaw2X();
+  // bool Jaw2X();
 
-  bool Jaw1Y();
+  // bool Jaw1Y();
 
-  bool Jaw2Y();
+  // bool Jaw2Y();
 
   bool MLC();
 

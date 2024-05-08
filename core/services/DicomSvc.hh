@@ -47,15 +47,19 @@ class ICtSvc {
 class IPlan {
   public:
     virtual ControlPointConfig GetControlPointConfig(int controlpointIdx, const std::string& planFile) = 0;
+    virtual std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx) = 0;
+    virtual double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const = 0;
     virtual std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 class IDicomPlan: public IPlan {
+  private:
+    double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const override;
   public:
     ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
-    G4double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const;
+    std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx) override;
     std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) override;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +69,11 @@ class ICustomPlan : public IPlan {
     // TODO: "Don't repeat yourself" (DRY)...
     int GetNEvents(const std::string& planFile);
     double GetRotation(const std::string& planFile);
+    double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const override;
+
   public:
     ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
+    std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx=0, int controlpointIdx=0) override;
     std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx=0, int controlpointIdx=0) override;
 };
 

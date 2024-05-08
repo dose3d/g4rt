@@ -28,7 +28,7 @@ class ControlPointConfig {
     double RotationInDeg = 0.;
     int NEvts = 0.;
     int Id = 0;
-    std::string MlcInputFile = std::string();
+    std::string PlanFile = std::string();
     // TODO: introduce here FieldType as enum type see def in Types.hh
     std::string FieldType = std::string();
     G4double FieldSizeA = G4double();
@@ -121,6 +121,7 @@ class ControlPoint {
     static std::set<G4String> GetHitCollectionNames();
 
     const std::vector<double>& GetMlcPositioning(const std::string& side) const;
+    double GetJawAperture(const std::string& side) const;
 
     std::vector<G4ThreeVector>& GetPlanMaskPoints() {return m_plan_mask_points;}
     void FillPlanFieldMask();
@@ -136,6 +137,11 @@ class ControlPoint {
 
     G4RotationMatrix* m_rotation = nullptr;
 
+    /// Jaw Aperture in mm
+    std::pair<double,double> m_jaw_x_aperture;
+    std::pair<double,double> m_jaw_y_aperture;
+
+    /// MLC positioning in mm
     std::vector<double> m_mlc_a_positioning;
     std::vector<double> m_mlc_b_positioning;
 

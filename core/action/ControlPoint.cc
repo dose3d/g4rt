@@ -216,10 +216,12 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     SetRotation(config.RotationInDeg);
     if(m_config.FieldType=="RTPlan"){
         auto dicomSvc = DicomSvc::GetInstance();
+        m_jaw_x_aperture = dicomSvc->GetPlan()->ReadJawsAperture(m_config.PlanFile,"X",0,0); // file, side, beamId, cpId
+        m_jaw_y_aperture = dicomSvc->GetPlan()->ReadJawsAperture(m_config.PlanFile,"Y",0,0); // file, side, beamId, cpId
         m_mlc_a_positioning.clear();
         m_mlc_b_positioning.clear();
-        m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y1",0,0); // file, beamId, cpId
-        m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.MlcInputFile,"Y2",0,0);
+        m_mlc_a_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.PlanFile,"Y1",0,0); // file, side, beamId, cpId
+        m_mlc_b_positioning = dicomSvc->GetPlan()->ReadMlcPositioning(m_config.PlanFile,"Y2",0,0);
     }
 }
 
@@ -229,6 +231,8 @@ ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
     m_rotation = new G4RotationMatrix(*cp.m_rotation);
     m_scoring_types = cp.m_scoring_types;
     m_plan_mask_points = cp.m_plan_mask_points;
+    m_jaw_x_aperture = cp.m_jaw_x_aperture;
+    m_jaw_y_aperture = cp.m_jaw_y_aperture;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
     m_mlc_b_positioning = cp.m_mlc_b_positioning;
 }
@@ -240,6 +244,8 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
     m_rotation = cp.m_rotation;
     cp.m_rotation = nullptr;
     m_plan_mask_points = cp.m_plan_mask_points;
+    m_jaw_x_aperture = cp.m_jaw_x_aperture;
+    m_jaw_y_aperture = cp.m_jaw_y_aperture;
     m_mlc_a_positioning = cp.m_mlc_a_positioning;
     m_mlc_b_positioning = cp.m_mlc_b_positioning;
 }
@@ -634,6 +640,27 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
     }
     return m_mlc_a_positioning; // never reached, prevent warning
 }
+
+double ControlPoint::GetJawAperture(const std::string& side) const{
+    if(side=="X1"){
+        return m_jaw_x_aperture.first;
+    }
+    else if(side=="X2"){
+        return m_jaw_x_aperture.second;
+    }
+    if(side=="Y1"){
+        return m_jaw_y_aperture.first;
+    }
+    else if(side=="Y2"){
+        return m_jaw_y_aperture.second;
+    }
+    else{
+        LOGSVC_ERROR("ControlPoint::GetJawAperture: Unknown side: {}", side);
+        std::exit(EXIT_FAILURE);
+    }
+    return 0.; // never reached, prevent warning
+}
+
 
 
 

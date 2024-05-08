@@ -64,7 +64,6 @@ void BeamCollimation::Destroy() {
 ///
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
   m_parentPV = parentWorld;
-  Jaws();
   MLC();
 }
 
@@ -155,6 +154,8 @@ bool BeamCollimation::Jaws() {
     auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
     auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
     SetJawAperture(name, centre, halfSize, cRotation);
+    if(m_physicalVolume[name]!=nullptr)
+      delete m_physicalVolume[name];
     m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
 
     // Region for cuts
@@ -186,9 +187,11 @@ bool BeamCollimation::MLC() {
     G4cout << "[INFO]:: BeamCollimation::MLC: Constructing the MLC model instantiation! " << G4endl;
     switch (model) {
       case EMlcModel::Millennium:
+        Jaws();
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
+        Jaws();
         m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
@@ -200,9 +203,11 @@ bool BeamCollimation::MLC() {
     G4cout << "[INFO]:: BeamCollimation::MLC: RESET the MLC model instantiation! " << G4endl;
     switch (model) {
       case EMlcModel::Millennium:
+        Jaws();
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
+        Jaws();
         delete m_mlc;
         m_mlc = new MlcHd120(m_parentPV);
         break;

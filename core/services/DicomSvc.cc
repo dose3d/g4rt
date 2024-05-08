@@ -50,7 +50,7 @@ DicomSvc *DicomSvc::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
+double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
   LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
   LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
@@ -70,6 +70,20 @@ G4double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::st
   else if (jawName == "Y1") jawIdx = 2;
   else if (jawName == "Y2") jawIdx = 3;
   return rtplanJawsReader.attr("return_position")(planFile, beamIdx, controlpointIdx, jawIdx).cast<double>();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::pair<double,double> IDicomPlan::ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx){
+  if(side=="X"){
+    auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
+    auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
+    return std::make_pair(x1,x2);
+  }else if(side=="Y"){
+    auto y1 = ReadJawPossition(planFile,"Y1",beamIdx,controlpointIdx);
+    auto y2 = ReadJawPossition(planFile,"Y2",beamIdx,controlpointIdx);
+    return std::make_pair(y1,y2);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,6 +110,40 @@ std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile
     mlcPositioning.emplace_back(accesableLeavesPositions[i]);
   }
   return std::move(mlcPositioning);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: TEMPORARY IMPLEMENTATION, It should be read-in from the plan file
+double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
+  if(jawName=="X1"){
+    return -3*cm;
+  } else if(jawName=="X2"){
+    return 3*cm;
+  } else if(jawName=="Y1"){
+    return -1.25*cm;
+  } else if(jawName=="Y2"){
+    return 1.25*cm;
+  }
+  return 0.;
+}
+////////////////////////////////////////////////////////////////////////////////
+///
+std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx){
+  if(side=="X"){
+    auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
+    auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
+    return std::make_pair(x1,x2);
+    // return std::make_pair(-3*cm, 3*cm);       // 1X, 2X
+  } else if(side=="Y"){
+    auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
+    auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
+    return std::make_pair(x1,x2);
+    // return std::make_pair(-1.25*cm, 1.25*cm); // 1Y, 2Y
+  } else {
+      LOGSVC_ERROR("ICustomPlan::ReadJawsAperture: Unknown side: {}", side);
+      std::exit(EXIT_FAILURE);
+  }
+  return std::make_pair(0,0); // Never reached, but compiler complains otherwise
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +258,7 @@ ControlPointConfig IDicomPlan::GetControlPointConfig(int id, const std::string& 
   // TODO
   // extract from planFile, below is dummy mockup
   auto config = ControlPointConfig(id, 1000, 0.);
-  config.MlcInputFile = planFile;
+  config.PlanFile = planFile;
   config.FieldType = "RTPlan"; // TODO FieldType::RTPlan;
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 
@@ -223,7 +271,7 @@ ControlPointConfig ICustomPlan::GetControlPointConfig(int id, const std::string&
   auto nEvents = GetNEvents(planFile);
   auto rotation = GetRotation(planFile);
   auto config = ControlPointConfig(id, nEvents, rotation);
-  config.MlcInputFile = planFile;
+  config.PlanFile = planFile;
   config.FieldType = "RTPlan"; // TODO FieldType::CustomPlan;
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 

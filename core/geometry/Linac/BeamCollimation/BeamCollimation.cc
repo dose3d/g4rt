@@ -20,17 +20,12 @@ G4double BeamCollimation::BeforeMLC  = -870.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"), Configurable("BeamCollimation"){
-  // m_leavesA = *m_geoSvc->getLeavesPositioning("A");
-  // m_leavesB = *m_geoSvc->getLeavesPositioning("B");
-  Configure();
-}
+BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 BeamCollimation::~BeamCollimation() {
   Destroy();
-  configSvc()->Unregister(thisConfig()->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,41 +37,14 @@ BeamCollimation *BeamCollimation::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void BeamCollimation::Configure() {
-  G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
-  // DefineUnit<G4double>("ionizationChamberThicknessP");
-  // DefineUnit<G4double>("ionizationChamberThicknessW");
-
-  Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
-  Configurable::PrintConfig();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void BeamCollimation::DefaultConfig(const std::string &unit) {
-
-  // Volume name
-  if (unit.compare("Label") == 0)
-    thisConfig()->SetValue(unit, std::string("Varian True Beam Head"));
-
-  // describe me.
-  if (unit.compare("ionizationChamberThicknessP") == 0)
-    thisConfig()->SetValue(unit, G4double(50.)); // [um]
-  if (unit.compare("ionizationChamberThicknessW") == 0)
-    thisConfig()->SetValue(unit, G4double(50.)); // [um]
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void BeamCollimation::WriteInfo() {
-  G4cout << "\n\n\tnominal beam energy: " << configSvc()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
+  G4cout << "\n\n\tnominal beam energy: " << Service<ConfigSvc>()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
   G4cout << "\tJaw X aperture: 1) "
-         << configSvc()->GetValue<G4double>("GeoSvc", "jaw1XAperture") / cm << "[cm]\t2) "
-         << configSvc()->GetValue<G4double>("GeoSvc", "jaw2XAperture") / cm << " [cm]" << G4endl;
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1XAperture") / cm << "[cm]\t2) "
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2XAperture") / cm << " [cm]" << G4endl;
   G4cout << "\tJaw Y aperture: 1) "
-         << configSvc()->GetValue<G4double>("GeoSvc", "jaw1YAperture") / cm << "[cm]\t2) "
-         << configSvc()->GetValue<G4double>("GeoSvc", "jaw2YAperture") / cm << " [cm]\n" << G4endl;
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1YAperture") / cm << "[cm]\t2) "
+         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2YAperture") / cm << " [cm]\n" << G4endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,8 +74,7 @@ void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void BeamCollimation::Reset() {
-  m_leavesA.clear();
-  m_leavesB.clear();
+  // TODO
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -159,12 +126,12 @@ void BeamCollimation::SetJawAperture(G4int idJaw, G4ThreeVector &centre, G4Three
   x = centre.getX();
   y = centre.getY();
   z = centre.getZ();
-  if (idJaw == 1) aperture = configSvc()->GetValue<G4double>("GeoSvc", "jaw1XAperture");
-  if (idJaw == 2) aperture = configSvc()->GetValue<G4double>("GeoSvc", "jaw2XAperture");
-  if (idJaw == 3) aperture = configSvc()->GetValue<G4double>("GeoSvc", "jaw1YAperture");
-  if (idJaw == 4) aperture = configSvc()->GetValue<G4double>("GeoSvc", "jaw2YAperture");
+  if (idJaw == 1) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1XAperture");
+  if (idJaw == 2) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2XAperture");
+  if (idJaw == 3) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw1YAperture");
+  if (idJaw == 4) aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "jaw2YAperture");
 
-  theta = fabs(atan(aperture / configSvc()->GetValue<G4double>("GeoSvc", "isoCentre")));
+  theta = fabs(atan(aperture / Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "isoCentre")));
   dx = halfSize.getX();
   dy = halfSize.getY();
   dz = halfSize.getZ();
@@ -196,7 +163,7 @@ void BeamCollimation::SetJawAperture(G4int idJaw, G4ThreeVector &centre, G4Three
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool BeamCollimation::Jaw1X() {
-  auto tungsten = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
   G4String name = "Jaws1X";
 
   auto cRotation = new G4RotationMatrix();
@@ -222,7 +189,7 @@ bool BeamCollimation::Jaw1X() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool BeamCollimation::Jaw2X() {
-  auto tungsten = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
   G4String name = "Jaws2X";
 
   auto cRotation = new G4RotationMatrix();
@@ -241,14 +208,13 @@ bool BeamCollimation::Jaw2X() {
   regVol->SetProductionCuts(cuts);
   logVol->SetRegion(regVol);
   regVol->AddRootLogicalVolume(logVol);
-
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool BeamCollimation::Jaw1Y() {
-  auto tungsten = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
   G4String name = "Jaws1Y";
 
   auto cRotation = new G4RotationMatrix();
@@ -276,7 +242,7 @@ bool BeamCollimation::Jaw1Y() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool BeamCollimation::Jaw2Y() {
-  auto tungsten = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
+  auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
   G4String name = "Jaws2Y";
 
   auto cRotation = new G4RotationMatrix();

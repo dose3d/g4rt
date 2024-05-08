@@ -10,15 +10,13 @@
 
 #include "IPhysicalVolume.hh"
 #include "G4PrimaryVertex.hh"
-#include "Configurable.hh"
 #include "Types.hh"
 #include "VMlc.hh"
 
 class G4VPhysicalVolume;
 
 ///\class BeamCollimation
-class BeamCollimation : public IPhysicalVolume,
-                        public Configurable {
+class BeamCollimation : public IPhysicalVolume {
   public:
   ///
   static BeamCollimation *GetInstance();
@@ -40,9 +38,6 @@ class BeamCollimation : public IPhysicalVolume,
 
   ///
   void WriteInfo() override;
-
-  ///
-  void DefaultConfig(const std::string &unit) override;
 
   static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
@@ -71,12 +66,6 @@ class BeamCollimation : public IPhysicalVolume,
   BeamCollimation &operator=(BeamCollimation &&) = delete;
 
   ///
-  void Configure() override;
-
-  ///
-  std::vector<G4double> m_leavesA, m_leavesB; 
-
-  ///
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;
 
   ///
@@ -97,8 +86,6 @@ class BeamCollimation : public IPhysicalVolume,
 
   ///
   void DefineSensitiveDetector() {}
-
-
 
 };
 

@@ -85,11 +85,21 @@ std::pair<double,double> IDicomPlan::ReadJawsAperture(const std::string& planFil
     return std::make_pair(y1,y2);
   }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void IPlan::AcknowledgeMlcPositioning() const {
+void IPlan::AcknowledgeJawsAperture(const std::string& side, const std::pair<double,double>& jawsAperture) const {
   // TODO
-  // Check the MLC type and verify if complete information is read-in;
+  // Check the Jaws type and verify if complete and correct information is read-in;
+  // if not, throw an exception
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void IPlan::AcknowledgeMlcPositioning(const std::string& side, const std::vector<G4double>& mlc_positioning) const {
+  // TODO
+  // Check the MLC type and verify if complete and correct information is read-in;
   // if not, throw an exception
 }
 
@@ -116,42 +126,85 @@ std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile
   for (int i = 0; i < acceser.size; i++) {
     mlcPositioning.emplace_back(accesableLeavesPositions[i]);
   }
-  AcknowledgeMlcPositioning();
+  AcknowledgeMlcPositioning(side, mlcPositioning);
   return std::move(mlcPositioning);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO: TEMPORARY IMPLEMENTATION, It should be read-in from the plan file
+///
 double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
+  std::ifstream file(planFile);
+  if (!file.is_open()) {
+    G4String msg = "Could not open file: " + planFile;
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
+  }
+  auto findJawHeader = [&file]() -> int {
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        ++lineNumber;
+        if (line.find("Jaws") != std::string::npos) {
+            return lineNumber;
+        }
+    }
+    return -1; // Return -1 if "Jaws" not found
+  };
+
+  auto jaw_header = findJawHeader();
+  if (jaw_header<0){
+    G4String msg = "Could find Jaws header in file: " + planFile;
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("ICustomPlan", "ReadJawPossition", FatalErrorInArgument, msg); 
+  }
+  std::string line;
+  std::string x1,x2,y1,y2;
+  while (std::getline(file, line)) {
+    std::istringstream iss(line);
+    // Get the values as strings separated by a comma
+    if (std::getline(iss, x1, ',') 
+        && std::getline(iss, x2, ',') 
+        && std::getline(iss, y1, ',')
+        && std::getline(iss, y2, ',') ) {
+      break;
+    } else {
+      G4String msg = "Could not parse line: " + line;
+      LOGSVC_CRITICAL(msg.data());
+      G4Exception("ICustomPlan", "ReadJawPossition", FatalErrorInArgument, msg);
+    }
+  }
+  file.close();
   if(jawName=="X1"){
-    return -3*cm;
+    return std::stod(x1);
   } else if(jawName=="X2"){
-    return 3*cm;
+    return std::stod(x2);
   } else if(jawName=="Y1"){
-    return -1.25*cm;
+    return std::stod(y1);
   } else if(jawName=="Y2"){
-    return 1.25*cm;
+    return std::stod(y2);
   }
   return 0.;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx){
+  std::pair<double,double> jawsSideAperture;
   if(side=="X"){
     auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
     auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
-    return std::make_pair(x1,x2);
-    // return std::make_pair(-3*cm, 3*cm);       // 1X, 2X
+    LOGSVC_INFO("JAWS:: X1={} mm, X2={} mm",x1,x2);
+    jawsSideAperture = std::make_pair(x1,x2);
   } else if(side=="Y"){
-    auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
-    auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
-    return std::make_pair(x1,x2);
-    // return std::make_pair(-1.25*cm, 1.25*cm); // 1Y, 2Y
+    auto y1 = ReadJawPossition(planFile,"Y1",beamIdx,controlpointIdx);
+    auto y2 = ReadJawPossition(planFile,"Y2",beamIdx,controlpointIdx);
+    LOGSVC_INFO("JAWS:: Y1={} mm, Y2={} mm",y1,y2);
+    jawsSideAperture = std::make_pair(y1,y2);
   } else {
       LOGSVC_ERROR("ICustomPlan::ReadJawsAperture: Unknown side: {}", side);
       std::exit(EXIT_FAILURE);
   }
-  return std::make_pair(0,0); // Never reached, but compiler complains otherwise
+  AcknowledgeJawsAperture(side,jawsSideAperture);
+  return std::move(jawsSideAperture);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,30 +224,26 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
   }
 
   auto findMLCheader = [&file]() -> int {
-        std::string line;
-        int lineNumber = 0;
-        while (std::getline(file, line)) {
-            ++lineNumber;
-            if (line.find("MLC") != std::string::npos) {
-                return lineNumber;
-            }
+    std::string line;
+    int lineNumber = 0;
+    while (std::getline(file, line)) {
+        ++lineNumber;
+        if (line.find("MLC") != std::string::npos) {
+            return lineNumber;
         }
-        return -1; // Return -1 if "MLC" not found
-    };
+    }
+    return -1; // Return -1 if "MLC" not found
+  };
 
   std::string line;
   std::vector<double> mlc_y1, mlc_y2;
   auto mlc_header = findMLCheader();
   if (mlc_header<0){
-      G4String msg = "Could find MLC header in file: " + planFile;
-      LOGSVC_CRITICAL(msg.data());
-      G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg); 
-    }
-  int skip_lines = 0;
+    G4String msg = "Could find MLC header in file: " + planFile;
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg); 
+  }
   while (std::getline(file, line)) {
-    // Skip header lines
-    if (++skip_lines < mlc_header+1)
-      continue;
     std::istringstream iss(line);
     std::string value_y1, value_y2;
     // Get the values as strings separated by a comma
@@ -205,7 +254,7 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
     }
   }
   file.close();
-  AcknowledgeMlcPositioning();
+  AcknowledgeMlcPositioning(side,side=="Y1" ? mlc_y1 : mlc_y2);
   return side=="Y1" ? std::move(mlc_y1) : std::move(mlc_y2);
 }
 

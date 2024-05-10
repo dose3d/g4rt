@@ -85,6 +85,13 @@ std::pair<double,double> IDicomPlan::ReadJawsAperture(const std::string& planFil
     return std::make_pair(y1,y2);
   }
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+void IPlan::AcknowledgeMlcPositioning() const {
+  // TODO
+  // Check the MLC type and verify if complete information is read-in;
+  // if not, throw an exception
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -109,6 +116,7 @@ std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile
   for (int i = 0; i < acceser.size; i++) {
     mlcPositioning.emplace_back(accesableLeavesPositions[i]);
   }
+  AcknowledgeMlcPositioning();
   return std::move(mlcPositioning);
 }
 
@@ -161,13 +169,32 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
     LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
   }
+
+  auto findMLCheader = [&file]() -> int {
+        std::string line;
+        int lineNumber = 0;
+        while (std::getline(file, line)) {
+            ++lineNumber;
+            if (line.find("MLC") != std::string::npos) {
+                return lineNumber;
+            }
+        }
+        return -1; // Return -1 if "MLC" not found
+    };
+
   std::string line;
   std::vector<double> mlc_y1, mlc_y2;
-
+  auto mlc_header = findMLCheader();
+  if (mlc_header<0){
+      G4String msg = "Could find MLC header in file: " + planFile;
+      LOGSVC_CRITICAL(msg.data());
+      G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg); 
+    }
+  int skip_lines = 0;
   while (std::getline(file, line)) {
     // Skip header lines
-    if (line.empty() || line[0] == '#')
-        continue;
+    if (++skip_lines < mlc_header+1)
+      continue;
     std::istringstream iss(line);
     std::string value_y1, value_y2;
     // Get the values as strings separated by a comma
@@ -178,6 +205,7 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
     }
   }
   file.close();
+  AcknowledgeMlcPositioning();
   return side=="Y1" ? std::move(mlc_y1) : std::move(mlc_y2);
 }
 

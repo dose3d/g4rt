@@ -50,6 +50,8 @@ class IPlan {
     virtual std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx) = 0;
     virtual double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const = 0;
     virtual std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
+    void AcknowledgeMlcPositioning() const;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////

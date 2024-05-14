@@ -1,5 +1,4 @@
 #include "LinacGeometry.hh"
-#include "MedLinac.hh"
 #include "BeamCollimation.hh"
 #include "Services.hh"
 #include "G4SystemOfUnits.hh"
@@ -65,10 +64,6 @@ bool LinacGeometry::design() {
   bool bAccExists = false;
   // switch between different types:
   switch (geoSvc->GetHeadModel()) {
-    case EHeadModel::G4MedicalLinac:
-      m_headInstance = MedLinac::GetInstance();
-      bAccExists = true;
-      break;
     case EHeadModel::BeamCollimation:
       m_headInstance = BeamCollimation::GetInstance();
       bAccExists = true;

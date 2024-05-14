@@ -49,13 +49,6 @@ void GeoSvc::Configure() {
   DefineUnit<std::string>("SavePhspRequest");
   DefineUnit<VecG4doubleSPtr>("SavePhSpHead");
   DefineUnit<VecG4doubleSPtr>("SavePhSpUsr");
-  DefineUnit<G4RotationMatrixSPtr>("RotationMatrix");
-  DefineUnit<G4String>("MLCInputFileName");
-  DefineUnit<G4double>("Jaw1XAperture");
-  DefineUnit<G4double>("Jaw2XAperture");
-  DefineUnit<G4double>("Jaw1YAperture");
-  DefineUnit<G4double>("Jaw2YAperture");
-
   DefineUnit<G4bool>("BuildLinac");
   DefineUnit<G4bool>("BuildPatient");
 
@@ -96,12 +89,6 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
-  if (unit.compare("MLCInputFileName") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, G4String("None"));
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-
   //  Distance between the isocentre and the target of the accelerator
   if (unit.compare("isoCentre") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
@@ -127,35 +114,6 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
     m_config->SetValue(unit, std::make_shared<VecG4double>());
     auto vecPtr = m_config->GetValue<VecG4doubleSPtr>(unit);
     vecPtr->emplace_back(2 * nm);
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-
-  // describe me.
-  if (unit.compare("RotationMatrix") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, std::make_shared<G4RotationMatrix>());
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-
-  G4double jawAper = 0.5*cm;
-  if (unit.compare("Jaw1XAperture") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, -jawAper*6);
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-  if (unit.compare("Jaw2XAperture") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, jawAper*6);
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-  if (unit.compare("Jaw1YAperture") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, -jawAper*2.5);
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
-  }
-  if (unit.compare("Jaw2YAperture") == 0){
-    // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    m_config->SetValue(unit, jawAper*2.5);
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -193,44 +151,14 @@ void GeoSvc::Initialize() {
     LOGSVC_INFO("Service initialization...");
     PrintConfig();
 
-    auto mlcFile = m_configSvc->GetValue<G4String>("GeoSvc", "MLCInputFileName");
-
     if (m_configSvc->GetValue<bool>("RunSvc", "SavePhSp")) 
       ParseSavePhspPlaneRequest();
-
-    thisConfig()->GetValue<G4RotationMatrixSPtr>("RotationMatrix")->rotateY(0.);
-
-    // Define the leaves positioning
-    leavesA = new std::vector<G4double>;
-    leavesB = new std::vector<G4double>;
-
-    if (mlcFile.compare("None") == 0) {
-      for (int i = 0; i < 60; ++i) {
-        // Nominal position: all leaves are pulled out by default
-        leavesA->push_back(20 * cm);
-        leavesB->push_back(20 * cm);
-      }
-    } else {
-      // read positioning from the file
-      ReadConfigMLC(mlcFile);
-    }
 
     GetHeadModel(); // verify the specified head model
     GetMlcModel();  // verify the specified MLC model
 
     m_isInitialized = true;
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-std::vector<G4double> *GeoSvc::getLeavesPositioning(G4String name) {
-  if (name.compare("A") == 0)
-    return leavesA;
-  else if (name.compare("B") == 0)
-    return leavesB;
-  else
-    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -390,86 +318,9 @@ void GeoSvc::ParseSavePhspPlaneRequest() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void GeoSvc::ReadConfigMLC(const G4String &macFile) {
-  G4cout << "[INFO]:: Reading the MLC configuration file :: " << macFile << G4endl;
-  if (leavesA->size() > 0) {
-    G4cout << "[INFO]:: Removing previous configuration" << G4endl;
-    leavesA->clear();
-    leavesB->clear();
-  }
-  std::string line;
-  std::ifstream file(macFile.data());
-  if (file.is_open()) {  // check if file exists
-    while (getline(file, line)) {
-      // get rid of commented out or empty lines:
-      if (line.length() > 0 && line.at(0) != '#') {
-        std::size_t start = line.find('=');
-        std::size_t end = line.find('#');
-        std::size_t typeA = line.find('A');
-        std::size_t typeB = line.find('B');
-
-        if (start == std::string::npos) {
-          G4String description = "Each MLC config should include value preceded with '=', couldn't find one ";
-          description += line;
-          G4Exception("GeoSvc", "ReadConfigMLC", FatalErrorInArgument, description.data());
-        }
-
-        if (typeA == std::string::npos && typeB == std::string::npos) {
-          G4String description = "Each MLC config should include A or B specification, couldn't find one: ";
-          description += line;
-          G4Exception("GeoSvc", "ReadConfigMLC", FatalErrorInArgument, description.data());
-        }
-
-        if (typeA != std::string::npos && typeB != std::string::npos) {
-          G4String description = "Each MLC config should include A or B specification, found both: ";
-          description += line;
-          G4Exception("GeoSvc", "ReadConfigMLC", FatalErrorInArgument, description.data());
-        }
-
-        // read the actual value as a string
-        std::string sval = end == std::string::npos ? line.substr(start + 1) : line.substr(start + 1, end - 1);
-
-        // get rid of empty cells from the string value
-        std::remove_if(sval.begin(), sval.end(), [](unsigned char x) { return std::isspace(x); });
-
-        G4double val = std::stod(sval);
-
-        if (typeA != std::string::npos) leavesA->push_back(val * cm);
-        if (typeB != std::string::npos) leavesB->push_back(val * cm);
-
-      }
-    }
-  } else {
-    G4String description = "The " + macFile + " not found";
-    G4Exception("GeoSvc", "MACFILE", FatalErrorInArgument, description.data());
-  }
-
-  // verify the number of parameters (should be 60 values per type)
-  if (leavesA->size() != 60 || leavesB->size() != 60) {
-    G4String description = "Each MLC config should include 60 values per cassette (A and B)";
-    description += " successfully found";
-    description += " A(" + std::to_string(leavesA->size()) + ")";
-    description += " B(" + std::to_string(leavesB->size()) + ")";
-    G4Exception("GeoSvc", "ReadConfigMLC", FatalErrorInArgument, description.data());
-  }
-
-  // check for overlaps
-  for (unsigned i = 0; i < leavesA->size(); ++i) {
-    if (leavesA->at(i) + leavesB->at(i) < 0) {
-      G4String description = "The MLC config seems to cause geometry overlap! ";
-      description += " Verify config for A and B: " + std::to_string(i + 1);
-      G4Exception("GeoSvc", "ReadConfigMLC", FatalErrorInArgument, description.data());
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 EHeadModel GeoSvc::GetHeadModel() const {
   auto headName = m_configSvc->GetValue<G4String>("GeoSvc", "HeadModel");
-  if (headName.compare("G4MedicalLinac") == 0) {
-    return EHeadModel::G4MedicalLinac;
-  } else if (headName.compare("BeamCollimation") == 0) {
+  if (headName.compare("BeamCollimation") == 0) {
     return EHeadModel::BeamCollimation;
   } else if (headName.compare("None") == 0) {
     return EHeadModel::None;

@@ -49,9 +49,6 @@ class GeoSvc : public TomlConfigurable, Logable {
   ///\brief Keep track of service initialization status.
   bool m_isInitialized = false;
 
-  ///\brief Store information of MLC leaves positioning
-  std::vector<G4double> *leavesA, *leavesB;
-
   ///
   std::vector<const GeoComponet*> m_scoring_components;
 
@@ -60,9 +57,6 @@ class GeoSvc : public TomlConfigurable, Logable {
 
   ///\brief Parse the User's request of saving the phsp plane.
   void ParseSavePhspPlaneRequest();
-
-  ///\brief Read-in the MLC configuration from the file.
-  void ReadConfigMLC(const G4String &macFile);
 
   ///
   void ExportCellPositioningToCsv() const;
@@ -110,9 +104,6 @@ class GeoSvc : public TomlConfigurable, Logable {
 
   ///\brief Destroy the main/top volume world in the Geant4 framework.
   void Destroy();
-
-  ///\brief Get pointer to the vector of information of MLC leaves positioning.
-  std::vector<G4double> *getLeavesPositioning(G4String name);
 
   ///\brief Get the actual device type registered in the service.
   EHeadModel GetHeadModel() const;

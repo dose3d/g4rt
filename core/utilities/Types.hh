@@ -34,7 +34,6 @@ using G4MaterialWPtr = std::weak_ptr<G4Material>;
 ///\brief geometry definitions types
 enum class EHeadModel {
   None,
-  G4MedicalLinac,
   BeamCollimation
 };
 

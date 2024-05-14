@@ -49,7 +49,6 @@ set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/geometry/Linac
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation/MLC
-        ${PROJECT_SOURCE_DIR}/geometry/Linac/G4MedLinac
         ${PROJECT_SOURCE_DIR}/geometry/PhaseSpace
         ${PROJECT_SOURCE_DIR}/geometry/BeamMonitoring
         ${PROJECT_SOURCE_DIR}/geometry/WorldConstruction

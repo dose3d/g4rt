@@ -6,8 +6,15 @@
 G4ThreeVector VMlc::m_isocentre = G4ThreeVector();
 
 
-VMlc::VMlc(const std::string& name) : TomlConfigurable(name) {
+VMlc::VMlc(const std::string& name){
     m_isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
+    AcceptRunVisitor(Service<RunSvc>());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void VMlc::AcceptRunVisitor(RunSvc *visitor){
+    visitor->RegisterRunComponent(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

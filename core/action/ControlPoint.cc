@@ -376,8 +376,8 @@ void ControlPoint::FillPlanFieldMask(){
         m_config.FieldType.compare("Elipsoidal")==0){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
-    if(m_config.FieldType.compare("RTPlan")==0){
-        FillPlanFieldMaskForRTPlan(z_position);
+    if(m_config.FieldType.compare("RTPlan")==0 || m_config.FieldType.compare("CustomPlan")==0){
+        FillPlanFieldMaskForInputPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
@@ -432,7 +432,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::FillPlanFieldMaskForRTPlan(double current_z){
+void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
     const auto& mlc_a_positioning = GetMlcPositioning("Y1");
     const auto& mlc_b_positioning = GetMlcPositioning("Y2");
     auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
@@ -614,14 +614,12 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 //   return total_dose == 0 ? sum : sum / total_dose;
 // }
 
-VMlc* ControlPoint::MLC() const { // It's have to be thread-safe
+VMlc* ControlPoint::MLC() const {
     // G4cout << "ControlPoint::MLC:: #{} CP" << Id() << G4endl;
     auto mlc = Service<GeoSvc>()->MLC();
     if(!mlc->Initialized(this)){
-        G4cout << "ControlPoint::MLC:: Initialize MLC for #{} CP" << Id() << G4endl;
-        G4AutoLock lock(&CPMutex);
-        auto isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
-        mlc->Initialize(this,isocentre); // G4ThreeVector(0,0,-430*mm)
+        LOGSVC_ERROR("ControlPoint::MLC:Initialization failed for #{} CP", Id());
+        std::exit(EXIT_FAILURE);
     }
     return mlc;
 }

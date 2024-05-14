@@ -49,6 +49,12 @@ RunSvc *RunSvc::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void RunSvc::RegisterRunComponent(RunComponet *element){
+  m_run_components.emplace_back(element);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void RunSvc::Configure() {
 
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
@@ -250,8 +256,8 @@ void RunSvc::Initialize(WorldConstruction* world) {
     }
 
     // Define Control Points etc.
-    SetSimulationConfiguration();
-    LoadSimulationPlan();
+    DefineSimConfiguration();
+    // LoadSimulationPlan();
 
     // Add simple scoring
     // if(thisConfig()->GetValue<G4String>("patientName")=="WaterPhantom"){
@@ -428,11 +434,11 @@ void RunSvc::ParseTomlConfig(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
-void RunSvc::SetSimulationConfiguration(){
+void RunSvc::DefineSimConfiguration(){
   if(IsTomlConfigExists()) // TODO Actually it is always true for now...
     ParseTomlConfig();
   else
-    SetSimulationDefaultConfig();
+    DefineSimDefaultConfig();
     
   DefineControlPoints();
 }
@@ -454,7 +460,7 @@ void RunSvc::DefineControlPoints() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define simply single Control Point
-void RunSvc::SetSimulationDefaultConfig(){
+void RunSvc::DefineSimDefaultConfig(){
   auto planFile = "plan/custom/rot00deg_stat1e3_3x3.dat";
   LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
   LOGSVC_INFO(" Plan file: {}",planFile);
@@ -464,14 +470,12 @@ void RunSvc::SetSimulationDefaultConfig(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::LoadSimulationPlan(){
-  Service<GeoSvc>()->World(); // We does need the world instance being built for the field mask initialization
-  LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINTS *** ",m_control_points.size());
-  for(auto& icp : m_control_points){
-    m_current_control_point = &icp;
-    icp.FillPlanFieldMask();
+  LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ",m_current_control_point->GetId());
+  for(auto& rcomponent : m_run_components){
+    rcomponent->SetRunConfiguration(m_current_control_point);
   }
-  // Set back the first control point as current
-  m_current_control_point = &m_control_points.at(0);
+  // Once the plan is loaded, we can fill the field mask
+  m_current_control_point->FillPlanFieldMask();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

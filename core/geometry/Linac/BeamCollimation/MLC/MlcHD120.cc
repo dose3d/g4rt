@@ -16,59 +16,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///
 MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
-    Configure();
     Construct(parentPV);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcHd120::~MlcHd120() {
-    configSvc()->Unregister(thisConfig()->GetName());
-}
-
-void MlcHd120::Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) {
-    m_control_point_id = control_point->Id();
-    m_isInitialized = true;    
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void MlcHd120::Configure() {
-    G4cout << "\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
-
-    DefineUnit<std::string>("PositionningFileType");
-
-    Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
-    Configurable::PrintConfig();
-
-    // Region and default production cuts
-    m_mlc_region = std::make_unique<G4Region>("MlcHd120Region");
-    m_mlc_region->SetProductionCuts(new G4ProductionCuts());
-    m_mlc_region->GetProductionCuts()->SetProductionCut(1.0 * cm);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void MlcHd120::DefaultConfig(const std::string &unit) {
-
-    // Volume name
-    if (unit.compare("Label") == 0)
-        thisConfig()->SetValue(unit, std::string("Varian HD120 MLC"));
-    if (unit.compare("PositionningFileType") == 0)
-        thisConfig()->SetValue(unit, std::string("Custom")); /// RTPlan, Custom
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
-    G4cout << "\n[INFO]::  Construction of the "
-           << thisConfig()->GetValue<std::string>("Label")
-           << G4endl;
+    G4cout << "\n[INFO]::  Construction of the " << GetName() << G4endl;
 
     m_parentPV = parentPV;
-    auto W_All = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "tungstenAlloy1");
+    auto W_All = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "tungstenAlloy1");
 
     CreateMlcModules(parentPV,W_All.get());
 }
@@ -88,7 +45,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     //  Creating the MLC world.
     /////////////////////////////////////////////////////////////////////////////
 
-    auto air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
+    auto air = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
     G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
     auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 290. * mm);
@@ -638,20 +595,23 @@ void MlcHd120::WriteInfo(){
     // implement me.
 }
 
-void MlcHd120::SetRunConfig(){
-
-    auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
+////////////////////////////////////////////////////////////////////////////////
+///
+void MlcHd120::SetRunConfiguration(const ControlPoint* control_point){
+    auto inputType = control_point->GetFieldType();
+    //thisConfig()->GetValue<std::string>("PositionningFileType");
     G4cout << "[INFO]:: MlcHd120:: the run configuration type: "<< inputType << G4endl;
 
-    if(inputType=="Custom"){
-        auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-        SetCustomPositioning(current_cp);
+    if(inputType=="CustomPlan"){
+        SetCustomPositioning(control_point);
     }
     else if(inputType=="RTPlan"){
         auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
         auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
         SetRTPlanPositioning(beamId,controlPointId);
     }
+    m_control_point_id = control_point->Id();
+    m_isInitialized = true; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////

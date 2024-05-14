@@ -100,7 +100,7 @@ class ControlPoint {
     ControlPointRun* GetRun() {return m_cp_run.Get();}
     const ControlPointRun* GetRun() const {return m_cp_run.Get();}
 
-    std::string GetFieldShape() const { return m_config.FieldType; } 
+    std::string GetFieldType() const { return m_config.FieldType; } 
 
     G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 
@@ -162,7 +162,7 @@ class ControlPoint {
 
     static double FIELD_MASK_POINTS_DISTANCE;
     void FillPlanFieldMaskForRegularShapes(double current_z);
-    void FillPlanFieldMaskForRTPlan(double current_z);
+    void FillPlanFieldMaskForInputPlan(double current_z);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
 
 };

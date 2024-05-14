@@ -73,6 +73,17 @@ class GeoComponet {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+class RunSvc;
+class ControlPoint;
+class RunComponet {
+  public:
+    virtual ~RunComponet(){}
+    virtual void AcceptRunVisitor(RunSvc *visitor) = 0;
+    virtual void SetRunConfiguration(const ControlPoint* ) = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+///
 enum class FieldType {
   Rectangular,
   Elipsoidal,

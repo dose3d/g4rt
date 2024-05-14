@@ -71,15 +71,17 @@ class RunSvc : public TomlConfigurable, Logable {
   std::vector<ControlPoint> m_control_points;
 
   ///
+  std::vector<RunComponet*> m_run_components;
+
+  ///
   ControlPoint* m_current_control_point = nullptr;
 
   ///\brief Virtual method implementation defining the list of configuration units for this module.
   void Configure() override;
 
   ///
-  void SetSimulationConfiguration();
-  void SetSimulationDefaultConfig();
-  void LoadSimulationPlan();
+  void DefineSimConfiguration();
+  void DefineSimDefaultConfig();
 
   ///\brief Perform User's configuration within the Geant4 framework.
   void UserG4Initialization();
@@ -127,6 +129,12 @@ class RunSvc : public TomlConfigurable, Logable {
   /// generation and propagation of photons and other particles until
   /// they stop at room floor.
   void FullSimulationMode();
+
+  ///
+  void RegisterRunComponent(RunComponet *element);
+
+  ///
+  void LoadSimulationPlan();
 
   ///
   G4RunManager* G4RunManagerPtr() const { return m_g4RunManager; }

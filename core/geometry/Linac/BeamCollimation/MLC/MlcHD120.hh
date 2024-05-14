@@ -36,16 +36,10 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     std::unique_ptr<G4Region> m_mlc_region;
 
     ///
-
-
-    ///
     void Construct(G4VPhysicalVolume *parentPV) override;
 
     ///
     void Destroy() override {}; // issue TNSIM-48
-
-    ///
-    void Configure() override;
 
     ///
     void SetCustomPositioning(const ControlPoint* control_point);
@@ -73,13 +67,7 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     explicit MlcHd120(G4VPhysicalVolume* parentPV);
 
     ////
-    ~MlcHd120() override;
-
-    ///
-    void DefaultConfig(const std::string &unit) override;
-    
-    ///
-    void SetRunConfig() override;
+    ~MlcHd120() = default;
 
     ///
     G4bool Update() override;
@@ -99,8 +87,8 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
       return true;
     }
 
-    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override;
-
+    ///
+    void SetRunConfiguration(const ControlPoint* control_point) override;
 
 };
 #endif //DOSE3D_VARIANMLCHD120_HH

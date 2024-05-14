@@ -7,14 +7,14 @@
 
 MlcSimplified::MlcSimplified() : VMlc("Simplified"){
     //m_control_point = Service<RunSvc>()->CurrentControlPoint();
-    //m_fieldShape = m_control_point->GetFieldShape();
+    //m_fieldShape = m_control_point->GetFieldType();
 };
 
-void MlcSimplified::Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition){
-    LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", vertexPosition, control_point->Id());
+void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
+    LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());
     // Update the control point
     m_control_point_id = control_point->Id();
-    m_fieldShape = control_point->GetFieldShape();
+    m_fieldShape = control_point->GetFieldType();
 
     auto getTransformToIsocentrePlane = [=](std::pair<G4double,G4double> pair,G4double zPosition) {
         auto ssd = 1000.0; // TODO Get from config
@@ -52,10 +52,11 @@ void MlcSimplified::Initialize(const ControlPoint* control_point, const G4ThreeV
         // Transform to isocentre plane once the input type is the DICOM RT_Plan
         if( dynamic_cast<IDicomPlan*>(Service<DicomSvc>()->GetPlan()) ) {
             for (int i = 0; i < m_mlc_corners.size(); i++) {
-                m_mlc_corners.at(i) = getTransformToIsocentrePlane(m_mlc_corners.at(i),vertexPosition.getZ());
+                m_mlc_corners.at(i) = getTransformToIsocentrePlane(m_mlc_corners.at(i),m_isocentre.getZ());
             }
         }
     }
+    m_control_point_id = control_point->Id();
     m_isInitialized = true;
 }
 

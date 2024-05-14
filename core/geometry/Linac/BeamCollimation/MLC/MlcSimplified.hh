@@ -12,15 +12,14 @@ class MlcSimplified : public VMlc {
         std::vector<std::pair<double,double>> m_mlc_a_corners;
         std::vector<std::pair<double,double>> m_mlc_b_corners;
         std::vector<std::pair<double,double>> m_mlc_corners;
+
 public:
     MlcSimplified();
     ~MlcSimplified() override {};	
     bool IsInField(const G4ThreeVector& position, bool transformToIsocentre = false) override;
     bool IsInField(G4PrimaryVertex* vrtx) override;
-    void Configure() override {};
-    void DefaultConfig(const std::string &unit) override {};
-    void ParseTomlConfig() override {};
-    void Initialize(const ControlPoint* control_point, const G4ThreeVector& vertexPosition) override;
+    void SetRunConfiguration(const ControlPoint* ) override;
+
 
 };
 

@@ -349,7 +349,7 @@ ControlPointConfig ICustomPlan::GetControlPointConfig(int id, const std::string&
   auto rotation = GetRotation(planFile);
   auto config = ControlPointConfig(id, nEvents, rotation);
   config.PlanFile = planFile;
-  config.FieldType = "RTPlan"; // TODO FieldType::CustomPlan;
+  config.FieldType = "CustomPlan"; // TODO FieldType::CustomPlan;
   config.FieldSizeA = 23.0; // Temp
   config.FieldSizeB = 35.0; // Temp 
   return std::move(config);

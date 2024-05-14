@@ -12,11 +12,12 @@
 #include "G4PrimaryVertex.hh"
 #include "Types.hh"
 #include "VMlc.hh"
+#include <unordered_map>
 
 class G4VPhysicalVolume;
 
 ///\class BeamCollimation
-class BeamCollimation : public IPhysicalVolume {
+class BeamCollimation : public IPhysicalVolume, public RunComponet {
   public:
   ///
   static BeamCollimation *GetInstance();
@@ -49,6 +50,9 @@ class BeamCollimation : public IPhysicalVolume {
   static G4double BeforeMLC;
   VMlc* GetMlc() { return m_mlc; }
 
+  void SetRunConfiguration(const ControlPoint* ) override;
+
+
   private:
   ///
   BeamCollimation();
@@ -69,6 +73,9 @@ class BeamCollimation : public IPhysicalVolume {
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;
 
   ///
+  void AcceptRunVisitor(RunSvc *visitor) override;
+
+  ///
   void SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
 
   ///
@@ -79,6 +86,9 @@ class BeamCollimation : public IPhysicalVolume {
 
   ///
   static VMlc* m_mlc;
+
+  ///
+  std::unordered_map<std::string, double> m_apertures;
 
   ///
   void DefineSensitiveDetector() {}

@@ -20,7 +20,9 @@ G4double BeamCollimation::BeforeMLC  = -870.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){}
+BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){
+    AcceptRunVisitor(Service<RunSvc>());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -37,14 +39,20 @@ BeamCollimation *BeamCollimation::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void BeamCollimation::AcceptRunVisitor(RunSvc *visitor){
+    visitor->RegisterRunComponent(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void BeamCollimation::WriteInfo() {
   G4cout << "\n\n\tnominal beam energy: " << Service<ConfigSvc>()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
   G4cout << "\tJaw X aperture: 1) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw1XAperture") / cm << "[cm]\t2) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw2XAperture") / cm << " [cm]" << G4endl;
+         << m_apertures["Jaw1X"] / cm << "[cm]\t2) "
+         << m_apertures["Jaw2X"] / cm << " [cm]" << G4endl;
   G4cout << "\tJaw Y aperture: 1) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw1YAperture") / cm << "[cm]\t2) "
-         << Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "Jaw2YAperture") / cm << " [cm]\n" << G4endl;
+         << m_apertures["Jaw1Y"] / cm << "[cm]\t2) "
+         << m_apertures["Jaw2Y"] / cm << " [cm]\n" << G4endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +80,16 @@ void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
 void BeamCollimation::Reset() {
   // TODO
 }
+
+void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
+  m_apertures.clear();
+  m_apertures["Jaw1X"] = control_point->GetJawAperture("X1");
+  m_apertures["Jaw2X"] = control_point->GetJawAperture("X2");
+  m_apertures["Jaw1Y"] = control_point->GetJawAperture("Y1");
+  m_apertures["Jaw2Y"] = control_point->GetJawAperture("Y2");
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
@@ -123,7 +141,7 @@ void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &cen
   G4double dx = halfSize.getX();
   G4double dy = halfSize.getY();
   G4double dz = halfSize.getZ();
-  G4double aperture = Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", name+"Aperture");
+  G4double aperture = m_apertures[name];
   G4double theta = fabs(atan(aperture / Service<ConfigSvc>()->GetValue<G4double>("GeoSvc", "isoCentre")));
 
   if (name=="Jaw1X") { // idJaw1XV2100:

@@ -95,11 +95,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 
   //___________________________________________________________________________
   // Setup geometry configuration and write it's information to the screen
-  if (IsMaster()){
-    configSvc->SetRunConfiguration();
-    // WorldConstruction::GetInstance()->WriteInfo();
+  if (IsMaster())
     Service<GeoSvc>()->World()->WriteInfo();
-  }
 
   m_timer.Start();
 }

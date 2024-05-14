@@ -537,11 +537,6 @@ void RunSvc::FullSimulationMode() {
   // m_g4RunManager = nullptr;
 }
 
-///
-void RunSvc::SetRunConfig(){
-  LOGSVC_INFO(" SETTING THE G4RUN CONFIGURATION... ");
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

@@ -50,7 +50,7 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetValue(unit, std::string("Linac Construction Environment"));
 
   if (unit.compare("LinacEnvelopeBoxSize") == 0)
-    thisConfig()->SetValue(unit, G4ThreeVector(950., 950., 680.)); // [mm]
+    thisConfig()->SetValue(unit, G4ThreeVector(1000., 1000., 1220.)); // [mm]
 
   if (unit.compare("SID") == 0)
     thisConfig()->SetValue(unit, G4double(1000.)); // [mm]
@@ -110,7 +110,7 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto accWorldLV = new G4LogicalVolume(accWorldB, medium.get(), "linacWorldLV", 0, 0, 0);
 
   // The centre of this PV is always 0,0,0, hence we need to only do the isoToSim translation
-  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-730), "acceleratorBox", accWorldLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-1000), "acceleratorBox", accWorldLV, parentPV, false, 0));
 
   // create the actual accelerator
   m_headInstance->Construct(GetPhysicalVolume());

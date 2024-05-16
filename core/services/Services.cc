@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "colors.hh"
 #include "LogSvc.hh"
+#include "G4Box.hh"
 #include <regex>
 
 namespace fs = std::filesystem;
@@ -321,3 +322,11 @@ std::vector<double> svc::linearizeG4ThreeVector(const std::vector<G4ThreeVector>
   }
   return std::move(linearized_vector);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
+  auto solid = dynamic_cast<G4Box*>(volume->GetLogicalVolume()->GetSolid());
+  return G4ThreeVector(solid->GetXHalfLength(),solid->GetYHalfLength(),solid->GetZHalfLength());
+}
+

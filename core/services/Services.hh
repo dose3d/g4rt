@@ -106,5 +106,7 @@ namespace svc {
   std::vector<double> linearizeG4ThreeVector(const G4ThreeVector& vector);
   std::vector<double> linearizeG4ThreeVector(const std::vector<G4ThreeVector>& vector);
 
+  G4ThreeVector getHalfSize(G4VPhysicalVolume* volume);
+
 }
 #endif  // Dose3D_SERVICES_H

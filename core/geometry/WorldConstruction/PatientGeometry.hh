@@ -78,6 +78,9 @@ class PatientGeometry : public IPhysicalVolume,
 
   ///
   VPatient* m_patient;
+
+  ///
+  G4RotationMatrix* m_rotation;
 };
 
 #endif // Dose3D_PHANTOMCONSTRUCTION_HH

@@ -83,6 +83,7 @@ void BeamCollimation::Reset() {
 
 void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
   auto inputType = control_point->GetFieldType();
+  auto model = Service<GeoSvc>()->GetMlcModel();
   m_apertures.clear();
   m_apertures["Jaw1X"] = control_point->GetJawAperture("X1");
   m_apertures["Jaw2X"] = control_point->GetJawAperture("X2");
@@ -98,7 +99,7 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  if(inputType=="CustomPlan"){
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
     setCustomPositioning("Jaw1X");
     setCustomPositioning("Jaw2X");
     setCustomPositioning("Jaw1Y");

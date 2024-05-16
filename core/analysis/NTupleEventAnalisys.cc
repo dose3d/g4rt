@@ -103,7 +103,7 @@ void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
   auto treeName = treeColl.m_name+m_treeNamePostfix;
   auto treeDescription = treeColl.m_description;
-  G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree: "<< treeName << ":"  << treeDescription << G4endl;
+  // G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree: "<< treeName << ":"  << treeDescription << G4endl;
   auto analysisManager =  G4AnalysisManager::Instance();
   m_ntuple_collection.Insert(treeName,TTreeEventCollection());
   auto& evtNTupleColl = m_ntuple_collection.Get(treeName);

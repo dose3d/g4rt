@@ -100,8 +100,10 @@ void D3DCell::SetNVoxels(char axis, int nv){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
+  // std::cout << "[INFO]:: D3DCell construction... " << std::endl;
   auto label = GetName();
   auto size = G4ThreeVector(D3DCell::SIZE,D3DCell::SIZE,D3DCell::SIZE);
+  // std::cout << "Parent world was set. " << std::endl;
   m_parentPV = parentWorld;
 
   // auto dose3dPaintedCellBox = new G4Box(label+"PreBox",0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.));
@@ -109,7 +111,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // auto dose3dPaintLV = new G4LogicalVolume(dose3dPaintedCellBox, myMedium.get(), label+"PaintedLV");
   // SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PaintedPV", dose3dPaintLV, parentWorld, false, 0));
   // auto pv = GetPhysicalVolume();
-  
+  // std::cout << "Setting medium..." << std::endl;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
   // create a cell box filled with PMMA, with given side dimensions
   auto dose3dCellBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
@@ -121,13 +123,22 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
   
+  // std::cout << "Setting centre..." << std::endl;
+
+  // std::cout << "Centre translation is it? " << m_parentPV->GetTranslation() <<  std::endl;
+
+  // std::cout << "Centre rotation is it? " <<  *m_parentPV->GetRotation() <<  std::endl;
+
+  // std::cout << "Centre is it? " <<  m_centre <<  std::endl;
+
 
   SetGlobalCentre((m_centre.transform( *m_parentPV->GetRotation())) + m_parentPV->GetTranslation());
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
-
+  // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
     // Region for cuts
   //G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
 
+  // std::cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
   auto regVol = new G4Region(label+"_G4RegionCuts");
   auto cuts = new G4ProductionCuts;
   cuts->SetProductionCut(0.1 * mm);
@@ -138,7 +149,6 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // G4UserLimits* userLimits = new G4UserLimits();
   // userLimits->SetMaxAllowedStep(1.0 * um);
   // dose3dCellLV->SetUserLimits(userLimits);
-
 
   }
 

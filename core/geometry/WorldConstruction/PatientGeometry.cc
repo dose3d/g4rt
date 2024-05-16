@@ -193,8 +193,8 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
-
-  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
+  auto rot = new G4RotationMatrix();
+  SetPhysicalVolume(new G4PVPlacement(rot, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
   // create the actual phantom
   m_patient->Construct(pv);

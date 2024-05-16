@@ -349,7 +349,7 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
 ///
 void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
-  G4cout << "DEBUG1 Writing Dose3D Voxel scroing positioning to csv..." << G4endl;
+  // G4cout << "DEBUG1 Writing Dose3D Voxel scroing positioning to csv..." << G4endl;
   if (run_collections.empty()) {
     LOGSVC_WARN("D3DDetector::ExportVoxelPositioningToCsv:: Any RunCollection found.");
     return;
@@ -359,7 +359,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
   //
   std::string sep = ",";
   for(const auto& run_collection : run_collections){
-    G4cout << "DEBUG2:: Writing Dose3D Voxel scroing positioning for RunCollection: " << run_collection << G4endl;
+    // G4cout << "DEBUG2:: Writing Dose3D Voxel scroing positioning for RunCollection: " << run_collection << G4endl;
     auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Voxel);
     if(hashed_scoring_map.empty()){
       LOGSVC_DEBUG("D3DDetector::ExportVoxelPositioningToCsv:: No voxelisation found for {} run collection.",run_collection);
@@ -480,7 +480,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
   if(!m_label.contains(run_collection))
     return std::map<std::size_t, VoxelHit>(); // return empty map
     
-  G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
+  // G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_cell_medium);

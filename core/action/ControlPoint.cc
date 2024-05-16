@@ -35,12 +35,12 @@ void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
     auto run_collections = ControlPoint::m_run_collections; 
-    LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
+    // LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& run_collection : run_collections){
         auto run_collection_name = run_collection.first;
         for(const auto& scoring_type: scoring_types){
             if(m_hashed_scoring_map.find(run_collection_name)==m_hashed_scoring_map.end()){
-                LOGSVC_INFO("Initializing new run collection map: {}",run_collection_name);
+                // LOGSVC_INFO("Initializing new run collection map: {}",run_collection_name);
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
             }
             auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
@@ -59,16 +59,17 @@ void ControlPointRun::InitializeScoringCollection(){
             if(sc.empty()){
                 LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
             }
-            LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
+            // LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
             scoring_collection[scoring_type] = sc;
             if(scoring_collection[scoring_type].empty()){
                 LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);
             }
             else
-                LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
+                continue;
+                // LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
         }
-        G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
+        // G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }
 }
 
@@ -83,7 +84,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
             G4double total_dose(0);
             auto& type = scoring.first;
             bool isVoxel = type == Scoring::Type::Voxel ? true : false;
-            LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
+            // LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
             for(auto& hashed_voxel : hashed_scoring_left){
@@ -102,7 +103,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 
     for(auto& scoring : m_hashed_scoring_map){
         auto scoring_name = scoring.first;
-        LOGSVC_INFO("Merging collection: {}",scoring_name);
+        // LOGSVC_INFO("Merging collection: {}",scoring_name);
         auto& master_scoring = scoring.second;
         // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
         const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
@@ -185,18 +186,18 @@ void ControlPointRun::FillDataTagging(){
 
         for(auto& scoring: hashed_scoring_map){
             auto scoring_type = scoring.first;
-            LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
+            // LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
             auto& data = scoring.second;
             in_field_scoring_volume.clear();
             for(auto& hit : data){
                 if(current_cp->MLC()->IsInField(hit.second.GetCentre(),true)) // DEBUG !!!!
                     in_field_scoring_volume.push_back(&hit.second);
             }
-            LOGSVC_INFO("Found InField #ScoringVolumes: {}",in_field_scoring_volume.size());
+            // LOGSVC_INFO("Found InField #ScoringVolumes: {}",in_field_scoring_volume.size());
             auto geo_centre = getActivityGeoCentre(false);
-            LOGSVC_INFO("Geocentre: {}",geo_centre);
+            // LOGSVC_INFO("Geocentre: {}",geo_centre);
             auto wgeo_centre = getActivityGeoCentre(true);
-            LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
+            // LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
             for(auto& hit : data){
                 fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
             }
@@ -214,7 +215,7 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
     SetRotation(config.RotationInDeg);
-    if(m_config.FieldType=="RTPlan"){
+    if(m_config.FieldType=="RTPlan" || m_config.FieldType=="CustomPlan"){
         auto dicomSvc = DicomSvc::GetInstance();
         m_jaw_x_aperture = dicomSvc->GetPlan()->ReadJawsAperture(m_config.PlanFile,"X",0,0); // file, side, beamId, cpId
         m_jaw_y_aperture = dicomSvc->GetPlan()->ReadJawsAperture(m_config.PlanFile,"Y",0,0); // file, side, beamId, cpId
@@ -377,6 +378,8 @@ void ControlPoint::FillPlanFieldMask(){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
     if(m_config.FieldType.compare("RTPlan")==0 || m_config.FieldType.compare("CustomPlan")==0){
+        // std::cout << "AaAaAaAa - I dont know what to do" << std::endl;
+        // std::cout << "AaAaAaAa - I dont know what to do" << std::endl;
         FillPlanFieldMaskForInputPlan(z_position);
     }
     if(m_plan_mask_points.empty()){
@@ -444,6 +447,10 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
     double min_x = -20*mm; // TODO: get somehow these values
     double max_x = +20*mm;
 
+
+    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
+    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
+    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
@@ -577,7 +584,7 @@ void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, c
 std::vector<G4String> ControlPoint::GetRunCollectionNames() {
     std::vector<G4String> run_collection_names;
     for(const auto& run_collection: ControlPoint::m_run_collections){
-        G4cout << "RunCollection: " << run_collection.first << G4endl;
+        // G4cout << "RunCollection: " << run_collection.first << G4endl;
         run_collection_names.emplace_back(run_collection.first);
     }
     return run_collection_names;

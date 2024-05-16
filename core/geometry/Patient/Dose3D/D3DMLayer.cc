@@ -133,7 +133,9 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
     for(int iz = 0; iz < m_n_cells_in_layer_z; ++iz ){
       auto const& row = m_layer_mapping.at(iz);
       G4double current_z = m_init_z + iz * (layer_width);
+      // std::cout << "current_z = " << current_z << std::endl;
       for(int ix = 0; ix < m_n_cells_in_layer_x; ++ix ){
+        // std::cout << "ix = " << ix << std::endl;
         G4double current_x = m_init_x + ix * (layer_width);
         if(m_mlayer_shift&&iz%2==1) // Assuming that the is no first level of two connection cells, TODO: otherwise if (iz%2==0)
           current_x+=(layer_width)/2.;
@@ -142,13 +144,18 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
         if (row.at(ix)){
           auto current_centre = G4ThreeVector(current_x, current_y, current_z);
           auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
+          // std::cout << "label = " << label << std::endl;
           m_d3d_cells.push_back(new D3DCell(label,current_centre,m_cell_medium_name));
           m_d3d_cells.back()->SetIDs(ix,iy,iz);
           m_d3d_cells.back()->SetNVoxels('x',m_cell_voxelization_x);
           m_d3d_cells.back()->SetNVoxels('y',m_cell_voxelization_y);
           m_d3d_cells.back()->SetNVoxels('z',m_cell_voxelization_z);
+          // std::cout << "Cell Voxelization: " << m_cell_voxelization_x << " " << m_cell_voxelization_y << " " << m_cell_voxelization_z << std::endl;
           m_d3d_cells.back()->SetTracksAnalysis(m_tracks_analysis);
+          // std::cout << "Before construct" << std::endl;
           m_d3d_cells.back()->Construct(parentWorld);
+          // std::cout << "After construct" << std::endl;
+
         }
       }
     }

@@ -171,10 +171,18 @@ bool BeamCollimation::Jaws() {
     auto cRotation = new G4RotationMatrix();
     auto box = new G4Box(name + "Box", halfSize.getX(), halfSize.getY(), halfSize.getZ());
     auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
+    std::cout << "Old centre!!! " << centre << std::endl;
+    std::cout << "Old centre!!! " << centre << std::endl;
+    std::cout << "Old centre!!! " << centre << std::endl;
+    std::cout << "Old centre!!! " << centre << std::endl;
     SetJawAperture(name, centre, halfSize, cRotation);
     if(m_physicalVolume[name]!=nullptr)
       delete m_physicalVolume[name];
     m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+    std::cout << "New centre!!! " << centre << std::endl;
+    std::cout << "New centre!!! " << centre << std::endl;
+    std::cout << "New centre!!! " << centre << std::endl;
+    std::cout << "New centre!!! " << centre << std::endl;
 
     // Region for cuts
     auto regVol = new G4Region(name + "R");
@@ -185,10 +193,10 @@ bool BeamCollimation::Jaws() {
     regVol->AddRootLogicalVolume(logVol);
   };
 
-  jaw("Jaw1X",G4ThreeVector(0., 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
-  jaw("Jaw2X",G4ThreeVector(0., 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
-  jaw("Jaw1Y",G4ThreeVector(0., 0., 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
-  jaw("Jaw2Y",G4ThreeVector(0., 0., 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
+  jaw("Jaw1X",G4ThreeVector(m_apertures["Jaw1X"], 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw2X",G4ThreeVector(m_apertures["Jaw2X"], 0., 105.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw1Y",G4ThreeVector(0., m_apertures["Jaw1Y"], 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
+  jaw("Jaw2Y",G4ThreeVector(0., m_apertures["Jaw2Y"], 205.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
   return true;
 }
 

@@ -24,7 +24,7 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     if(m_fieldShape == "Rectangular" || m_fieldShape == "Elipsoidal"){
         m_fieldParamA = control_point->GetFieldSizeA();
         m_fieldParamB = control_point->GetFieldSizeB();
-    } else if (m_fieldShape == "RTPlan"){
+    } else if (m_fieldShape == "RTPlan" || m_fieldShape == "CustomPlan") {
         LOGSVC_INFO("Initializing MLC from RTPlan");
         m_mlc_a_corners.clear();
         m_mlc_b_corners.clear();
@@ -66,19 +66,21 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
         LOGSVC_WARN("Position z {} not equal to isocentre z {}",maskLevelPosition.z(), m_isocentre.z());
         return false;
     } else if( transformToIsocentre ) {
-        //G4cout << "Transforming position to isocentre plane, before: " << maskLevelPosition;
+        // G4cout << "Transforming position to isocentre plane, before: " << maskLevelPosition;
         maskLevelPosition = GetPositionInMaskPlane(position);
-        //G4cout << " after: " << maskLevelPosition;
+        // G4cout << " after: " << maskLevelPosition;
     }
 
     auto isPointInPolygon = [&](double x, double y){
         bool inside = false;
+        // std::cout << "The m_mlc_corners.size(): " << m_mlc_corners.size() << std::endl;
         for (int i = 0, j = m_mlc_corners.size() - 1; i < m_mlc_corners.size(); j = i++) {
             if ((m_mlc_corners[i].second > y) != (m_mlc_corners[j].second > y) &&
                 (x < (m_mlc_corners[j].first - m_mlc_corners[i].first) * (y - m_mlc_corners[i].second) / (m_mlc_corners[j].second - m_mlc_corners[i].second) + m_mlc_corners[i].first)) {
                 inside = !inside;
                     }
                 }
+            // std::cout << "Inside: " << inside << " x: " << x << " y: " << y << std::endl;
             return inside;
     };
 
@@ -98,10 +100,11 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
         if ((pow(maskLevelPosition.x(),2)/ pow(m_fieldParamA,2) + pow(maskLevelPosition.y(),2)/pow(m_fieldParamB,2))<= 1)
         return true;        
     }
-    if (m_fieldShape == "RTPlan"){ 
+    if (m_fieldShape == "RTPlan" || m_fieldShape == "CustomPlan"){
+        // std::cout << "Field shape: " << m_fieldShape << std::endl;
         auto isInside = isPointInPolygon(maskLevelPosition.x(), maskLevelPosition.y());
-        //if(transformToIsocentre)
-         //   G4cout << " isInside: " << isInside << G4endl; 
+        // if(transformToIsocentre)
+        //    G4cout << " isInside: " << isInside << G4endl; 
         return isInside;
     }
     return false;

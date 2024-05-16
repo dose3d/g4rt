@@ -130,41 +130,41 @@ void LinacGeometry::ResetHead() {
   if (m_headInstance) m_headInstance->Reset();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///
-G4RotationMatrix *LinacGeometry::rotateHead() {
-  G4double rotationX = configSvc()->GetValue<G4double>("WorldConstruction", "rotationX");
-  G4RotationMatrix *rmInv = new G4RotationMatrix();
-  rmInv = rotateHead(rotationX);
-  return rmInv == nullptr ? rmInv : nullptr;
-}
+// ////////////////////////////////////////////////////////////////////////////////
+// ///
+// G4RotationMatrix *LinacGeometry::rotateHead() {
+//   G4double rotationX = configSvc()->GetValue<G4double>("WorldConstruction", "rotationX");
+//   G4RotationMatrix *rmInv = new G4RotationMatrix();
+//   rmInv = rotateHead(rotationX);
+//   return rmInv == nullptr ? rmInv : nullptr;
+// }
 
-////////////////////////////////////////////////////////////////////////////////
-/// TODO: refactor code to smart ptrs!
-G4RotationMatrix* LinacGeometry::rotateHead(G4double angleX) {
-  G4GeometryManager::GetInstance()->OpenGeometry();
-  G4ThreeVector NewCentre;
-  const G4RotationMatrixWPtr& rmWPtr = configSvc()->GetValue<G4RotationMatrixSPtr>("GeoSvc", "RotationMatrix");
-  if(!rmWPtr.expired()) {
-    auto rm = rmWPtr.lock();
-    auto headPV = GetPhysicalVolume();
-    auto rmInv = new G4RotationMatrix();
-    headPV->SetTranslation(G4ThreeVector());
-    headPV->SetRotation(rm.get());
-    if (configSvc()->GetValue<G4bool>("WorldConstruction", "Rotate90Y")) {
-      rm->rotateY(90. * deg);
-    }
-    rm->rotateX(-angleX);
-    headPV->SetRotation(rm.get());
-    *rmInv = CLHEP::inverseOf(*rm);
-    NewCentre = *rmInv * G4ThreeVector();
-    headPV->SetTranslation(NewCentre);
-    G4GeometryManager::GetInstance()->CloseGeometry();
-    G4RunManager::GetRunManager()->GeometryHasBeenModified();
-    return rmInv;
-  }
-  return nullptr;
-}
+// ////////////////////////////////////////////////////////////////////////////////
+// /// TODO: refactor code to smart ptrs!
+// G4RotationMatrix* LinacGeometry::rotateHead(G4double angleX) {
+//   G4GeometryManager::GetInstance()->OpenGeometry();
+//   G4ThreeVector NewCentre;
+//   const G4RotationMatrixWPtr& rmWPtr = configSvc()->GetValue<G4RotationMatrixSPtr>("GeoSvc", "RotationMatrix");
+//   if(!rmWPtr.expired()) {
+//     auto rm = rmWPtr.lock();
+//     auto headPV = GetPhysicalVolume();
+//     auto rmInv = new G4RotationMatrix();
+//     headPV->SetTranslation(G4ThreeVector());
+//     headPV->SetRotation(rm.get());
+//     if (configSvc()->GetValue<G4bool>("WorldConstruction", "Rotate90Y")) {
+//       rm->rotateY(90. * deg);
+//     }
+//     rm->rotateX(-angleX);
+//     headPV->SetRotation(rm.get());
+//     *rmInv = CLHEP::inverseOf(*rm);
+//     NewCentre = *rmInv * G4ThreeVector();
+//     headPV->SetTranslation(NewCentre);
+//     G4GeometryManager::GetInstance()->CloseGeometry();
+//     G4RunManager::GetRunManager()->GeometryHasBeenModified();
+//     return rmInv;
+//   }
+//   return nullptr;
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// NOTE: This method is called from WorldConstruction::ConstructSDandField

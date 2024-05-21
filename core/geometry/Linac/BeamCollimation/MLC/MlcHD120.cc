@@ -34,12 +34,8 @@ void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
 ///
 G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Material* material){
 
-    // TODO JIRA TNSIM-55
-    // If yRotationTest0->rotateZ(90.*deg) - It is our mlc that moves in the Y plane.
-    // If yRotationTest0->rotateZ(0.*deg), it moves in the X plane.
-    // The rest of the code doesn't need to be changed, it retrieves the appropriate data by itself (I rotate the box where the MLC is, so I am always interested in its X position, because it becomes either X or Y position)
-    G4RotationMatrix* mlcWorldRotation = new G4RotationMatrix();
-    mlcWorldRotation->rotateZ(90.*deg);
+    // TODO
+    // Reafactor, using lambda, also take into account X:Y switich, for rotation of the leafs
 
     /////////////////////////////////////////////////////////////////////////////
     //  Creating the MLC world.
@@ -47,15 +43,8 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
 
     auto air = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
-    G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 560./2 * mm);
     auto zShiftInLinacWorld = parentPV->GetTranslation().getZ() - VMlc::ZPositionAboveIsocentre;
     auto zTranslationInLinacWorld = G4ThreeVector(0.,0.,-zShiftInLinacWorld);
-    G4cout << "[DEBUG]:: zShiftInLinacWorld: " << zShiftInLinacWorld << G4endl;
-    G4cout << "[DEBUG]:: zTranslationInLinacWorld: " << zTranslationInLinacWorld << G4endl;
-    // auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
-    // auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
-    // auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
     auto mlcWorldPV = parentPV;
     /////////////////////////////////////////////////////////////////////////////
     //  Giving shape to the leaves located in the center of the MLC.

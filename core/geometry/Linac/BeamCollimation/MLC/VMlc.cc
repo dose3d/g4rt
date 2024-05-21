@@ -4,6 +4,7 @@
 #include "G4PrimaryVertex.hh"
 
 G4ThreeVector VMlc::m_isocentre = G4ThreeVector();
+G4double VMlc::ZPositionAboveIsocentre = -734.25 * mm;
 
 
 VMlc::VMlc(const std::string& name){

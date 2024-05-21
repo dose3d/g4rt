@@ -99,12 +99,12 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
-    setCustomPositioning("Jaw1X");
-    setCustomPositioning("Jaw2X");
-    setCustomPositioning("Jaw1Y");
-    setCustomPositioning("Jaw2Y");
-  }
+  // if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+  //   setCustomPositioning("Jaw1X");
+  //   setCustomPositioning("Jaw2X");
+  //   setCustomPositioning("Jaw1Y");
+  //   setCustomPositioning("Jaw2Y");
+  // }
 
 }
 
@@ -227,7 +227,7 @@ bool BeamCollimation::MLC() {
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
-        Jaws();
+        // Jaws();
         m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
@@ -243,7 +243,7 @@ bool BeamCollimation::MLC() {
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
-        Jaws();
+        // Jaws();
         delete m_mlc;
         m_mlc = new MlcHd120(m_parentPV);
         break;

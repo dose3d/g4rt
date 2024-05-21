@@ -26,6 +26,7 @@ class VMlc: public RunComponet {
         bool Initialized(const ControlPoint* control_point) const;
         static G4ThreeVector GetPositionInMaskPlane(const G4ThreeVector& position);
         static G4ThreeVector GetPositionInMaskPlane(const G4PrimaryVertex* vrtx);
+        static G4double ZPositionAboveIsocentre;
 
     
 };

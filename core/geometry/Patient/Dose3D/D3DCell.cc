@@ -131,8 +131,8 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
 
   // std::cout << "Centre is it? " <<  m_centre <<  std::endl;
 
-
-  SetGlobalCentre((m_centre.transform( *m_parentPV->GetRotation())) + m_parentPV->GetTranslation());
+  // const CLHEP::HepRotation* rot = m_parentPV->GetRotation();
+  SetGlobalCentre( m_parentPV->GetTranslation()); // m_centre.transform(*rot) +
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
   // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
     // Region for cuts

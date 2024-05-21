@@ -48,11 +48,15 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     auto air = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
     std::string moduleName = "MlcWorld";
     G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 560. * mm);
-    auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
-    auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
-    auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
-
+    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, 560./2 * mm);
+    auto zShiftInLinacWorld = parentPV->GetTranslation().getZ() - VMlc::ZPositionAboveIsocentre;
+    auto zTranslationInLinacWorld = G4ThreeVector(0.,0.,-zShiftInLinacWorld);
+    G4cout << "[DEBUG]:: zShiftInLinacWorld: " << zShiftInLinacWorld << G4endl;
+    G4cout << "[DEBUG]:: zTranslationInLinacWorld: " << zTranslationInLinacWorld << G4endl;
+    // auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
+    // auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
+    // auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
+    auto mlcWorldPV = parentPV;
     /////////////////////////////////////////////////////////////////////////////
     //  Giving shape to the leaves located in the center of the MLC.
     /////////////////////////////////////////////////////////////////////////////
@@ -154,7 +158,10 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
             /////////////////////////////////////////////////////////////////////////////
 
             leafOneCentre3Vec.setZ(mlcCentrePosZa);
+            leafOneCentre3Vec+=zTranslationInLinacWorld;
             leafTwoCentre3Vec.setZ(mlcCentrePosZa);
+            leafTwoCentre3Vec+=zTranslationInLinacWorld;
+
             m_y1_leaves.push_back(
                     std::make_unique<G4PVPlacement>(leavesOrientation1, leafOneCentre3Vec, name, leafLV, mlcWorldPV, false, i));
             m_y2_leaves.push_back(
@@ -227,7 +234,10 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
             /////////////////////////////////////////////////////////////////////////////
 
             leafOneCentre3Vec.setZ(mlcCentrePosZb);
+            leafOneCentre3Vec+=zTranslationInLinacWorld;
             leafTwoCentre3Vec.setZ(mlcCentrePosZb);
+            leafTwoCentre3Vec+=zTranslationInLinacWorld;
+
             m_y1_leaves.push_back(
                     std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec, name, leafLV, mlcWorldPV, false, i));
             m_y2_leaves.push_back(

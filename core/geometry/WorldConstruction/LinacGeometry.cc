@@ -50,7 +50,7 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetValue(unit, std::string("Linac Construction Environment"));
 
   if (unit.compare("LinacEnvelopeBoxSize") == 0)
-    thisConfig()->SetValue(unit, G4ThreeVector(1000., 1000., 1220.)); // [mm]
+    thisConfig()->SetValue(unit, G4ThreeVector(1000., 1000., 1000.)); // [mm]
 
   if (unit.compare("SID") == 0)
     thisConfig()->SetValue(unit, G4double(1000.)); // [mm]

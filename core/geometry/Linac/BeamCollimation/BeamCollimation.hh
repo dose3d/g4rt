@@ -42,12 +42,13 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
 
   static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
-  static G4ThreeVector SetParticlePositionBeforeMLC(G4PrimaryVertex* vrtx, G4double finalZ);
+  static G4ThreeVector SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ);
 
   VMlc* GetMlc() const { return m_mlc; }
 
   static G4double AfterMLC;
   static G4double BeforeMLC;
+  static G4double BeforeJaws;
   VMlc* GetMlc() { return m_mlc; }
 
   void SetRunConfiguration(const ControlPoint* ) override;

@@ -15,8 +15,9 @@
 #include "G4Cons.hh"
 
 VMlc* BeamCollimation::m_mlc = nullptr;
-G4double BeamCollimation::AfterMLC = -390.0;
-G4double BeamCollimation::BeforeMLC  = -720.0;
+G4double BeamCollimation::AfterMLC = -690.0;
+G4double BeamCollimation::BeforeMLC  = -730.0;
+G4double BeamCollimation::BeforeJaws  = -1000.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -99,12 +100,12 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  // if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
-  //   setCustomPositioning("Jaw1X");
-  //   setCustomPositioning("Jaw2X");
-  //   setCustomPositioning("Jaw1Y");
-  //   setCustomPositioning("Jaw2Y");
-  // }
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+    setCustomPositioning("Jaw1X");
+    setCustomPositioning("Jaw2X");
+    setCustomPositioning("Jaw1Y");
+    setCustomPositioning("Jaw2Y");
+  }
 
 }
 
@@ -114,13 +115,13 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
 
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
   Service<RunSvc>()->CurrentControlPoint()->MLC();
-  for(int i=0; i < p_vrtx.size();++i){
-    BeamCollimation::SetParticlePositionBeforeMLC(p_vrtx.at(i), BeforeMLC);
-  }
 
   auto model = Service<GeoSvc>()->GetMlcModel();
-  if(model != EMlcModel::Simplified)
+  if(model != EMlcModel::Simplified){
+    for(int i=0; i < p_vrtx.size();++i)
+      BeamCollimation::SetParticlePositionBeforeCollimators(p_vrtx.at(i), BeforeJaws);
     return;
+  }
 
   for(int i=0; i < p_vrtx.size();++i){
     auto vrtx = p_vrtx.at(i);
@@ -136,7 +137,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector BeamCollimation::SetParticlePositionBeforeMLC(G4PrimaryVertex* vrtx, G4double finalZ) {
+G4ThreeVector BeamCollimation::SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ) {
   G4double x, y, zRatio = 0.;
   G4double deltaX, deltaY, deltaZ;
   G4ThreeVector position = vrtx->GetPosition();
@@ -203,10 +204,10 @@ bool BeamCollimation::Jaws() {
     regVol->AddRootLogicalVolume(logVol);
   };
 
-  jaw("Jaw1X",G4ThreeVector(0., 0., 375.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
-  jaw("Jaw2X",G4ThreeVector(0., 0., 375.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
-  jaw("Jaw1Y",G4ThreeVector(0., 0., 475.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
-  jaw("Jaw2Y",G4ThreeVector(0., 0., 475.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
+  jaw("Jaw1X",G4ThreeVector(0., 0., 50.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw2X",G4ThreeVector(0., 0., 50.*mm),G4ThreeVector(55.*mm, 100.*mm, 90./2.*mm));
+  jaw("Jaw1Y",G4ThreeVector(0., 0., 180.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
+  jaw("Jaw2Y",G4ThreeVector(0., 0., 180.*mm),G4ThreeVector(100.*mm, 45.*mm, 90./2.*mm));
   return true;
 }
 
@@ -227,7 +228,7 @@ bool BeamCollimation::MLC() {
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
-        // Jaws();
+        Jaws();
         m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
@@ -243,7 +244,7 @@ bool BeamCollimation::MLC() {
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
-        // Jaws();
+        Jaws();
         delete m_mlc;
         m_mlc = new MlcHd120(m_parentPV);
         break;

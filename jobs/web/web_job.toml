@@ -21,8 +21,6 @@ Voxelization = [3,2,5] # Number of cels in every direction
 Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 TracksAnalysis = false
-# CellScorer = false
-# CellVoxelisedScorer = true
 
 [RunSvc_Plan]
 Control_Points_In_Treatment_Plan = 1

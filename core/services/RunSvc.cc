@@ -192,8 +192,8 @@ void RunSvc::DefaultConfig(const std::string &unit) {
     thisConfig()->SetValue(unit, false);
 
   if (unit.compare("GpsMacFileName") == 0){
-    std::string project_path = PROJECT_LOCATION_PATH;    
-    thisConfig()->SetTValue<std::string>(unit, std::string(project_path+"/scripts/gps.mac")); // ./gps.mac, gps_cd109_gammas_pre.mac
+    std::string data_path = PROJECT_DATA_PATH;
+    thisConfig()->SetTValue<std::string>(unit, std::string(data_path+"/gps/gpsCLinac_pre.mac")); // ./gps.mac, gps_cd109_gammas_pre.mac
 }
 
   if (unit.compare("PhspInputFileName") == 0){

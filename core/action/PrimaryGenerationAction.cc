@@ -193,8 +193,8 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
       momentum = (rotation)*(momentum);
     }
     vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
-    anEvent->AddPrimaryVertex(vrtx);
-
+    if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) )
+      anEvent->AddPrimaryVertex(vrtx);
   }
   // FILL PRIMARYPARTICLEINFO
   auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
@@ -214,5 +214,4 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   // FILL PRIMARY ANALYSIS
   if (nVrtx>0 && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "PrimariesAnalysis") )
     PrimariesAnalysis::GetInstance()->FillPrimaries(anEvent);
-  
 }

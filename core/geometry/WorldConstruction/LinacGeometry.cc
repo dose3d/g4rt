@@ -50,7 +50,7 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetValue(unit, std::string("Linac Construction Environment"));
 
   if (unit.compare("LinacEnvelopeBoxSize") == 0)
-    thisConfig()->SetValue(unit, G4ThreeVector(1000., 1000., 1000.)); // [mm]
+    thisConfig()->SetValue(unit, G4ThreeVector(2000., 2000., 1500.)); // [mm]
 
   if (unit.compare("SID") == 0)
     thisConfig()->SetValue(unit, G4double(1000.)); // [mm]
@@ -103,7 +103,7 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
   // a call to select the right accelerator
   design();
   // create the accelerator-world box
-  //auto medium = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
+  // auto medium = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
   auto medium = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
   auto envBoxSize = thisConfig()->GetValue<G4ThreeVector>("LinacEnvelopeBoxSize");
   auto accWorldB = new G4Box("accWorldG", envBoxSize.getX() / 2., envBoxSize.getY() / 2., envBoxSize.getZ() / 2.);

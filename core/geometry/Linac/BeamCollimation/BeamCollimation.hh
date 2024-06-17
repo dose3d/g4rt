@@ -49,6 +49,7 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   static G4double AfterMLC;
   static G4double BeforeMLC;
   static G4double BeforeJaws;
+  static G4double ParticleAngleTreshold;
   VMlc* GetMlc() { return m_mlc; }
 
   void SetRunConfiguration(const ControlPoint* ) override;

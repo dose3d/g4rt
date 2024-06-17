@@ -436,16 +436,16 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
-    const auto& mlc_a_positioning = GetMlcPositioning("Y1");
-    const auto& mlc_b_positioning = GetMlcPositioning("Y2");
-    auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    auto max_a = *std::max_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    auto min_b = *std::min_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    auto max_b = *std::max_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    auto min_y = std::min(min_a, min_b);
-    auto max_y = std::max(max_a, max_b);
-    double min_x = -20*mm; // TODO: get somehow these values
-    double max_x = +20*mm;
+    // const auto& mlc_a_positioning = GetMlcPositioning("Y1");
+    // const auto& mlc_b_positioning = GetMlcPositioning("Y2");
+    // auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
+    // auto max_a = *std::max_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
+    // auto min_b = *std::min_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
+    // auto max_b = *std::max_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
+    // auto min_y = std::min(min_a, min_b);
+    // auto max_y = std::max(max_a, max_b);
+    // double min_x = -20*mm; // TODO: get somehow these values
+    // double max_x = +20*mm;
 
 
     // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;

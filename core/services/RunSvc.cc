@@ -257,7 +257,6 @@ void RunSvc::Initialize(WorldConstruction* world) {
 
     // Define Control Points etc.
     DefineSimConfiguration();
-    // LoadSimulationPlan();
 
     // Add simple scoring
     // if(thisConfig()->GetValue<G4String>("patientName")=="WaterPhantom"){

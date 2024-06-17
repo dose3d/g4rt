@@ -122,17 +122,8 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // For Painted
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
-  
-  // std::cout << "Setting centre..." << std::endl;
 
-  // std::cout << "Centre translation is it? " << m_parentPV->GetTranslation() <<  std::endl;
-
-  // std::cout << "Centre rotation is it? " <<  *m_parentPV->GetRotation() <<  std::endl;
-
-  // std::cout << "Centre is it? " <<  m_centre <<  std::endl;
-
-  // const CLHEP::HepRotation* rot = m_parentPV->GetRotation();
-  SetGlobalCentre( m_parentPV->GetTranslation()); // m_centre.transform(*rot) +
+  SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 
   LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
   // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
     // Region for cuts

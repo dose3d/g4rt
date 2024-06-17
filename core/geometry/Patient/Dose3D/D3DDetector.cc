@@ -521,7 +521,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
               hashed_map_scoring[voxelHash] = VoxelHit();
               auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
               auto y_centre = centre.getY() - size/2 + (iy) * pix_size_y + pix_size_y/2.;  
-              auto z_centre = centre.getZ() - size/2 + (iz) * pix_size_z + pix_size_z/2.; 
+              auto z_centre = centre.getZ() - size/2 + (iz) * pix_size_z + pix_size_z/2.;
               hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);

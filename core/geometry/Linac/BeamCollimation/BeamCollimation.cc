@@ -20,7 +20,7 @@ VMlc* BeamCollimation::m_mlc = nullptr;
 G4double BeamCollimation::AfterMLC = -300.25;   
 G4double BeamCollimation::BeforeMLC  = -415.0;
 G4double BeamCollimation::BeforeJaws  = -745.3;
-G4double BeamCollimation::ParticleAngleTreshold = 80.0; // [deg]
+G4double BeamCollimation::ParticleAngleTreshold = 50.0; // [deg]
 ////////////////////////////////////////////////////////////////////////////////
 ///
 BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){
@@ -102,12 +102,12 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  // if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
-  //   setCustomPositioning("Jaw1X");
-  //   setCustomPositioning("Jaw2X");
-  //   setCustomPositioning("Jaw1Y");
-  //   setCustomPositioning("Jaw2Y");
-  // }
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+    setCustomPositioning("Jaw1X");
+    setCustomPositioning("Jaw2X");
+    setCustomPositioning("Jaw1Y");
+    setCustomPositioning("Jaw2Y");
+  }
 
 }
 
@@ -116,14 +116,12 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
 ///
 
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
-  // std::cout << "Filtering.. " << std::endl;
   Service<RunSvc>()->CurrentControlPoint()->MLC();
 
   auto model = Service<GeoSvc>()->GetMlcModel();
   for(int i=0; i < p_vrtx.size();++i){
     auto vrtx = p_vrtx.at(i);
     auto theta = vrtx->GetPrimary()->GetMomentum().theta();
-    // std::cout << "theta: " << theta * 180.0 / M_PI << " [deg] > " << ParticleAngleTreshold << " [deg]" << std::endl;
     if (theta * 180.0 / M_PI > ParticleAngleTreshold ){
       delete vrtx;
       p_vrtx.at(i) = nullptr;
@@ -234,7 +232,7 @@ bool BeamCollimation::MLC() {
         //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
         break;
       case EMlcModel::HD120:
-        // Jaws();
+        Jaws();
         m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
@@ -242,25 +240,25 @@ bool BeamCollimation::MLC() {
         m_mlc = new MlcSimplified;
         break;
     }
-  } //else {
-    // G4cout << "[INFO]:: BeamCollimation::MLC: RESET the MLC model instantiation! " << G4endl;
-    // switch (model) {
-    //   case EMlcModel::Millennium:
-    //     Jaws();
-    //     //m_mlc.reset(new MlcMillennium(m_parentPV));
-    //     break;
-    //   case EMlcModel::HD120:
-    //     Jaws();
-    //     delete m_mlc;
-    //     m_mlc = new MlcHd120(m_parentPV);
-    //     break;
-    //   case EMlcModel::Simplified:
-    //     delete m_mlc;
-    //     LOGSVC_INFO("Using Simplified type of MLC");
-    //     m_mlc = new MlcSimplified();
-    //     break;
-    // }
+  } else {
+    G4cout << "[INFO]:: BeamCollimation::MLC: RESET the MLC model instantiation! " << G4endl;
+    switch (model) {
+      case EMlcModel::Millennium:
+        Jaws();
+        //m_mlc.reset(new MlcMillennium(m_parentPV));
+        break;
+      case EMlcModel::HD120:
+        Jaws();
+        delete m_mlc;
+        m_mlc = new MlcHd120(m_parentPV);
+        break;
+      case EMlcModel::Simplified:
+        delete m_mlc;
+        LOGSVC_INFO("Using Simplified type of MLC");
+        m_mlc = new MlcSimplified();
+        break;
+    }
 
-  // }
+  }
   return true;
 }

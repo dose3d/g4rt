@@ -12,10 +12,8 @@ class VMlc: public RunComponet {
         void AcceptRunVisitor(RunSvc *visitor) override;
 
     protected:
-        // std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
-        // std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves; 
-        std::vector<G4VPhysicalVolume*> m_y1_leaves;
-        std::vector<G4VPhysicalVolume*> m_y2_leaves;
+        std::vector<G4VPhysicalVolumeUPtr> m_y1_leaves;
+        std::vector<G4VPhysicalVolumeUPtr> m_y2_leaves; 
         int m_control_point_id = -1;
         bool m_isInitialized = false;
         static G4ThreeVector m_isocentre;

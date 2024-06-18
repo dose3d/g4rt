@@ -12,7 +12,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4RotationMatrix.hh"
 #include "G4PVPlacement.hh"
-
+#include <memory>
 ////////////////////////////////////////////////////////////////////////////////
 ///
 MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
@@ -326,43 +326,31 @@ G4VSolid* MlcHd120::CreateCentralLeafShape() const {
                                           m_leafHeight / 2.,
                                           leafWidth / 2.);
 
-
-    auto translation1 = G4ThreeVector( 1.5 * cm,  0., 0.);
-
     auto intersectionCentralLeaf  = new G4IntersectionSolid("PrimalCentralLeaf",
                                                               cylinderCentralLeaf,
                                                               boxCentralLeaf,
                                                               0,
-                                                              translation1);
-
-
-    auto translation2 = G4ThreeVector(0. * cm, 3.5 * cm,  2.52 * mm);
+                                                              G4ThreeVector( 1.5*cm,0.,0.));
 
     auto halfDoneCentralLeaf = new G4SubtractionSolid("HalfDoneCentralLeaf",
                                                         intersectionCentralLeaf,
                                                         boxCentralLeaf2,
                                                         0,
-                                                        translation2);
+                                                        G4ThreeVector(0., 3.5*cm, 2.52*mm));
 
-
-    auto translation3 = G4ThreeVector(0. * cm, 3.5 * cm, - 2.52 * mm);
     auto almostDoneCentralLeaf = new G4SubtractionSolid("CentralLeaf0",
                                                           halfDoneCentralLeaf,
                                                           boxCentralLeaf2,
                                                           0,
-                                                          translation3);
-
+                                                          G4ThreeVector(0.,3.5*cm,-2.52*mm));
 
     auto endCapBox = CreateEndCapCutBox();
-
-
-    auto translation4 = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
 
     auto centralLeaf = new G4SubtractionSolid("CentralLeaf",
                                                  almostDoneCentralLeaf,
                                                  endCapBox,
                                                  0,
-                                                 translation4);
+                                                 G4ThreeVector(-10.*cm, 0., 0.));
 
 
     return centralLeaf;
@@ -395,44 +383,32 @@ G4VSolid* MlcHd120::CreateSideLeafShape() const {
                                        m_leafHeight / 2.,
                                        leafWidth / 2.);
 
-
-    auto interTranslation = G4ThreeVector( 1.5 * cm,0., 0.);
-
     auto intersectionSideLeaf  = new G4IntersectionSolid("PrimalSideLeaf",
                                                                cylinderSideLeaf,
                                                                boxSideLeaf,
                                                                0,
-                                                               interTranslation);
-
-
-    auto outerTranslation1 = G4ThreeVector(0.* cm, 3.5 * cm, 5.05 * mm);
+                                                               G4ThreeVector(1.5*cm,0.,0.));
 
     auto halfDoneSideLeaf = new G4SubtractionSolid("HalfDoneSideLeaf",
-                                                        intersectionSideLeaf,
-                                                        boxSideLeaf2,
-                                                       0,
-                                                        outerTranslation1);
-
-
-    auto outerTranslation2 = G4ThreeVector(0.* cm, 3.5 * cm, -5.05 * mm);
+                                                    intersectionSideLeaf,
+                                                    boxSideLeaf2,
+                                                    0,
+                                                    G4ThreeVector(0., 3.5*cm, 5.05*mm));
 
     auto almostDoneSideLeaf = new G4SubtractionSolid("SideLeaf0",
-                                                 halfDoneSideLeaf ,
-                                                 boxSideLeaf2,
+                                                halfDoneSideLeaf ,
+                                                boxSideLeaf2,
                                                 0,
-                                                 outerTranslation2);
+                                                G4ThreeVector(0., 3.5*cm, -5.05*mm));
 
 
     auto endCapBox = CreateEndCapCutBox();
 
-
-    auto translation = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
-
     auto sideLeaf = new G4SubtractionSolid("SideLeaf",
-                                                almostDoneSideLeaf,
-                                                endCapBox,
-                                                0,
-                                                translation);
+                                            almostDoneSideLeaf,
+                                            endCapBox,
+                                            0,
+                                            G4ThreeVector(-10.*cm, 0., 0.));
     return sideLeaf;
 }
 
@@ -442,8 +418,60 @@ G4VSolid* MlcHd120::CreateSideLeafShape() const {
 
 G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
 
-    G4VSolid* transitionLeaf;
+    auto createLeafShape = [&](const G4double& leafWidth, 
+                            const G4ThreeVector& cut_offset_left,
+                            const G4ThreeVector& cut_offset_right) -> G4VSolid* {
+        auto innerEndCap = new G4Tubs("innerEndCap",
+                                        m_innerRadius,
+                                        m_cylinderRadius,
+                                        leafWidth / 2.,
+                                        0,
+                                        2 * M_PI);
+        auto narrowBox = new G4Box("narrowBox",
+                                        m_leafLength / 2.,
+                                        m_leafHeight / 2.,
+                                        (2 * cm + leafWidth / 2.));
+        auto wideBox = new G4Box("wideBox",
+                                        ((4. * cm) + m_leafLength / 2.),
+                                        m_leafHeight / 2.,
+                                        leafWidth / 2.);
+        auto roundedLeafShape  = new G4IntersectionSolid("roundedLeafShape",
+                                                        innerEndCap,
+                                                        narrowBox,
+                                                        nullptr,
+                                                        G4ThreeVector( 1.5 * cm,0., 0.));
+        auto first_halfLeaf = new G4SubtractionSolid("first_halfLeaf",
+                                                        roundedLeafShape,
+                                                        wideBox,
+                                                        nullptr,
+                                                        cut_offset_left);
+        auto second_halfLeaf = new G4SubtractionSolid("second_halfLeaf",
+                                                        first_halfLeaf,
+                                                        wideBox,
+                                                        nullptr,
+                                                        cut_offset_right);
+        return new G4SubtractionSolid("transitionLeaf",
+                                    second_halfLeaf,
+                                    CreateEndCapCutBox(),
+                                    nullptr,
+                                    G4ThreeVector(-10.*cm, 0.*cm, 0.*mm));
+    };
 
+    G4double side_leaf_width = 6.1 * mm;
+    G4ThreeVector side_leaf_offset_left(0., 3.5*cm, 4.70*mm);
+    G4ThreeVector side_leaf_offset_right(0., 3.5*cm, -5.05*mm);
+
+    G4double central_leaf_width = 3.57 * mm;
+    G4ThreeVector central_leaf_offset_left(0., 3.5*cm, 2.52*mm);
+    G4ThreeVector central_leaf_offset_right(0.*cm, 3.5*cm, -2.87*mm);
+    
+    if (type.compare("Side") == 0){
+        return createLeafShape(side_leaf_width, side_leaf_offset_left,side_leaf_offset_right);
+    }
+    else if (type.compare("Central") == 0){
+        return createLeafShape(side_leaf_width, central_leaf_offset_left,central_leaf_offset_right);
+    }
+/*
     if (type.compare("Side") == 0){
 
         G4double leafWidth = 6.1 * mm;
@@ -467,44 +495,32 @@ G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
                                       m_leafHeight / 2.,
                                       leafWidth / 2.);
 
-
-        auto interTranslation = G4ThreeVector( 1.5 * cm,0., 0.);
-
         auto intersectionTransitionLeaf  = new G4IntersectionSolid("PrimalTransitionLeaf",
                                                              cylinderTransitionLeaf,
                                                              boxTransitionLeaf,
                                                              0,
-                                                             interTranslation);
-
-
-        auto outerTranslation1 = G4ThreeVector(0.* cm, 3.5 * cm, 4.70 * mm);
+                                                             G4ThreeVector( 1.5 * cm,0., 0.));
 
         auto halfDoneTransitionLeaf = new G4SubtractionSolid("HalfDoneTransitionLeaf",
                                                        intersectionTransitionLeaf,
                                                        boxTransitionLeaf2,
                                                        0,
-                                                       outerTranslation1);
-
-
-        auto outerTranslation2 = G4ThreeVector(0.* cm, 3.5 * cm, -5.05 * mm);
+                                                       G4ThreeVector(0., 3.5*cm, 4.70*mm));
 
         auto almostDoneTransitionLeaf = new G4SubtractionSolid("TransitionLeaf0",
                                                          halfDoneTransitionLeaf ,
                                                          boxTransitionLeaf2,
                                                          0,
-                                                         outerTranslation2);
+                                                         G4ThreeVector(0., 3.5*cm, -5.05*mm));
 
 
         auto endCapBox = CreateEndCapCutBox();
-
-
-        auto translation = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
 
         auto transitionLeaf = new G4SubtractionSolid("TransitionLeaf",
                                                almostDoneTransitionLeaf,
                                                endCapBox,
                                                0,
-                                               translation);
+                                               G4ThreeVector(-10.*cm, 0.*cm, 0.*mm));
 
         return transitionLeaf;
     }
@@ -532,46 +548,35 @@ G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
                                      m_leafHeight / 2.,
                                      leafWidth / 2.);
 
-
-        auto translation1 = G4ThreeVector(1.5 * cm, 0. * cm, 0. * mm);
-
         auto intersectionTransitionLeaf  = new G4IntersectionSolid("PrimalTransitionLeaf",
                                                             cylinderTransitionLeaf,
                                                             boxTransitionLeaf,
                                                             0,
-                                                            translation1);
-
-
-        auto translation2 = G4ThreeVector(0. * cm, 3.5 * cm, 2.52 * mm);
+                                                            G4ThreeVector(1.5*cm, 0., 0.));
 
         auto halfDoneTransitionLeaf = new G4SubtractionSolid("HalfDoneTransitionLeaf",
                                                       intersectionTransitionLeaf,
                                                       boxTransitionLeaf2,
                                                       0,
-                                                      translation2);
-
-
-        auto translation3 = G4ThreeVector(0. * cm, 3.5 * cm, - 2.87 * mm);
+                                                      G4ThreeVector(0., 3.5*cm, 2.52*mm));
 
         auto almostDoneTransitionLeaf = new G4SubtractionSolid("TransitionLeaf0",
                                                         halfDoneTransitionLeaf,
                                                         boxTransitionLeaf2,
                                                         0,
-                                                        translation3);
+                                                        G4ThreeVector(0.*cm, 3.5*cm, -2.87*mm));
 
         auto endCapBox = CreateEndCapCutBox();
-
-
-        auto translation4 = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
 
         auto transitionLeaf = new G4SubtractionSolid("TransitionLeaf",
                                               almostDoneTransitionLeaf,
                                               endCapBox,
                                               0,
-                                              translation4);
+                                              G4ThreeVector(-10.*cm, 0., 0.));
 
         return transitionLeaf;
     }
+    */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

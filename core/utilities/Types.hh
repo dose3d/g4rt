@@ -34,7 +34,6 @@ using G4MaterialWPtr = std::weak_ptr<G4Material>;
 ///\brief geometry definitions types
 enum class EHeadModel {
   None,
-  G4MedicalLinac,
   BeamCollimation
 };
 
@@ -42,10 +41,9 @@ enum class EHeadModel {
 ///\brief MLC types
 enum class EMlcModel {
   None,
-  Custom,     // Varian
   Millennium, // Varian
   HD120,       // Varian
-  Ghost
+  Simplified
 };
 
 
@@ -72,4 +70,23 @@ class GeoComponet {
     virtual void ExportToGateCsv(const std::string& path_to_output_dir) const {};
 };
 
+////////////////////////////////////////////////////////////////////////////////
+///
+class RunSvc;
+class ControlPoint;
+class RunComponet {
+  public:
+    virtual ~RunComponet(){}
+    virtual void AcceptRunVisitor(RunSvc *visitor) = 0;
+    virtual void SetRunConfiguration(const ControlPoint* ) = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+///
+enum class FieldType {
+  Rectangular,
+  Elipsoidal,
+  RTPlan,
+  CustomPlan
+};
 #endif //DOSE3D_TYPES_HH

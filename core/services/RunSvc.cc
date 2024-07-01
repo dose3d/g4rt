@@ -49,6 +49,12 @@ RunSvc *RunSvc::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+void RunSvc::RegisterRunComponent(RunComponet *element){
+  m_run_components.emplace_back(element);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void RunSvc::Configure() {
 
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
@@ -72,10 +78,7 @@ void RunSvc::Configure() {
 
   // PRIMARY GENERATOR
   DefineUnit<std::string>("BeamType");
-  DefineUnit<double>("FieldSizeA");
-  DefineUnit<double>("FieldSizeB");
-  DefineUnit<std::string>("FieldShape");
-  DefineUnit<double>("phspShiftZ");
+  DefineUnit<double>("phspShiftZ"); 
   DefineUnit<std::string>("Physics");
   DefineUnit<int>("idEnergy");
 
@@ -86,12 +89,8 @@ void RunSvc::Configure() {
   DefineUnit<bool>("SavePhSp");
   DefineUnit<std::string>("PhspInputFileName");
   DefineUnit<int>("PhspEvtVrtxMultiplicityTreshold");
-  DefineUnit<std::string>("PhspInputPosition");
+  // DefineUnit<std::string>("PhspInputPosition");
   DefineUnit<std::string>("PhspOutputFileName");
-
-  // DICOM initial parameters
-  DefineUnit<bool>("DICOM"); // the general flag to activate DICOM processing
-  DefineUnit<std::string>("RTPlanInputFile");
 
   // ANALYSIS MANAGEMENT
   DefineUnit<bool>("RunAnalysis");
@@ -159,17 +158,7 @@ void RunSvc::DefaultConfig(const std::string &unit) {
   // default source type
   // Available source types: phaseSpace, gps, phaseSpaceCustom
   if (unit.compare("BeamType") == 0) 
-    thisConfig()->SetTValue<std::string>(unit, std::string("None")); //IAEA or gps 
-
-  if (unit.compare("FieldSizeA") == 0) 
-    thisConfig()->SetTValue<double>(unit, double(-1)); // by default no cut at the level of PrimaryGenerationAction::GeneratePrimaries
-
-  if (unit.compare("FieldSizeB") == 0) 
-    thisConfig()->SetTValue<double>(unit, double(-1)); // by default no cut at the level of PrimaryGenerationAction::GeneratePrimaries
-
-  if (unit.compare("FieldShape") == 0){
-    m_config->SetTValue<std::string>(unit, std::string("Rectangular"));
-  }
+    thisConfig()->SetTValue<std::string>(unit, std::string("None")); //IAEA or gps
 
   if (unit.compare("PhspEvtVrtxMultiplicityTreshold") == 0){
     m_config->SetTValue<int>(unit, int(1));
@@ -198,11 +187,6 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("PhspInputFileName") == 0){
     m_config->SetTValue<std::string>(unit, std::string("None"));
-  }
-  // if (unit.compare("PhspInputFileName") == 0) thisConfig()->SetValue(unit, G4String("/primo/iaea_clinac2300/s2/field3x3-s2"));
-
-  if (unit.compare("PhspInputPosition") == 0){
-    m_config->SetTValue<std::string>(unit, std::string("s2"));
   }
 
   if (unit.compare("PhspOutputFileName") == 0) 
@@ -243,8 +227,11 @@ bool RunSvc::ValidateConfig() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void RunSvc::Initialize() {
-
+void RunSvc::Initialize(WorldConstruction* world) {
+  // build a geometry
+  world->Configure();
+  world->Create();
+  Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
   LogSvc::Configure();
   m_logger = LogSvc::RecreateLogger("RunSvc");
@@ -269,7 +256,7 @@ void RunSvc::Initialize() {
     }
 
     // Define Control Points etc.
-    SetSimulationConfiguration();
+    DefineSimConfiguration();
 
     // Add simple scoring
     // if(thisConfig()->GetValue<G4String>("patientName")=="WaterPhantom"){
@@ -379,48 +366,78 @@ void RunSvc::Run() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::ParseTomlConfig(){
+
+  auto criticalError = [&](const G4String& msg){
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
+  };
+  
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
-  LOGSVC_INFO("Importing configuration from:\n{}",configFile);
+  LOGSVC_INFO("Importing configuration from: {}",configFile);
   std::string configObj("Plan");
   if(!configPrefix.empty() || configPrefix=="None" ){ // It shouldn't be empty!
     configObj.insert(0,configPrefix+"_");
   } 
-  else {
-    G4ExceptionDescription msg;
-    msg << "The configuration PREFIX is not defined";
-    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
-  }
+  else criticalError("The configuration PREFIX is not defined");
+
   auto config = toml::parse_file(configFile);
-  G4double rotationInDeg = 0.;
-  auto numberOfCP = config[configObj]["Control_Points_In_Treatment_Plan"].value_or(0);
-  if(numberOfCP>0){
+  
+  // __________________________________________________________________________
+  // Reading the plan from files is defined with the highest priority
+  if (config[configObj].as_table()->find("PlanInputFile")!= config[configObj].as_table()->end()){
+    // Each file is assumed to define single Control Point!
+    auto numberOfCP = config[configObj]["PlanInputFile"].as_array()->size();
     for( int i = 0; i < numberOfCP; i++ ){
-      rotationInDeg = (config[configObj]["Gantry_Angle_Per_Control_Point"][i].value_or(0.0));
-      G4cout << " DEBUG: RunSvc::ParseTomlConfig: rotationInDeg: " << rotationInDeg << G4endl;
-      int nEvents = config[configObj]["Particle_Counter_Per_Control_Point"][i].value_or(-1);
+      std::string planFile = config[configObj]["PlanInputFile"][i].value_or(std::string());
+      if(!svc::checkIfFileExist(planFile)){
+        criticalError("CP#"+std::to_string(i)+" File not found: "+planFile);
+      }
+      // Define the new control point configuration
+      LOGSVC_INFO("Importing control point from plan file: {}",planFile);
+      m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i,planFile));
+    }
+    return;
+  }
+  // __________________________________________________________________________
+  // Reading the plan from custom TOML inteface is defined with the next priority
+  LOGSVC_INFO("Importing control point configuration from file: {}",configFile);
+  G4double rotationInDeg = 0.;
+  auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
+  if(numberOfCP>0){
+    auto n_fmask = config[configObj]["FieldMask"].as_array()->size();
+    if(n_fmask != numberOfCP)
+      criticalError("The number of field masks is not equal to the number of control points");
+    auto n_beam_rot = config[configObj]["BeamRotation"].as_array()->size();
+    if(n_beam_rot != numberOfCP)
+      criticalError("The number of beam rotations is not equal to the number of control points");
+    auto n_stat = config[configObj]["nParticles"].as_array()->size();
+    if(n_stat != numberOfCP)
+      criticalError("The number of particles statistics is not equal to the number of control points");
+
+    for( int i = 0; i < numberOfCP; i++ ){
+      rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
+      int nEvents = config[configObj]["nParticles"][i].value_or(-1);
       if(nEvents<0)
         nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
+      /// _______________________________________________________________________
+      /// Define the new control point configuration
       m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
+      m_control_points_config.back().FieldType = (config[configObj]["FieldMask"][i]["Type"].value_or(std::string()));
+      m_control_points_config.back().FieldSizeA = (config[configObj]["FieldMask"][i]["SizeA"].value_or(G4double(0.0)));
+      m_control_points_config.back().FieldSizeB = (config[configObj]["FieldMask"][i]["SizeB"].value_or(G4double(0.0)));
     }
   }
-  else{
-    G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg.data());
-    G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
-  }
+  else criticalError("nControlPoints not found or set to zero!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
-void RunSvc::SetSimulationConfiguration(){
-  if(IsTomlConfigExists())
+void RunSvc::DefineSimConfiguration(){
+  if(IsTomlConfigExists()) // TODO Actually it is always true for now...
     ParseTomlConfig();
   else
-    SetSimulationDefaultConfig();
-  
-  if(m_configSvc->GetValue<bool>("RunSvc", "DICOM"))
-    ParseDicomInputData();
+    DefineSimDefaultConfig();
     
   DefineControlPoints();
 }
@@ -441,27 +458,23 @@ void RunSvc::DefineControlPoints() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-void RunSvc::ParseDicomInputData(){
-  auto dicomSvc = Service<DicomSvc>(); // initialize the DICOM service
-  auto nCP = 1; // temp fixed, final version: dicomSvc->GetTotalNumberOfControlPoints();
-  LOGSVC_INFO("RT-Plan #ControlPoints: {}",nCP);
-  int nevts = 10000; // temp fixed
-  double rot_in_deg = 0;// temp fixed
-  for(unsigned i=0;i<nCP;++i){
-    m_control_points_config.emplace_back(i,nevts,rot_in_deg);
-    //TODO m_control_points_config.back().RTPlanFile = ...
-    
-  }
+/// Define simply single Control Point
+void RunSvc::DefineSimDefaultConfig(){
+  auto planFile = "plan/custom/rot00deg_stat1e3_3x3.dat";
+  LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
+  LOGSVC_INFO(" Plan file: {}",planFile);
+  m_control_points_config.push_back(DicomSvc::GetControlPointConfig(0,planFile));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define simply single Control Point
-void RunSvc::SetSimulationDefaultConfig(){
-  G4double rotationInDeg = 0.;
-  auto nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
-  m_control_points_config.emplace_back(0,nEvents,rotationInDeg);
-
+///
+void RunSvc::LoadSimulationPlan(){
+  LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ",m_current_control_point->GetId());
+  for(auto& rcomponent : m_run_components){
+    rcomponent->SetRunConfiguration(m_current_control_point);
+  }
+  // Once the plan is loaded, we can fill the field mask
+  m_current_control_point->FillPlanFieldMask();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -522,11 +535,6 @@ void RunSvc::FullSimulationMode() {
   // delete m_g4RunManager;
   // m_g4RunManager = nullptr;
 }
-
-///
-void RunSvc::SetRunConfig(){
-  LOGSVC_INFO(" SETTING THE G4RUN CONFIGURATION... ");
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -69,6 +69,9 @@ void MaterialsSvc::Configure() {
   
   DefineUnit<G4MaterialSPtr>("TiO2");
 
+  DefineUnit<G4MaterialSPtr>("BaritesConcrete");
+
+
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   //Configurable::PrintConfig();
@@ -212,8 +215,16 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       const std::vector<G4String> elements{"H","C","N","O"};
       // const std::vector<G4double> masses{5.925*perCent,77.957*perCent,0.345*perCent,15.774*perCent,0.0*perCent};
       const std::vector<G4int> natoms{239,264,1,40};
-      auto rmps_470 = G4NISTManager->ConstructNewMaterial("RMPS470", elements, natoms, d, true, kStateSolid, 310.15);
+      auto rmps_470 = G4NISTManager->ConstructNewMaterial("RMPS470", elements, natoms, d, true, kStateSolid, 299.15);
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(rmps_470));
+  }
+
+  if (unit.compare("BaritesConcrete") == 0) {
+      d = 3.3 * g / cm3;
+      const std::vector<G4String> elements{"H","O","Si","Al","Ca","Fe","Mg","S","Ba"};
+      const std::vector<G4int> natoms{76,282,21,1,14,21,2,38,37};
+      auto carites_concrete = G4NISTManager->ConstructNewMaterial("BaritesConcrete", elements, natoms, d, true, kStateSolid, 299.15);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(carites_concrete));
   }
 
 

@@ -117,6 +117,6 @@ void BeamMonitoring::DefineSensitiveDetector(){
     m_beamMonitoringSD.Put(beamSD);
   }
   G4SDManager::GetSDMpointer()->AddNewDetector(m_beamMonitoringSD.Get());
-  WorldConstruction::GetInstance()->SetSensitiveDetector("BeamScoringPlaneLV", m_beamMonitoringSD.Get());
+  Service<GeoSvc>()->World()->SetSensitiveDetector("BeamScoringPlaneLV", m_beamMonitoringSD.Get());
 }
 

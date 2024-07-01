@@ -15,6 +15,7 @@
 class WorldConstruction;
 class D3DDetector;
 class VPatient;
+class VMlc;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -48,9 +49,6 @@ class GeoSvc : public TomlConfigurable, Logable {
   ///\brief Keep track of service initialization status.
   bool m_isInitialized = false;
 
-  ///\brief Store information of MLC leaves positioning
-  std::vector<G4double> *leavesA, *leavesB;
-
   ///
   std::vector<const GeoComponet*> m_scoring_components;
 
@@ -59,9 +57,6 @@ class GeoSvc : public TomlConfigurable, Logable {
 
   ///\brief Parse the User's request of saving the phsp plane.
   void ParseSavePhspPlaneRequest();
-
-  ///\brief Read-in the MLC configuration from the file.
-  void ReadConfigMLC(const G4String &macFile);
 
   ///
   void ExportCellPositioningToCsv() const;
@@ -83,28 +78,32 @@ class GeoSvc : public TomlConfigurable, Logable {
   void DefaultConfig(const std::string &unit);
 
   /// \brief Check if the main/top volume world is already built in the Geant4 framework.
-  bool IsWorldBuilt();
+  bool IsWorldBuilt() const;
 
   ///\brief Build the actual main/top volume in the Geant4 framework.
   WorldConstruction *Build();
 
   ///\brief Get the main/top volume world pointer.
+  WorldConstruction *World() const { return my_world; }
   WorldConstruction *World() { return my_world ? my_world : Build(); }
+  
+  /// 
+  void SetWorld(WorldConstruction *world) { my_world = world; }
 
   ///
   VPatient* Patient();
 
   ///
-  WorldConstruction *World() const { return my_world; }
+  std::vector<VPatient*> CustomDetectors();
+
+  ///
+  VMlc* MLC();
 
   ///\brief Update the geometry.
   WorldConstruction *Update(int runId);
 
   ///\brief Destroy the main/top volume world in the Geant4 framework.
   void Destroy();
-
-  ///\brief Get pointer to the vector of information of MLC leaves positioning.
-  std::vector<G4double> *getLeavesPositioning(G4String name);
 
   ///\brief Get the actual device type registered in the service.
   EHeadModel GetHeadModel() const;

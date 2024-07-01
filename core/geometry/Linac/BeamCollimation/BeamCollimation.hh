@@ -9,13 +9,15 @@
 #define Dose3D_VARIAN_TRUEBEAM_HEAD_MOCKUP_HH
 
 #include "IPhysicalVolume.hh"
-#include "Configurable.hh"
+#include "G4PrimaryVertex.hh"
 #include "Types.hh"
+#include "VMlc.hh"
+#include <unordered_map>
 
 class G4VPhysicalVolume;
 
 ///\class BeamCollimation
-class BeamCollimation : public IPhysicalVolume, public Configurable {
+class BeamCollimation : public IPhysicalVolume, public RunComponet {
   public:
   ///
   static BeamCollimation *GetInstance();
@@ -38,10 +40,20 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   ///
   void WriteInfo() override;
 
-  ///
-  void DefaultConfig(const std::string &unit) override;
+  static void FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx);
 
-  static G4ThreeVector TransformToHeadOuputPlane(const G4ThreeVector& momentum);
+  static G4ThreeVector SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ);
+
+  VMlc* GetMlc() const { return m_mlc; }
+
+  static G4double AfterMLC;
+  static G4double BeforeMLC;
+  static G4double BeforeJaws;
+  static G4double ParticleAngleTreshold;
+  VMlc* GetMlc() { return m_mlc; }
+
+  void SetRunConfiguration(const ControlPoint* ) override;
+
 
   private:
   ///
@@ -60,29 +72,25 @@ class BeamCollimation : public IPhysicalVolume, public Configurable {
   BeamCollimation &operator=(BeamCollimation &&) = delete;
 
   ///
-  void Configure() override;
-
-  ///
-  std::vector<G4double> m_leavesA, m_leavesB;
-
-  ///
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;
 
   ///
-  void SetJawAperture(G4int idJaw, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
+  void AcceptRunVisitor(RunSvc *visitor) override;
 
-  bool Jaw1X();
+  ///
+  void SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
 
-  bool Jaw2X();
+  ///
+  bool Jaws();
 
-  bool Jaw1Y();
-
-  bool Jaw2Y();
-
+  /// 
   bool MLC();
 
   ///
-  std::unique_ptr<IPhysicalVolume> m_mlc;
+  static VMlc* m_mlc;
+
+  ///
+  std::unordered_map<std::string, double> m_apertures;
 
   ///
   void DefineSensitiveDetector() {}

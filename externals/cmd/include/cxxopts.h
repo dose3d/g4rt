@@ -219,56 +219,56 @@ namespace cxxopts {
   class option_exists_error : public OptionSpecException {
     public:
     option_exists_error(const std::string &option)
-        : OptionSpecException(u8"Option " + LQUOTE + option + RQUOTE + u8" already exists") {}
+        : OptionSpecException("Option " + LQUOTE + option + RQUOTE + " already exists") {}
   };
 
   class invalid_option_format_error : public OptionSpecException {
     public:
     invalid_option_format_error(const std::string &format)
-        : OptionSpecException(u8"Invalid option format " + LQUOTE + format + RQUOTE) {}
+        : OptionSpecException("Invalid option format " + LQUOTE + format + RQUOTE) {}
   };
 
   class option_not_exists_exception : public OptionParseException {
     public:
     option_not_exists_exception(const std::string &option)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" does not exist") {}
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " does not exist") {}
   };
 
   class missing_argument_exception : public OptionParseException {
     public:
     missing_argument_exception(const std::string &option)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" is missing an argument") {}
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " is missing an argument") {}
   };
 
   class option_requires_argument_exception : public OptionParseException {
     public:
     option_requires_argument_exception(const std::string &option)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" requires an argument") {}
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " requires an argument") {}
   };
 
   class option_not_has_argument_exception : public OptionParseException {
     public:
     option_not_has_argument_exception(const std::string &option, const std::string &arg)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" does not take an argument, but argument " +
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " does not take an argument, but argument " +
                                LQUOTE + arg + RQUOTE + " given") {}
   };
 
   class option_not_present_exception : public OptionParseException {
     public:
     option_not_present_exception(const std::string &option)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" not present") {}
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " not present") {}
   };
 
   class argument_incorrect_type : public OptionParseException {
     public:
     argument_incorrect_type(const std::string &arg)
-        : OptionParseException(u8"Argument " + LQUOTE + arg + RQUOTE + u8" failed to parse") {}
+        : OptionParseException("Argument " + LQUOTE + arg + RQUOTE + " failed to parse") {}
   };
 
   class option_required_exception : public OptionParseException {
     public:
     option_required_exception(const std::string &option)
-        : OptionParseException(u8"Option " + LQUOTE + option + RQUOTE + u8" is required but not present") {}
+        : OptionParseException("Option " + LQUOTE + option + RQUOTE + " is required but not present") {}
   };
 
   namespace values {

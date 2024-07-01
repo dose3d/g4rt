@@ -12,7 +12,8 @@
 #include "Configurable.hh"
 
 class G4Run;
-class G4VPhysicalVolume;;
+class G4VPhysicalVolume;
+class VMlc;
 
 ///\class LinacGeometry
 ///\brief The linac head level volume construction factory.
@@ -32,9 +33,10 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
 
   void WriteInfo() override;
 
-  G4RotationMatrix *rotateHead();
+  // TODO: No geometry roration - but particle should be rotate after going through Jaws and MLC
+  // G4RotationMatrix *rotateHead();
 
-  G4RotationMatrix *rotateHead(G4double angleX);
+  // G4RotationMatrix *rotateHead(G4double angleX);
 
   ///
   void DefineSensitiveDetector();

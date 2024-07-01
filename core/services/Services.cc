@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "colors.hh"
 #include "LogSvc.hh"
+#include "G4Box.hh"
 #include <regex>
 
 namespace fs = std::filesystem;
@@ -99,8 +100,16 @@ std::string svc::createOutputDir(const std::string& userArgPath) {
 
 ////////////////////////////////////////////////////////////////////////////////////
 ///
-bool svc::checkIfFileExist(const std::string& file_full_path){
-	if(fs::exists(fs::path(file_full_path)))
+bool svc::checkIfFileExist(const std::string& file_full_or_relative_path){
+  if(file_full_or_relative_path.empty()) 
+    return false;
+  // try to get file from full path
+	if(fs::exists(fs::path(file_full_or_relative_path)))
+    return true;
+  // try to get file from relative path
+  std::string data_path = PROJECT_DATA_PATH;
+  auto file = data_path+"/"+file_full_or_relative_path;
+  if(fs::exists(fs::path(file)))
     return true;
   return false;
 }
@@ -174,6 +183,15 @@ std::vector<std::string> svc::getFilesInDir(const std::string& path, const std::
   return files;
 }
 
+std::string svc::getFileExtenstion(const std::string& filePath){
+  // Find the last dot position
+  std::size_t dotPos = filePath.rfind('.');
+  // If there's no dot, or it's the first character (hidden files in Unix), return an empty string
+  if (dotPos == std::string::npos || dotPos == 0)
+      return "";
+  // Extract and return the substring after the last dot
+  return filePath.substr(dotPos + 1);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parsing a String Containing a Number in Scientific Notation
@@ -304,3 +322,11 @@ std::vector<double> svc::linearizeG4ThreeVector(const std::vector<G4ThreeVector>
   }
   return std::move(linearized_vector);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
+  auto solid = dynamic_cast<G4Box*>(volume->GetLogicalVolume()->GetSolid());
+  return G4ThreeVector(solid->GetXHalfLength(),solid->GetYHalfLength(),solid->GetZHalfLength());
+}
+

@@ -4,7 +4,7 @@ BeamType = "gps"
 GpsMacFileName = "gps/gpsCLinac.mac" # gets file from data/ in this repo
 PrintProgressFrequency = 0.005
 NTupleAnalysis = true 
-FieldShape = "Elipsoidal"  # "Rectangular" # "Elipsoidal", "RTPlan"
+FieldType = "Elipsoidal"  # "Rectangular" # "Elipsoidal", "RTPlan"
 FieldSizeA = 40 # mm
 FieldSizeB = 40 # mm
 

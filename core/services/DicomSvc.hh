@@ -13,7 +13,7 @@
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-
+#include "ControlPoint.hh"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -43,6 +43,44 @@ class ICtSvc {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// 
+class IPlan {
+  public:
+    virtual ControlPointConfig GetControlPointConfig(int controlpointIdx, const std::string& planFile) = 0;
+    virtual std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx) = 0;
+    virtual double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const = 0;
+    virtual std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) = 0;
+    void AcknowledgeJawsAperture(const std::string& side, const std::pair<double,double>& jawsAperture) const;
+    void AcknowledgeMlcPositioning(const std::string& side, const std::vector<G4double>& mlc_positioning) const;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// 
+class IDicomPlan: public IPlan {
+  private:
+    double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const override;
+  public:
+    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
+    std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx) override;
+    std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx) override;
+};
+////////////////////////////////////////////////////////////////////////////////
+/// 
+class ICustomPlan : public IPlan {
+  private:
+    // TODO: "Don't repeat yourself" (DRY)...
+    int GetNEvents(const std::string& planFile);
+    double GetRotation(const std::string& planFile);
+    double ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const override;
+
+  public:
+    ControlPointConfig GetControlPointConfig(int id, const std::string& planFile) override;
+    std::pair<double,double> ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx=0, int controlpointIdx=0) override;
+    std::vector<G4double> ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx=0, int controlpointIdx=0) override;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 ///
 class DicomSvc {
   private:
@@ -60,7 +98,7 @@ class DicomSvc {
     std::vector<int> m_rtplan_beam_n_control_points;
 
     ///
-    DicomSvc();
+    DicomSvc() = default;
 
     ///
     ~DicomSvc() = default;
@@ -72,20 +110,24 @@ class DicomSvc {
     DicomSvc &operator=(DicomSvc &&) = delete;
 
     ///
-    void Initialize();
+    ICtSvc m_ct_svc;
 
     ///
-    ICtSvc m_ct_svc;
+    std::unique_ptr<IPlan> m_plan;
 
   public:
     ///\brief Static method to get instance of this singleton object.
     static DicomSvc* GetInstance();
 
-    ///\brief  Mądry opis
-    G4double GetRTPlanJawPossition(const std::string& jawName, int current_beam, int current_controlpoint) const;
-
     ///
-    std::vector<G4double> GetRTPlanMlcPossitioning(const std::string& side, int current_beam, int current_controlpoint) const;
+    void Initialize(const std::string& planFileType);
+
+     ///
+    bool Initialized() const { return m_plan.get() ? true : false; }
+
+    IPlan* GetPlan() const {
+      return m_plan.get();
+    }
 
     ///\brief  Describe me.
     double GetRTPlanAngle(int current_beam, int current_controlpoint) const;
@@ -102,7 +144,11 @@ class DicomSvc {
     ///
     unsigned GetTotalNumberOfControlPoints() const;
 
+    ///
     void ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const;
+
+    ///
+    static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
 };
 
 #endif  // Dose3D_DicomSvcSVC_H

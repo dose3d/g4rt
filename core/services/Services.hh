@@ -53,13 +53,16 @@ namespace svc {
   std::string createOutputDir(const std::string& userPath=std::string());
 
   ////
-  bool checkIfFileExist(const std::string& file_full_path);
+  bool checkIfFileExist(const std::string& file_full_or_relative_path);
 
   ///
   void deleteFileIfExists(const std::string& file_full_path);
 
   ///
   std::vector<std::string> getFilesInDir(const std::string& path, const std::string& extension=std::string());
+
+  ///
+  std::string getFileExtenstion(const std::string& filePath);
 
   ///\brief The number to std::string conversion function.
   ///\param v number to be converted.
@@ -102,6 +105,8 @@ namespace svc {
   ///
   std::vector<double> linearizeG4ThreeVector(const G4ThreeVector& vector);
   std::vector<double> linearizeG4ThreeVector(const std::vector<G4ThreeVector>& vector);
+
+  G4ThreeVector getHalfSize(G4VPhysicalVolume* volume);
 
 }
 #endif  // Dose3D_SERVICES_H

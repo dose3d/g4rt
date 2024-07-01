@@ -5,13 +5,13 @@ GpsMacFileName = "gps/gpsCLinac.mac" # gets file from data/ in this repo
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true
 # Physics = "LowE_Penelope" #"LowE_Penelope"
-# FieldShape = "Rectangular" # "Elipsoidal", "RTPlan"
-FieldShape = "Elipsoidal"
+# FieldType = "Rectangular" # "Elipsoidal", "RTPlan"
+FieldType = "Elipsoidal"
 FieldSizeA = 25 # mm
 FieldSizeB = 25 # mm
 
 [GeoSvc]
-BuildLinac = false
+BuildLinac = true
 BuildPatient = true
 
 [PatientGeometry]

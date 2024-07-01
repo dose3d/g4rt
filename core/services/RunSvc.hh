@@ -71,15 +71,17 @@ class RunSvc : public TomlConfigurable, Logable {
   std::vector<ControlPoint> m_control_points;
 
   ///
+  std::vector<RunComponet*> m_run_components;
+
+  ///
   ControlPoint* m_current_control_point = nullptr;
 
   ///\brief Virtual method implementation defining the list of configuration units for this module.
   void Configure() override;
 
   ///
-  void SetSimulationConfiguration();
-  void SetSimulationDefaultConfig();
-  void ParseDicomInputData();
+  void DefineSimConfiguration();
+  void DefineSimDefaultConfig();
 
   ///\brief Perform User's configuration within the Geant4 framework.
   void UserG4Initialization();
@@ -111,7 +113,7 @@ class RunSvc : public TomlConfigurable, Logable {
   void AppMode(OperationalMode mode) { m_application_mode = mode; }
 
   ///\brief Perform service and global run related configuration initialization.
-  void Initialize();
+  void Initialize(WorldConstruction* world);
 
   ///\brief Perform service and global run related configuration finalization.
   void Finalize();
@@ -129,6 +131,12 @@ class RunSvc : public TomlConfigurable, Logable {
   void FullSimulationMode();
 
   ///
+  void RegisterRunComponent(RunComponet *element);
+
+  ///
+  void LoadSimulationPlan();
+
+  ///
   G4RunManager* G4RunManagerPtr() const { return m_g4RunManager; }
 
 
@@ -138,7 +146,11 @@ class RunSvc : public TomlConfigurable, Logable {
   ControlPoint* CurrentControlPoint() const { return m_current_control_point; }
 
   ///
-  ControlPoint* CurrentControlPoint(ControlPoint* cp) { m_current_control_point = cp; return cp; }
+  ControlPoint* CurrentControlPoint(ControlPoint* cp) { 
+    // cp->FillPlanFieldMask();
+    m_current_control_point = cp; 
+    return cp; 
+  }
 
   ///
   void ParseTomlConfig() override;
@@ -155,9 +167,6 @@ class RunSvc : public TomlConfigurable, Logable {
   ///
   const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }
   std::set<Scoring::Type>& GetScoringTypes() { return m_scoring_types; }
-
-  /// This is for G4Run context
-  void SetRunConfig() override;
 };
 
 #endif  // Dose3D_RUNSVC_H

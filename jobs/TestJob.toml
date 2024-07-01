@@ -8,8 +8,8 @@ PrintProgressFrequency = 0.01
 Physics = "LowE_Penelope"
 NTupleAnalysis = true 
 PrimariesAnalysis = true
-# FieldShape = "Rectangular"
-FieldShape = "Elipsoidal"
+# FieldType = "Rectangular"
+FieldType = "Elipsoidal"
 FieldSizeA = 90 # mm
 FieldSizeB = 90 # mm
 

@@ -16,10 +16,10 @@
 
 ///\class D3DDetector
 ///\brief The Phantom constructed on top of Dose3D cells
-class D3DDetector : public VPatient, public GeoComponet{
+class D3DDetector : public VPatient, public GeoComponet {
   public:
     ///
-    D3DDetector();
+    D3DDetector(const std::string& label = "D3DDetector");
 
     ///
     ~D3DDetector();
@@ -58,6 +58,37 @@ class D3DDetector : public VPatient, public GeoComponet{
 
     //
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
+    //
+    class Config {
+      public:
+        std::string m_cell_medium = "None";
+
+        //
+        G4String m_stl_geometry_file_path = "None";
+
+        //
+        G4String m_in_layer_positioning_module = "None";
+
+        G4int m_nX_cells = 0;
+        G4int m_nY_cells = 0;
+        G4int m_nZ_cells = 0;
+        
+        /// 
+        G4ThreeVector m_top_position_in_env;
+        
+        ///
+        G4int m_cell_nX_voxels = 0;
+        G4int m_cell_nY_voxels = 0;
+        G4int m_cell_nZ_voxels = 0;
+        
+        ///
+        bool m_mrow_shift = false;
+        bool m_mlayer_shift = false;
+
+        bool m_initialized = false;
+    };
+
+    void SetConfig(const D3DDetector::Config& config);
 
   private:
 
@@ -76,29 +107,8 @@ class D3DDetector : public VPatient, public GeoComponet{
     ///
     G4String m_label;
 
-    std::string m_cell_medium = "None";
-
-    //
-    G4String m_stl_geometry_file_path = "None";
-
-    //
-    G4String m_in_layer_positioning_module = "None";
-
-    G4int m_nX_cells = 0;
-    G4int m_nY_cells = 0;
-    G4int m_nZ_cells = 0;
-    
-    /// 
-    G4ThreeVector m_top_position_in_env;
-    
     ///
-    G4int m_cell_nX_voxels = 0;
-    G4int m_cell_nY_voxels = 0;
-    G4int m_cell_nZ_voxels = 0;
-    
-    ///
-    bool m_mrow_shift = false;
-    bool m_mlayer_shift = false;
+    D3DDetector::Config m_config;
 
     ///
     std::vector<D3DMLayer*> m_d3d_layers;

@@ -5,7 +5,7 @@ BeamType = "gps"
 GpsMacFileName = "gps/gpsCLinac.mac"
 PrintProgressFrequency = 0.01
 NTupleAnalysis = true 
-FieldShape = "Rectangular"
+FieldType = "Rectangular"
 FieldSizeA = 55 # mm
 FieldSizeB = 55 # mm
 

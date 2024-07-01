@@ -9,8 +9,8 @@ Physics = "LowE_Penelope"
 NTupleAnalysis = true 
 PrimariesAnalysis = true
 GenerateCT = false
-# FieldShape = "Rectangular"
-FieldShape = "Elipsoidal"
+# FieldType = "Rectangular"
+FieldType = "Elipsoidal"
 FieldSizeA = 20 # mm
 FieldSizeB = 20 # mm
 

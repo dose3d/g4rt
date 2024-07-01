@@ -193,18 +193,19 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
-
-  SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
   // create the actual phantom
   m_patient->Construct(pv);
   m_patient->WriteInfo();
 
-  // // Creation of bed?
-  // auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
-  // auto tableBox = new G4Box("TableBox", 300.0*mm, 300.0*mm, 5.0*mm);
-  // auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
-  // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.0,0.0,60.1), "CoverBoxPV", dcoverLV, parentPV, false, 0));
+  // Creation of bed?
+  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
+  auto tableHeight =  7.0*mm;
+  auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
+  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
+  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0));
+
 
 
 
@@ -253,10 +254,14 @@ void PatientGeometry::DefineSensitiveDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
-  auto worldInstance = WorldConstruction::GetInstance();
-  auto patientInstance = worldInstance->PatientEnvironment()->GetPatient();
+  auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
+  if (!patientEnv) {
+    return;
+  }
+  auto patientInstance = patientEnv->GetPatient();
 
   auto g4Navigator = std::make_unique<G4Navigator>();
+  auto worldInstance = Service<GeoSvc>()->World();
   g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
   
   IO::CreateDirIfNotExits(path_to_output_dir);

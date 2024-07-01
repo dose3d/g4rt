@@ -92,7 +92,7 @@ void UIManager::UserRunInitialization() {
 
   // Initialize G4 kernel
   //-----------------------------------------------------------------
-  InitializeG4kernel();
+  // InitializeG4kernel();
 
   pretimer.Stop();
   G4cout << "Pre-beam elapsed time [s] : " << pretimer.GetRealElapsed() << G4endl;
@@ -113,11 +113,14 @@ void UIManager::UserRunInitialization() {
 
   for(auto& cp : controPoints){
     runSvc->CurrentControlPoint(&cp);
+    runSvc->LoadSimulationPlan();
     runSvc->G4RunManagerPtr()->SetRunIDCounter(cp.GetId());
-    G4cout << "DEBUG:: UIManager::UserRunInitialization:: rotation_matrix" << cp.GetRotation() << G4endl;
+    G4cout << "DEBUG:: UIManager::UserRunInitialization:: rotation_matrix:\n" << *cp.GetRotation() << G4endl;
     PrimaryGenerationAction::SetRotation(cp.GetRotation());
+    InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
+    LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 

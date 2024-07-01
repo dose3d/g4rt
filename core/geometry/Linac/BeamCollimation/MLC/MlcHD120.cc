@@ -12,57 +12,25 @@
 #include "G4LogicalVolume.hh"
 #include "G4RotationMatrix.hh"
 #include "G4PVPlacement.hh"
-
+#include "G4ReflectedSolid.hh"
+#include <memory>
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), Configurable("MlcHd120"){
-    Configure();
+MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
+    // Region and default production cuts
+    m_mlc_region = std::make_unique<G4Region>("MlcHd120Region");
+    m_mlc_region->SetProductionCuts(new G4ProductionCuts());
+    m_mlc_region->GetProductionCuts()->SetProductionCut(1.0 * cm);
     Construct(parentPV);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcHd120::~MlcHd120() {
-    configSvc()->Unregister(thisConfig()->GetName());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void MlcHd120::Configure() {
-    G4cout << "\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
-
-    DefineUnit<std::string>("PositionningFileType");
-
-    Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
-    Configurable::PrintConfig();
-
-    // Region and default production cuts
-    m_mlc_region = std::make_unique<G4Region>("MlcHd120Region");
-    m_mlc_region->SetProductionCuts(new G4ProductionCuts());
-    m_mlc_region->GetProductionCuts()->SetProductionCut(1.0 * cm);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void MlcHd120::DefaultConfig(const std::string &unit) {
-
-    // Volume name
-    if (unit.compare("Label") == 0)
-        thisConfig()->SetValue(unit, std::string("Varian HD120 MLC"));
-    if (unit.compare("PositionningFileType") == 0)
-        thisConfig()->SetValue(unit, std::string("Custom")); /// RTPlan, Custom
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
-    G4cout << "\n[INFO]::  Construction of the "
-           << thisConfig()->GetValue<std::string>("Label")
-           << G4endl;
+    G4cout << "\n[INFO]::  Construction of the " << GetName() << G4endl;
 
     m_parentPV = parentPV;
-    auto W_All = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "tungstenAlloy1");
+    auto W_All = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "tungstenAlloy1");
 
     CreateMlcModules(parentPV,W_All.get());
 }
@@ -71,25 +39,16 @@ void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
 ///
 G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Material* material){
 
-    // TODO JIRA TNSIM-55
-    // If yRotationTest0->rotateZ(90.*deg) - It is our mlc that moves in the Y plane.
-    // If yRotationTest0->rotateZ(0.*deg), it moves in the X plane.
-    // The rest of the code doesn't need to be changed, it retrieves the appropriate data by itself (I rotate the box where the MLC is, so I am always interested in its X position, because it becomes either X or Y position)
-    G4RotationMatrix* mlcWorldRotation = new G4RotationMatrix();
-    mlcWorldRotation->rotateZ(90.*deg);
+    // TODO
+    // Reafactor, using lambda, also take into account X:Y switich, for rotation of the leafs
 
     /////////////////////////////////////////////////////////////////////////////
     //  Creating the MLC world.
     /////////////////////////////////////////////////////////////////////////////
 
-    auto air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Galactic");
-    std::string moduleName = "MlcWorld";
-    G4ThreeVector head_halfSize(68./2*cm, 68./2*cm, 7.1/2*cm);
-    auto mlcWorldPosition =  G4ThreeVector(0. * cm, 0. * cm, -269. * mm);
-    auto mlcWorldBox = new G4Box(moduleName+"Box", head_halfSize.getX() * mm, head_halfSize.getY() * mm, head_halfSize.getZ() * mm);
-    auto mlcWorldLV = new G4LogicalVolume(mlcWorldBox, air.get(), moduleName+"LV", 0, 0, 0);
-    auto mlcWorldPV = new G4PVPlacement(mlcWorldRotation, mlcWorldPosition, moduleName+"PV", mlcWorldLV, parentPV, false, 0);
-
+    auto zShiftInLinacWorld = parentPV->GetTranslation().getZ() + 373.75 * mm;
+    auto zTranslationInLinacWorld = G4ThreeVector(0.,0.,-zShiftInLinacWorld);
+    auto mlcWorldPV = parentPV;
     /////////////////////////////////////////////////////////////////////////////
     //  Giving shape to the leaves located in the center of the MLC.
     /////////////////////////////////////////////////////////////////////////////
@@ -109,18 +68,34 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     /////////////////////////////////////////////////////////////////////////////
     //  The shape of the transition leaves between wide and narrow leaves - wide version.
     /////////////////////////////////////////////////////////////////////////////
-
-    auto transitionLeafShape1 = CreateTransitionLeafShape("Side");
+    auto transitionLeafShape1 = CreateTransitionLeafShape("SideA");
+    G4VSolid* refSolidTransLeaf1 = new G4ReflectedSolid("transitionLeaf",transitionLeafShape1,G4ScaleZ3D(-1.0));
     auto transitionLeafLV1 = new G4LogicalVolume(transitionLeafShape1, material, "transitionLeafLV", 0, 0, 0);
+    auto refTransitionLeafLV1 = new G4LogicalVolume(refSolidTransLeaf1, material, "transitionLeafLV", 0, 0, 0);
     transitionLeafLV1->SetRegion(m_mlc_region.get());
+
+
+    auto transitionLeafShape1B = CreateTransitionLeafShape("SideB");
+    G4VSolid* refSolidTransLeaf1B = new G4ReflectedSolid("transitionLeafB",transitionLeafShape1,G4ScaleZ3D(-1.0));
+    auto transitionLeafLV1B = new G4LogicalVolume(transitionLeafShape1B, material, "transitionLeafLVB", 0, 0, 0);
+    auto refTransitionLeafLV1B = new G4LogicalVolume(refSolidTransLeaf1B, material, "transitionLeafLVB", 0, 0, 0);
+    transitionLeafLV1B->SetRegion(m_mlc_region.get());
 
     /////////////////////////////////////////////////////////////////////////////
     //  The shape of the transition leaves between wide and narrow leaves - narrow version.
     /////////////////////////////////////////////////////////////////////////////
 
-    auto transitionLeafShape2 = CreateTransitionLeafShape("Central");
-    auto transitionLeafLV2 = new G4LogicalVolume(transitionLeafShape2, material, "transitionLeafLV", 0, 0, 0);
+    auto transitionLeafShape2 = CreateTransitionLeafShape("CentralA");
+    G4VSolid* refSolidTransLeaf2 = new G4ReflectedSolid("transitionLeaf2",transitionLeafShape2,G4ScaleZ3D(-1.0));
+    auto transitionLeafLV2 = new G4LogicalVolume(transitionLeafShape2, material, "transitionLeaf2LV", 0, 0, 0);
+    auto refTransitionLeafLV2 = new G4LogicalVolume(refSolidTransLeaf2, material, "transitionLeaf2LV", 0, 0, 0);
     transitionLeafLV2->SetRegion(m_mlc_region.get());
+
+    auto transitionLeafShape2B = CreateTransitionLeafShape("CentralB");
+    G4VSolid* refSolidTransLeaf2B = new G4ReflectedSolid("transitionLeaf2B",transitionLeafShape2B,G4ScaleZ3D(-1.0));
+    auto transitionLeafLV2B = new G4LogicalVolume(transitionLeafShape2B, material, "transitionLeaf2LVB", 0, 0, 0);
+    auto refTransitionLeafLV2B = new G4LogicalVolume(refSolidTransLeaf2B, material, "transitionLeaf2LVB", 0, 0, 0);
+    transitionLeafLV2B->SetRegion(m_mlc_region.get());
 
     /////////////////////////////////////////////////////////////////////////////
     //  The orientation of leaves in space - Version 1.
@@ -163,16 +138,21 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     /////////////////////////////////////////////////////////////////////////////
 
     G4LogicalVolume *leafLV;
-    G4double mlcCentrePosZa = 0.5 * mm;
-    G4double mlcCentrePosZb = -0.5 * mm;
-    G4ThreeVector leafOneCentre3Vec(16.*cm, -11.*cm, 0.);
-    G4ThreeVector leafTwoCentre3Vec(-16.*cm, -11.*cm, 0.);
+    G4ThreeVector leafOneCentre3Vec_a( 16.*cm, -11*cm, 0.051*cm);
+    G4ThreeVector leafOneCentre3Vec_b( 16.*cm, -10.493*cm, -0.051*cm);
+    G4ThreeVector leafTwoCentre3Vec_a( -16.*cm, -11*cm, 0.051*cm);
+    G4ThreeVector leafTwoCentre3Vec_b( -16.*cm, -10.493*cm, -0.051*cm);
+    leafOneCentre3Vec_a+=zTranslationInLinacWorld;
+    leafTwoCentre3Vec_a+=zTranslationInLinacWorld;
+    leafOneCentre3Vec_b+=zTranslationInLinacWorld;
+    leafTwoCentre3Vec_b+=zTranslationInLinacWorld;
 
     /////////////////////////////////////////////////////////////////////////////
     //  Entry of initial logical volume to loop.
     /////////////////////////////////////////////////////////////////////////////
 
     leafLV = sideLeafLV;
+    G4double shiftStep_fact = 2.0;
 
     for (unsigned i = 0; i < 60; ++i) {
 
@@ -189,21 +169,11 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
             /////////////////////////////////////////////////////////////////////////////
             //  Creating a pair leaves on opposite sides of the MLC - corresponding leaves.
             /////////////////////////////////////////////////////////////////////////////
-
-            leafOneCentre3Vec.setZ(mlcCentrePosZa);
-            leafTwoCentre3Vec.setZ(mlcCentrePosZa);
-            m_y1_leaves.push_back(
-                    std::make_unique<G4PVPlacement>(leavesOrientation1, leafOneCentre3Vec, name, leafLV, mlcWorldPV, false, i));
-            m_y2_leaves.push_back(
-                    std::make_unique<G4PVPlacement>(leavesOrientation3, leafTwoCentre3Vec, name, leafLV, mlcWorldPV, false, i));
-
             G4double shiftStep;
-
             /////////////////////////////////////////////////////////////////////////////
             //  The leaves numbered from 0 to 12 $ from 47 to 59 belong to the side leaf class.
             //  Below we exclude rest of the leaves (13 - 46) from the side leaf class.
             /////////////////////////////////////////////////////////////////////////////
-
             if (i > 12 && i < 47) {
                 if (i == 14){
 
@@ -211,7 +181,8 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     // Leaf 14 -  Creating a pair of transition leaves - narrow version.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = ((5.05 * mm) + (2.52 * mm))/2.;
+                    shiftStep = 4.35 * mm;
+                    shiftStep*= shiftStep_fact;
                     leafLV = transitionLeafLV2;
                 }
                 else if (i == 46){
@@ -220,8 +191,20 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     // Leaf 46 -  Creating a pair of transition leaves - wide version.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = ((5.05 * mm) + (2.52 * mm))/2.;
-                    leafLV = transitionLeafLV1;
+                    shiftStep = 3.29 * mm;
+                    shiftStep*= shiftStep_fact;
+                    leafLV = transitionLeafLV1B;
+
+                }
+                else if (i == 16){
+
+                    /////////////////////////////////////////////////////////////////////////////
+                    // Leaf 46 -  Creating a pair of transition leaves - wide version.
+                    /////////////////////////////////////////////////////////////////////////////
+
+                    shiftStep = 2.64 * mm;
+                    shiftStep*= shiftStep_fact;
+                    leafLV = centralLeafLV;
                 }
                 else {
 
@@ -229,23 +212,53 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     //  Creating a pair of central leaves.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = 2.52 * mm;
+                    shiftStep = 2.57 * mm;
+                    shiftStep*= shiftStep_fact;
                     leafLV = centralLeafLV;
                 }
-                leafOneCentre3Vec.setY(leafOneCentre3Vec.getY() + shiftStep);
-                leafTwoCentre3Vec.setY(leafTwoCentre3Vec.getY() + shiftStep);
+                leafOneCentre3Vec_a.setY(leafOneCentre3Vec_a.getY() + shiftStep);
+                leafTwoCentre3Vec_a.setY(leafTwoCentre3Vec_a.getY() + shiftStep);
+            } else if (i == 48){
+
+                /////////////////////////////////////////////////////////////////////////////
+                //  Creating a pair of side leaves.
+                /////////////////////////////////////////////////////////////////////////////
+                shiftStep = 4.98 * mm;
+                shiftStep*= shiftStep_fact;
+                leafLV = sideLeafLV;
+
+                leafOneCentre3Vec_a.setY(leafOneCentre3Vec_a.getY() + shiftStep);
+                leafTwoCentre3Vec_a.setY(leafTwoCentre3Vec_a.getY() + shiftStep);
             }
             else {
 
                 /////////////////////////////////////////////////////////////////////////////
                 //  Creating a pair of side leaves.
                 /////////////////////////////////////////////////////////////////////////////
-
-                shiftStep = 5.05 * mm;
+                shiftStep = 5.07 * mm;
+                shiftStep*= shiftStep_fact;
                 leafLV = sideLeafLV;
 
-                leafOneCentre3Vec.setY(leafOneCentre3Vec.getY() + shiftStep);
-                leafTwoCentre3Vec.setY(leafTwoCentre3Vec.getY() + shiftStep);
+                leafOneCentre3Vec_a.setY(leafOneCentre3Vec_a.getY() + shiftStep);
+                leafTwoCentre3Vec_a.setY(leafTwoCentre3Vec_a.getY() + shiftStep);
+            }
+            if (i == 14) {
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation1, leafOneCentre3Vec_a, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation3, leafTwoCentre3Vec_a, name+"B", refTransitionLeafLV2B, mlcWorldPV, false, i));
+            }
+            else if (i == 46) {
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation1, leafOneCentre3Vec_a, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation3, leafTwoCentre3Vec_a, name+"B", refTransitionLeafLV1, mlcWorldPV, false, i));
+            }
+            else{
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation1, leafOneCentre3Vec_a, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation3, leafTwoCentre3Vec_a, name+"B", leafLV, mlcWorldPV, false, i));
             }
         }
 
@@ -263,12 +276,6 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
             //  Creating a pair leaves on opposite sides of the MLC - corresponding leaves.
             /////////////////////////////////////////////////////////////////////////////
 
-            leafOneCentre3Vec.setZ(mlcCentrePosZb);
-            leafTwoCentre3Vec.setZ(mlcCentrePosZb);
-            m_y1_leaves.push_back(
-                    std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec, name, leafLV, mlcWorldPV, false, i));
-            m_y2_leaves.push_back(
-                    std::make_unique<G4PVPlacement>(leavesOrientation4, leafTwoCentre3Vec, name, leafLV, mlcWorldPV, false, i));
 
             G4double shiftStep;
 
@@ -284,7 +291,8 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     // Leaf 13 -  Creating a pair of transition leaves - wide version.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = 5.05 * mm;
+                    shiftStep = 4.98 * mm;
+                    shiftStep*= shiftStep_fact;
                     leafLV = transitionLeafLV1;
                 }
                 else  if (i == 45){
@@ -293,8 +301,19 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     // Leaf 45 -  Creating a pair of transition leaves - narrow version.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = 2.52 * mm;
-                    leafLV = transitionLeafLV2;
+                    shiftStep = 2.65 * mm;
+                    shiftStep*= shiftStep_fact;
+                    leafLV = transitionLeafLV2B;
+                }
+                else  if (i == 15){
+
+                    /////////////////////////////////////////////////////////////////////////////
+                    // Leaf 45 -  Creating a pair of transition leaves - narrow version.
+                    /////////////////////////////////////////////////////////////////////////////
+
+                    shiftStep = 3.27 * mm;
+                    shiftStep*= shiftStep_fact;
+                    leafLV = centralLeafLV;
                 }
                 else {
 
@@ -302,30 +321,59 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                     //  Creating a pair of central leaves.
                     /////////////////////////////////////////////////////////////////////////////
 
-                    shiftStep = 2.52 * mm;
+                    shiftStep = 2.57 * mm;
+                    shiftStep*= shiftStep_fact;
                     leafLV = centralLeafLV;
                 }
-                leafOneCentre3Vec.setY(leafOneCentre3Vec.getY() + shiftStep);
-                leafTwoCentre3Vec.setY(leafTwoCentre3Vec.getY() + shiftStep);
+                leafOneCentre3Vec_b.setY(leafOneCentre3Vec_b.getY() + shiftStep);
+                leafTwoCentre3Vec_b.setY(leafTwoCentre3Vec_b.getY() + shiftStep);
             }
-            else {
-
+            else if (i == 47){
                 /////////////////////////////////////////////////////////////////////////////
                 //  Creating a pair of side leaves.
                 /////////////////////////////////////////////////////////////////////////////
 
-                shiftStep = 5.05 * mm;
+                shiftStep = 4.36 * mm;
+                shiftStep*= shiftStep_fact;
                 leafLV = sideLeafLV;
 
-                leafOneCentre3Vec.setY(leafOneCentre3Vec.getY() + shiftStep);
-                leafTwoCentre3Vec.setY(leafTwoCentre3Vec.getY() + shiftStep);
+                leafOneCentre3Vec_b.setY(leafOneCentre3Vec_b.getY() + shiftStep);
+                leafTwoCentre3Vec_b.setY(leafTwoCentre3Vec_b.getY() + shiftStep);
+            }
+            else{
+                /////////////////////////////////////////////////////////////////////////////
+                //  Creating a pair of side leaves.
+                /////////////////////////////////////////////////////////////////////////////
+
+                shiftStep = 5.07 * mm;
+                shiftStep*= shiftStep_fact;
+                leafLV = sideLeafLV;
+
+                leafOneCentre3Vec_b.setY(leafOneCentre3Vec_b.getY() + shiftStep);
+                leafTwoCentre3Vec_b.setY(leafTwoCentre3Vec_b.getY() + shiftStep);
+            }
+            if (i == 13) {
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec_b, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation4, leafTwoCentre3Vec_b, name+"B", refTransitionLeafLV1, mlcWorldPV, false, i));
+            }
+            else if (i == 45) {
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec_b, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation4, leafTwoCentre3Vec_b, name+"B", refTransitionLeafLV2B, mlcWorldPV, false, i));
+            }
+            else{
+            m_y1_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec_b, name+"A", leafLV, mlcWorldPV, false, i));
+            m_y2_leaves.push_back(
+                    std::make_unique<G4PVPlacement>(leavesOrientation4, leafTwoCentre3Vec_b, name+"B", leafLV, mlcWorldPV, false, i));
             }
         }
-   }
-   mlcWorldPV->CheckOverlaps();
-
-
-   return mlcWorldPV;
+    }
+    mlcWorldPV->CheckOverlaps();
+    return mlcWorldPV;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -347,7 +395,7 @@ G4VSolid* MlcHd120::CreateCentralLeafShape() const {
     auto boxCentralLeaf = new G4Box("CentralLeafBox",
                                          m_leafLength / 2.,
                                          m_leafHeight / 2.,
-                                         (2 * cm + leafWidth / 2.));
+                                        (2 * cm + leafWidth / 2.));
 
 
     auto boxCentralLeaf2 = new G4Box("CentralLeafBox2",
@@ -355,43 +403,31 @@ G4VSolid* MlcHd120::CreateCentralLeafShape() const {
                                           m_leafHeight / 2.,
                                           leafWidth / 2.);
 
-
-    auto translation1 = G4ThreeVector( 1.5 * cm,  0., 0.);
-
     auto intersectionCentralLeaf  = new G4IntersectionSolid("PrimalCentralLeaf",
                                                               cylinderCentralLeaf,
                                                               boxCentralLeaf,
                                                               0,
-                                                              translation1);
-
-
-    auto translation2 = G4ThreeVector(0. * cm, 3.5 * cm,  2.52 * mm);
+                                                              G4ThreeVector( 1.5*cm,0.,0.));
 
     auto halfDoneCentralLeaf = new G4SubtractionSolid("HalfDoneCentralLeaf",
                                                         intersectionCentralLeaf,
                                                         boxCentralLeaf2,
                                                         0,
-                                                        translation2);
+                                                        G4ThreeVector(0., 3.5*cm, 2.52*mm));
 
-
-    auto translation3 = G4ThreeVector(0. * cm, 3.5 * cm, - 2.52 * mm);
     auto almostDoneCentralLeaf = new G4SubtractionSolid("CentralLeaf0",
                                                           halfDoneCentralLeaf,
                                                           boxCentralLeaf2,
                                                           0,
-                                                          translation3);
-
+                                                          G4ThreeVector(0.,3.5*cm,-2.52*mm));
 
     auto endCapBox = CreateEndCapCutBox();
-
-
-    auto translation4 = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
 
     auto centralLeaf = new G4SubtractionSolid("CentralLeaf",
                                                  almostDoneCentralLeaf,
                                                  endCapBox,
                                                  0,
-                                                 translation4);
+                                                 G4ThreeVector(-10.*cm, 0., 0.));
 
 
     return centralLeaf;
@@ -424,46 +460,32 @@ G4VSolid* MlcHd120::CreateSideLeafShape() const {
                                        m_leafHeight / 2.,
                                        leafWidth / 2.);
 
-
-    auto interTranslation = G4ThreeVector( 1.5 * cm,0., 0.);
-
     auto intersectionSideLeaf  = new G4IntersectionSolid("PrimalSideLeaf",
                                                                cylinderSideLeaf,
                                                                boxSideLeaf,
                                                                0,
-                                                               interTranslation);
-
-
-    auto outerTranslation1 = G4ThreeVector(0.* cm, 3.5 * cm, 5.05 * mm);
+                                                               G4ThreeVector(1.5*cm,0.,0.));
 
     auto halfDoneSideLeaf = new G4SubtractionSolid("HalfDoneSideLeaf",
-                                                        intersectionSideLeaf,
-                                                        boxSideLeaf2,
-                                                       0,
-                                                        outerTranslation1);
-
-
-    auto outerTranslation2 = G4ThreeVector(0.* cm, 3.5 * cm, -5.05 * mm);
+                                                    intersectionSideLeaf,
+                                                    boxSideLeaf2,
+                                                    0,
+                                                    G4ThreeVector(0., 3.5*cm, 5.05*mm));
 
     auto almostDoneSideLeaf = new G4SubtractionSolid("SideLeaf0",
-                                                 halfDoneSideLeaf ,
-                                                 boxSideLeaf2,
+                                                halfDoneSideLeaf ,
+                                                boxSideLeaf2,
                                                 0,
-                                                 outerTranslation2);
+                                                G4ThreeVector(0., 3.5*cm, -5.05*mm));
 
 
     auto endCapBox = CreateEndCapCutBox();
 
-
-    auto translation = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
-
     auto sideLeaf = new G4SubtractionSolid("SideLeaf",
-                                                almostDoneSideLeaf,
-                                                endCapBox,
-                                                0,
-                                                translation);
-
-
+                                            almostDoneSideLeaf,
+                                            endCapBox,
+                                            0,
+                                            G4ThreeVector(-10.*cm, 0., 0.));
     return sideLeaf;
 }
 
@@ -473,138 +495,63 @@ G4VSolid* MlcHd120::CreateSideLeafShape() const {
 
 G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
 
-    G4VSolid* transitionLeaf;
+    auto createLeafShape = [&](const G4double& leafWidth, 
+                            const G4ThreeVector& cut_offset_left,
+                            const G4ThreeVector& cut_offset_right) -> G4VSolid* {
+        auto innerEndCap = new G4Tubs("innerEndCap",
+                                        m_innerRadius,
+                                        m_cylinderRadius,
+                                        leafWidth / 2.,
+                                        0,
+                                        2 * M_PI);
+        auto narrowBox = new G4Box("narrowBox",
+                                        m_leafLength / 2.,
+                                        m_leafHeight / 2.,
+                                        (2 * cm + leafWidth / 2.));
+        auto wideBox = new G4Box("wideBox",
+                                        ((4. * cm) + m_leafLength / 2.),
+                                        m_leafHeight / 2.,
+                                        leafWidth / 2.);
+        auto roundedLeafShape  = new G4IntersectionSolid("roundedLeafShape",
+                                                        innerEndCap,
+                                                        narrowBox,
+                                                        nullptr,
+                                                        G4ThreeVector( 1.5 * cm,0., 0.));
+        auto first_halfLeaf = new G4SubtractionSolid("first_halfLeaf",
+                                                        roundedLeafShape,
+                                                        wideBox,
+                                                        nullptr,
+                                                        cut_offset_left);
+        auto second_halfLeaf = new G4SubtractionSolid("second_halfLeaf",
+                                                        first_halfLeaf,
+                                                        wideBox,
+                                                        nullptr,
+                                                        cut_offset_right);
+        return new G4SubtractionSolid("transitionLeaf",
+                                    second_halfLeaf,
+                                    CreateEndCapCutBox(),
+                                    nullptr,
+                                    G4ThreeVector(-10.*cm, 0.*cm, 0.*mm));
+    };
 
-    if (type.compare("Side") == 0){
+    G4double side_leaf_width = 6.1 * mm;
+    G4ThreeVector side_leaf_offset_left(0., 3.5*cm, 5.05*mm);
+    G4ThreeVector side_leaf_offset_right(0., 3.5*cm, -4.69*mm);
 
-        G4double leafWidth = 6.1 * mm;
-
-        auto cylinderTransitionLeaf = new G4Tubs("TransitionLeafTube",
-                                           m_innerRadius / 1.,
-                                           m_cylinderRadius / 1.,
-                                           leafWidth / 2.,
-                                           0 / 1.,
-                                           2 * M_PI / 1.);
-
-
-        auto boxTransitionLeaf = new G4Box("TransitionLeafBox",
-                                     m_leafLength / 2.,
-                                     m_leafHeight / 2.,
-                                     (2 * cm + leafWidth / 2.));
-
-
-        auto boxTransitionLeaf2 = new G4Box("TransitionLeafBox",
-                                      ((4. * cm) + m_leafLength / 2.),
-                                      m_leafHeight / 2.,
-                                      leafWidth / 2.);
-
-
-        auto interTranslation = G4ThreeVector( 1.5 * cm,0., 0.);
-
-        auto intersectionTransitionLeaf  = new G4IntersectionSolid("PrimalTransitionLeaf",
-                                                             cylinderTransitionLeaf,
-                                                             boxTransitionLeaf,
-                                                             0,
-                                                             interTranslation);
-
-
-        auto outerTranslation1 = G4ThreeVector(0.* cm, 3.5 * cm, 4.70 * mm);
-
-        auto halfDoneTransitionLeaf = new G4SubtractionSolid("HalfDoneTransitionLeaf",
-                                                       intersectionTransitionLeaf,
-                                                       boxTransitionLeaf2,
-                                                       0,
-                                                       outerTranslation1);
-
-
-        auto outerTranslation2 = G4ThreeVector(0.* cm, 3.5 * cm, -5.05 * mm);
-
-        auto almostDoneTransitionLeaf = new G4SubtractionSolid("TransitionLeaf0",
-                                                         halfDoneTransitionLeaf ,
-                                                         boxTransitionLeaf2,
-                                                         0,
-                                                         outerTranslation2);
-
-
-        auto endCapBox = CreateEndCapCutBox();
-
-
-        auto translation = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
-
-        auto transitionLeaf = new G4SubtractionSolid("TransitionLeaf",
-                                               almostDoneTransitionLeaf,
-                                               endCapBox,
-                                               0,
-                                               translation);
-
-
-        return transitionLeaf;
+    G4double central_leaf_width = 3.57 * mm;
+    G4ThreeVector central_leaf_offset_left(0., 3.5*cm, 2.52*mm);
+    G4ThreeVector central_leaf_offset_right(0.*cm, 3.5*cm, -2.87*mm);
+    
+    if (type.compare("SideA") == 0){
+        return createLeafShape(side_leaf_width, side_leaf_offset_left,side_leaf_offset_right);
+    } else if (type.compare("SideB") == 0){
+        return createLeafShape(side_leaf_width, side_leaf_offset_right, side_leaf_offset_left);
+    } else if (type.compare("CentralA") == 0){
+        return createLeafShape(central_leaf_width, central_leaf_offset_left,central_leaf_offset_right);
+    } else if (type.compare("CentralB") == 0){
+        return createLeafShape(central_leaf_width, central_leaf_offset_right, central_leaf_offset_left);
     }
 
-    else if (type.compare("Central") == 0){
-
-        G4double leafWidth = 3.57 * mm;
-
-        auto cylinderTransitionLeaf = new G4Tubs("TransitionLeafTube",
-                                          m_innerRadius,
-                                          m_cylinderRadius,
-                                          leafWidth / 2.,
-                                          0,
-                                          2 * M_PI);
-
-
-        auto boxTransitionLeaf = new G4Box("TransitionLeafBox",
-                                    m_leafLength / 2.,
-                                    m_leafHeight / 2.,
-                                    (2 * cm + leafWidth / 2.));
-
-
-        auto boxTransitionLeaf2 = new G4Box("TransitionLeafBox2",
-                                     ((4. * cm) + m_leafLength / 2.),
-                                     m_leafHeight / 2.,
-                                     leafWidth / 2.);
-
-
-        auto translation1 = G4ThreeVector(1.5 * cm, 0. * cm, 0. * mm);
-
-        auto intersectionTransitionLeaf  = new G4IntersectionSolid("PrimalTransitionLeaf",
-                                                            cylinderTransitionLeaf,
-                                                            boxTransitionLeaf,
-                                                            0,
-                                                            translation1);
-
-
-        auto translation2 = G4ThreeVector(0. * cm, 3.5 * cm, 2.52 * mm);
-
-        auto halfDoneTransitionLeaf = new G4SubtractionSolid("HalfDoneTransitionLeaf",
-                                                      intersectionTransitionLeaf,
-                                                      boxTransitionLeaf2,
-                                                      0,
-                                                      translation2);
-
-
-        auto translation3 = G4ThreeVector(0. * cm, 3.5 * cm, - 2.87 * mm);
-
-        auto almostDoneTransitionLeaf = new G4SubtractionSolid("TransitionLeaf0",
-                                                        halfDoneTransitionLeaf,
-                                                        boxTransitionLeaf2,
-                                                        0,
-                                                        translation3);
-
-        auto endCapBox = CreateEndCapCutBox();
-
-
-        auto translation4 = G4ThreeVector(-10. * cm, 0. * cm, 0. * mm);
-
-        auto transitionLeaf = new G4SubtractionSolid("TransitionLeaf",
-                                              almostDoneTransitionLeaf,
-                                              endCapBox,
-                                              0,
-                                              translation4);
-
-
-        return transitionLeaf;
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -632,74 +579,48 @@ void MlcHd120::WriteInfo(){
     // implement me.
 }
 
-void MlcHd120::SetRunConfig(){
-
-    auto inputType = thisConfig()->GetValue<std::string>("PositionningFileType");
+////////////////////////////////////////////////////////////////////////////////
+///
+void MlcHd120::SetRunConfiguration(const ControlPoint* control_point){
+    auto inputType = control_point->GetFieldType();
+    //thisConfig()->GetValue<std::string>("PositionningFileType");
     G4cout << "[INFO]:: MlcHd120:: the run configuration type: "<< inputType << G4endl;
 
-    if(inputType=="Custom"){
-        auto flsz = std::string("3x3"); // temporary fixed; it should come from GeoSvc or RunSvc
-        SetCustomPositioning(flsz);
+    if(inputType=="CustomPlan"){
+        SetCustomPositioning(control_point);
     }
     else if(inputType=="RTPlan"){
         auto beamId = int(0);         // temporary fixed; it will come from LinacRun instance
         auto controlPointId = int(0); // temporary fixed; it will come from LinacRun instance
         SetRTPlanPositioning(beamId,controlPointId);
     }
+    m_control_point_id = control_point->Id();
+    m_isInitialized = true; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void MlcHd120::SetCustomPositioning(const std::string& fieldSize){
-    std::string data_path = PROJECT_DATA_PATH;
-    auto customPositioningFile = data_path+"/TrueBeam/MLC/Mlc_"+fieldSize+".dat";
-    G4cout << "[INFO]:: Reading the MLC configuration file :: " << customPositioningFile << G4endl;
-    std::string line;
-    std::ifstream file(customPositioningFile.c_str());
-    int leafsCounter = 0;
-    if (file.is_open()) {  // check if file exists
-        while (getline(file, line)){
-            // get rid of commented out or empty lines:
-            if (line.length() > 0 && line.at(0) != '#') {
-                std::istringstream ss(line);
-                std::string svalue;
-                std::vector<double> y1y2_position;
-                while (getline(ss, svalue,',')){
-                    y1y2_position.emplace_back(std::strtod(svalue.c_str(),nullptr)*mm);
-
-                    //G4cout << "[DEBUG]:: MlcHd120:: config value ("<<count<<")"<< svalue << G4endl;
-                }
-                //
-                // Input data file should contain 2 columns with comma separation, verify it:
-                if(y1y2_position.size()>2)
-                    G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "Wrong input data format!");
-
-                if(leafsCounter>59)
-                    G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "To many leafs configuration!");
-
-                auto y1_translation = m_y1_leaves[leafsCounter]->GetTranslation();
-                y1_translation.setX(y1_translation.getX()+y1y2_position.at(1));
-                m_y1_leaves[leafsCounter]->SetTranslation(y1_translation);
-
-                auto y2_translation = m_y2_leaves[leafsCounter]->GetTranslation();
-                y2_translation.setX(y2_translation.getX()+y1y2_position.at(0));
-                m_y2_leaves[leafsCounter]->SetTranslation(y2_translation);
-
-                ++leafsCounter;
-
-            }
-        }
-        if(leafsCounter<59)
-            G4Exception("MlcHd120", "SetCustomPositioning", FatalErrorInArgument, "To less leafs configuration!");
+void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
+    const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
+    const auto& mlc_b_positioning = control_point->GetMlcPositioning("Y2");
+    for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
+        auto y1_translation = m_y1_leaves[leaf_idx]->GetTranslation();
+        y1_translation.setX(y1_translation.getX()-mlc_a_positioning.at(leaf_idx));
+        m_y1_leaves[leaf_idx]->SetTranslation(y1_translation);
+    }
+    for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
+        auto y2_translation = m_y2_leaves[leaf_idx]->GetTranslation();
+        y2_translation.setX(y2_translation.getX()-mlc_b_positioning.at(leaf_idx));
+        m_y2_leaves[leaf_idx]->SetTranslation(y2_translation);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
-    auto dicomSvc = Service<DicomSvc>();
-    auto pos1 = dicomSvc->GetRTPlanMlcPossitioning("Y1",current_beam,current_controlpoint);
-    auto pos2 = dicomSvc->GetRTPlanMlcPossitioning("Y2",current_beam,current_controlpoint);
+    auto contolPoint = Service<RunSvc>()->CurrentControlPoint();
+    const auto& pos1 = contolPoint->GetMlcPositioning("Y1");
+    const auto& pos2 = contolPoint->GetMlcPositioning("Y1");
 
     if(pos1.size()!=pos2.size() || pos1.size()!=60){
         G4cout << "[DEBUG]:: MlcHd120:: posY1.size() " << pos1.size() << G4endl;
@@ -709,12 +630,12 @@ void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
 
     for(int i=0; i<pos1.size(); ++i){
         G4cout << "[DEBUG]:: MlcHd120:: Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
-        // overlap check:
-        if(pos2.at(i)-pos1.at(i)<0){
-            G4cout << "[WARNING]:: MlcHd120:: OVERLAP Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
-            pos1[i] = 0;
-            pos2[i] = 0;
-        }
+        // overlap check: TODO this should be done in filling the positioning vectors?
+        // if(pos2.at(i)-pos1.at(i)<0){
+        //     G4cout << "[WARNING]:: MlcHd120:: OVERLAP Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
+        //     pos1[i] = 0;
+        //     pos2[i] = 0;
+        // }
 
         auto y1_translation = m_y1_leaves[i]->GetTranslation();
         y1_translation.setX(y1_translation.getX()+pos2.at(i) );

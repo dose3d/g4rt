@@ -59,6 +59,7 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   /// 
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
+  LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
 
 
   /// so that the unique_ptr may delete the singleton
@@ -69,13 +70,29 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   friend class VPatient;
   friend class BeamMonitoring;
 
-  private:
+  virtual bool Create();
+
+  ///
+  void Configure() override;
+
+  virtual std::vector<VPatient*> GetCustomDetectors() const {
+    return std::vector<VPatient*>();
+  }
+  
+  protected:
   ///
   WorldConstruction();
 
   ///
   ~WorldConstruction();
 
+  /// have to implement pure virtual function
+  G4VPhysicalVolume* Construct() override;      // <- G4VUserDetectorConstruction
+
+  ///
+  bool ConstructWorldModules(G4VPhysicalVolume *parentPV);
+  
+  private:
   /// Delete the copy and move constructors
   WorldConstruction(const WorldConstruction &) = delete;
 
@@ -85,17 +102,10 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   WorldConstruction &operator=(WorldConstruction &&) = delete;
 
-  /// have to implement pure virtual function
-  G4VPhysicalVolume* Construct() override;      // <- G4VUserDetectorConstruction
 
   /// have to implement pure virtual function
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume
-
   ///
-  bool Create();
-
-  ///
-  void Configure() override;
 
   ///
   PatientGeometry* m_phantomEnv = nullptr;
@@ -108,6 +118,7 @@ class WorldConstruction : public G4VUserDetectorConstruction,
 
   ///
   BeamMonitoring* m_beamMonitoring = nullptr;
+
 };
 
 #endif  // Dose3D_WORLDCONSTRUCTION_HH

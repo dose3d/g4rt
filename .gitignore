@@ -14,10 +14,11 @@ data/*
 !data/Results/
 !data/dose3d/
 !data/gps/
+!data/plan/
 build/
 build-vscode/
 output/
-core/utilities/python/__pycache__
+core/utilities/python/__pycache__/*
 scripts/__pycache__
 output/*
 out/*

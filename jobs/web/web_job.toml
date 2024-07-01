@@ -2,7 +2,8 @@
 JobName = "web_job_example"
 BeamType = "gps" 
 NTupleAnalysis = true 
-FieldShape = "Elipsoidal"
+# FieldType = "Rectangular"
+FieldType = "Elipsoidal"
 FieldSizeA = 10 # mm
 FieldSizeB = 30 # mm
 

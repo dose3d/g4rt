@@ -1,5 +1,5 @@
 import datetime
-from loguru import logger
+# from loguru import logger
 import os
 import time
 from sys import prefix
@@ -14,10 +14,10 @@ import json
 from pathlib import Path
 
 # def CtSvc():
-#     logger.info("Initialoizing CT scaner.")
+#     logger.info("Initializing CT scaner.")
 
 # def create_ct_series():
-#     logger.info("Initialoizing CT series.")
+#     logger.info("Initializing CT series.")
     
 # def set_output_path():
 #     logger.info("Setting path for CT series.")
@@ -29,7 +29,8 @@ class CtSvc():
     
 # -------------------------------- Init -----------------------------------------
     def __init__(self, label="CT_"):
-        logger.info("Initialoizing CT scaner.")
+        print("Initializing CT scaner.")
+        print()
         self.__label = label # Did I Need that?
         self.__generate_CT = True # Did I Need that?
         self.__output_array = np.zeros((1, 1, 1))
@@ -63,7 +64,7 @@ class CtSvc():
         except FileExistsError:
             # directory already exists
             pass
-        logger.info(f"Output was set to: {output_path}")
+        print(f"Output was set to: {output_path}")
 
     def set_project_path(cls, project_path):
         # Not as set_hounsfield_dictiobnary cause also it sett path to template CT.dcm
@@ -75,10 +76,10 @@ class CtSvc():
         except FileExistsError:
             # directory already exists
             pass
-        logger.info(f"Project root was set to: {project_path}")
+        print(f"Project root was set to: {project_path}")
 
     def  __set_hounsfield_dictiobnary(self):
-        dictionary = (f"{self.__project_path}dicom/hounsfield_scale_60keV.json")
+        dictionary = (f"{self.__project_path}config/hounsfield_scale_60keV.json")
         with open(dictionary) as jsn_file:
             self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
 # ------------------------------- Priv Class Methods ----------------------------
@@ -110,7 +111,7 @@ class CtSvc():
 
     def __start_Dicom_series(self):
         self.__set_hounsfield_dictiobnary()
-        name = f"{self.__project_path}dicom/ct_slice_template.dcm"
+        name = f"{self.__project_path}config/ct_slice_template.dcm"
         ds = pydicom.dcmread(name)
         
         # --------------- overwrite metadata ----------------
@@ -186,17 +187,17 @@ class CtSvc():
         ds.PixelData = image2d.tobytes()
         pydicom.dataset.validate_file_meta(ds.file_meta, enforce_standard=True)
         ds.save_as(self.__output_path+self.__label+f"{sliceNumber}"+r".dcm")
-        # logger.info(f"I just saved {self.__label}{sliceNumber}.dcm")
+        print(f"I just saved {self.__label}{sliceNumber}.dcm")
 
     def __write_whole_Dicom_ct_from_csv(self):
-        logger.debug("Writing the whole DICOM CT")
+        # logger.debug("Writing the whole DICOM CT")
         self.series = self.__start_Dicom_series()
         self.instance_UID = self.series.SOPInstanceUID
         images_path_string = self.__data_path
         images_paths = Path(images_path_string)
         ser = pd.Series(np.zeros(int(self.__pixel_in_y)))
         iterator = 0
-        logger.info(f"Start iteration over images")
+        print(f"Start iteration over images")
         for path in images_paths.iterdir():
             ser.iat[iterator] = (path.name)
             iterator +=1

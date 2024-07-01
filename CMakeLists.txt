@@ -52,7 +52,8 @@ include(CTest)
 #       if you specify full path to the include directlry
 add_subdirectory(externals)
 add_subdirectory(core)
-add_subdirectory(executables)
+# add_subdirectory(executables)
+add_subdirectory(app)
 
 #----------------------------------------------------------------------------
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})

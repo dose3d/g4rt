@@ -64,6 +64,9 @@ namespace svc {
   ///
   std::string getFileExtenstion(const std::string& filePath);
 
+  //
+  std::string getFileName(const std::string& filePath);
+
   ///\brief The number to std::string conversion function.
   ///\param v number to be converted.
   ///\param precision precision to be taken in the conversion.

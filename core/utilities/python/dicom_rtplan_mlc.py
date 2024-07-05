@@ -8,20 +8,17 @@ def return_possition(dataFile, side, current_beam, current_controlpoint, num_of_
     AllLeavesPositions = np.zeros(num_of_leaves, np.single)
     SideLeavesPositions = np.zeros(int(num_of_leaves/2), np.single)
     if current_controlpoint == 0:
+        AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][2][0x300a, 0x011c].value
         if side == "Y1":
-            AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][2][0x300a, 0x011c].value
             SideLeavesPositions = AllLeavesPositions[0:int(num_of_leaves/2)]
         if side == "Y2":
-            AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][2][0x300a, 0x011c].value
             SideLeavesPositions = AllLeavesPositions[int(num_of_leaves/2):int(num_of_leaves)]
     else:
         AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][0][0x300a, 0x011c].value
         if side == "Y1":
-            AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][0][0x300a, 0x011c].value
             SideLeavesPositions = AllLeavesPositions[0:int(num_of_leaves/2)]
         if side == "Y2":
-            AllLeavesPositions = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint][0x300a, 0x011a][0][0x300a, 0x011c].value
-            SideLeavesPositions = AllLeavesPositions[0:int(num_of_leaves/2)]
+            SideLeavesPositions = AllLeavesPositions[int(num_of_leaves/2):int(num_of_leaves)]
     return SideLeavesPositions
 
 

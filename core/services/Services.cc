@@ -183,6 +183,8 @@ std::vector<std::string> svc::getFilesInDir(const std::string& path, const std::
   return files;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 std::string svc::getFileExtenstion(const std::string& filePath){
   // Find the last dot position
   std::size_t dotPos = filePath.rfind('.');
@@ -192,6 +194,19 @@ std::string svc::getFileExtenstion(const std::string& filePath){
   // Extract and return the substring after the last dot
   return filePath.substr(dotPos + 1);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::string svc::getFileName(const std::string& filePath){
+  // Find last occurrence of '/' or '\\' to handle different path separators
+  size_t lastSlash = filePath.find_last_of("/\\");
+  std::string fileName = (lastSlash != std::string::npos) ? filePath.substr(lastSlash + 1) : filePath;
+
+  // Find last occurrence of '.' to handle file extension
+  size_t lastDot = fileName.find_last_of('.');
+  return (lastDot != std::string::npos) ? fileName.substr(0, lastDot) : fileName;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parsing a String Containing a Number in Scientific Notation

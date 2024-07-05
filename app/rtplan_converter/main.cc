@@ -56,7 +56,9 @@ int main(int argc, const char *argv[]) {
         rtplan_file = cmdopts["f"].as<std::string>();
       if(rtplan_file.empty())
         svc::invalidArgumentError("main","Please specify RT-Plan file!");
-      
+      if(!svc::checkIfFileExist(rtplan_file))
+        svc::invalidArgumentError("main","RT-Plan file not found!");
+
       auto output_dir = std::string();
       if (cmdopts.count("o")) 
         output_dir = cmdopts["o"].as<std::string>();
@@ -65,10 +67,39 @@ int main(int argc, const char *argv[]) {
       
       // OPERATION
       // --------------------------------------------------------------------
+      auto write_dat_plan_file = [&]( std::string dat_plan_file,
+                                      std::pair<double,double>& jaw_x,
+                                      std::pair<double,double>& jaw_y, 
+                                      std::vector<G4double>& mlc_a, 
+                                      std::vector<G4double>& mlc_b) {
+        if(mlc_a.empty() || mlc_b.empty()){
+          SPDLOG_ERROR("MLC data is empty!");
+        }
+        std::ofstream outFile(dat_plan_file);
+        if (outFile.is_open()) {
+          // Write data to file
+          // NOTE: There are FIXED values!!!!
+          outFile << "# Rotation: 0.0\n";
+          outFile << "# Particles: 2e7\n";
+          outFile << "# Jaws: X1[mm],X2[mm],Y1[mm],Y2[mm]\n";
+          outFile << jaw_x.first << "," << jaw_x.second << "," << jaw_y.first << "," << jaw_y.second << "\n";
+          outFile << "# MLC: Y1[mm],Y2[mm]\n";
+          for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++)
+            outFile << mlc_a.at(i_leaf) << "," << mlc_b.at(i_leaf) << "\n";
+
+          // Close file
+          outFile.close();
+          SPDLOG_INFO("Plan data written into file: {}", dat_plan_file);
+
+      } else 
+          SPDLOG_ERROR("Unable to open file: {}", dat_plan_file);
+      };
+
+
       dicomSvc->SetPlanFile(rtplan_file);
-      auto nBeams = 2; //dicomSvc->GetRTPlanNumberOfBeams();
+      auto nBeams = dicomSvc->GetRTPlanNumberOfBeams();
       for(int i_beam=0; i_beam<nBeams; i_beam++){
-        auto nCtrlPts = 10; //dicomSvc->GetRTPlanNumberOfControlPoints(i_beam);
+        auto nCtrlPts = dicomSvc->GetRTPlanNumberOfControlPoints(i_beam);
         // NOTE: For all control points in the beam the jaws aperture
         // is defined in the first control point:
         auto jaw_x = dicomSvc->GetPlan()->ReadJawsAperture(rtplan_file,"X",i_beam,0);
@@ -76,14 +107,19 @@ int main(int argc, const char *argv[]) {
         for(int i_cp=0; i_cp < nCtrlPts; i_cp++){
           auto mlc_a = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y1",i_beam,i_cp);
           auto mlc_b = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y2",i_beam,i_cp);
-          
-          SPDLOG_INFO("Beam {} | CP {} | Jaws X: {}, {}, Y: {}, {}", i_beam, i_cp,jaw_x.first,jaw_x.second,jaw_y.first,jaw_y.second);
-          for(const auto& mlc_position : mlc_a)
-            std::cout << mlc_position << ",";
-          std::cout << std::endl;
-          for(const auto& mlc_position : mlc_b)
-            std::cout << mlc_position << ",";
-          std::cout << std::endl;
+          std::string dat_plan_file = svc::getFileName(rtplan_file);
+          dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
+          //SPDLOG_INFO("Beam {} | CP {} | Jaws X: {}, {}, Y: {}, {}", i_beam, i_cp,jaw_x.first,jaw_x.second,jaw_y.first,jaw_y.second);
+          // for(const auto& mlc_position : mlc_a)
+          //   std::cout << mlc_position << ",";
+          // std::cout << std::endl;
+          // for(const auto& mlc_position : mlc_b)
+          //   std::cout << mlc_position << ",";
+          // std::cout << std::endl;
+
+          write_dat_plan_file(dat_plan_file,jaw_x,jaw_y,mlc_a,mlc_b);
+          mlc_a.clear();
+          mlc_b.clear();
           
         }
       }

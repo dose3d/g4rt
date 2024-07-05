@@ -122,6 +122,9 @@ class DicomSvc {
     ///
     void Initialize(const std::string& planFileType);
 
+    ///
+    void SetPlanFile(const std::string& plan_file);
+
      ///
     bool Initialized() const { return m_plan.get() ? true : false; }
 

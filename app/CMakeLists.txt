@@ -60,6 +60,11 @@ add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
 target_link_libraries(g4rt_bworld IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
 
 #---------------------------------------------------------------------------
+file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
+add_executable(g4rt_dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc)
+target_link_libraries(g4rt_dcm2dat IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+
+#---------------------------------------------------------------------------
 # install definitions
 install(TARGETS g4rt
         RUNTIME DESTINATION "${PROJECT_INSTALL_DIR}"

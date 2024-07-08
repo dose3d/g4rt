@@ -305,7 +305,7 @@ unsigned DicomSvc::GetRTPlanNumberOfBeams() const {
 unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
   // Implement me. Note: verify if given beamNumber exists!
   // To be done when you will not use the 0 beam and control point 0.
-  return 100; // dummy number
+  return 50; // dummy number
 }
 
 ////////////////////////////////////////////////////////////////////////////////

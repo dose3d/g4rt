@@ -31,6 +31,7 @@ int main(int argc, const char *argv[]) {
         ("b,nBeams", "Number of beams (default value ALL)", cxxopts::value<int>(), "N")
         ("c,nCtrlPts", "Number of control points (default value ALL)", cxxopts::value<int>(), "N")
         ("f,File", "Specify RT-Plan file", cxxopts::value<std::string>(), "FILE")
+        ("fieldCentre", "Perform Field centralization in AB sides", cxxopts::value<bool>()->default_value("false"))
         ("o,OutputDir", "Specify output directory", cxxopts::value<std::string>(), "PATH")
         ;
 
@@ -67,6 +68,27 @@ int main(int argc, const char *argv[]) {
       
       // OPERATION
       // --------------------------------------------------------------------
+      bool fieldCentre = cmdopts["fieldCentre"].as<bool>();
+      auto centralize_ab = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
+        G4double min_a = 10000, min_b = 0;
+        G4double max_a = 0, max_b = -10000;
+        int min_leaf_y = -1, max_leaf_y = -1;
+        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
+          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) != 0){ // check if mlc is not closed
+            if(mlc_a.at(i_leaf) < min_a) min_a = mlc_a.at(i_leaf);
+            if(mlc_b.at(i_leaf) < min_b) min_b = mlc_b.at(i_leaf);
+            if(mlc_a.at(i_leaf) > max_a) max_a = mlc_a.at(i_leaf);
+            if(mlc_b.at(i_leaf) > max_b) max_b = mlc_b.at(i_leaf);
+          }
+        }
+        auto shift_ab = (max_b - min_a)/2;
+        std::cout << "Shift A-B: " << shift_ab << std::endl;
+        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
+          mlc_a.at(i_leaf) = mlc_a.at(i_leaf) + shift_ab;
+          mlc_b.at(i_leaf) = mlc_b.at(i_leaf) + shift_ab;
+        }
+      };
+
       auto write_dat_plan_file = [&]( std::string dat_plan_file,
                                       std::pair<double,double>& jaw_x,
                                       std::pair<double,double>& jaw_y, 
@@ -80,7 +102,7 @@ int main(int argc, const char *argv[]) {
           // Write data to file
           // NOTE: There are FIXED values!!!!
           outFile << "# Rotation: 0.0\n";
-          outFile << "# Particles: 2e7\n";
+          outFile << "# Particles: 1000\n";
           outFile << "# Jaws: X1[mm],X2[mm],Y1[mm],Y2[mm]\n";
           outFile << jaw_x.first << "," << jaw_x.second << "," << jaw_y.first << "," << jaw_y.second << "\n";
           outFile << "# MLC: Y1[mm],Y2[mm]\n";
@@ -109,14 +131,8 @@ int main(int argc, const char *argv[]) {
           auto mlc_b = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y2",i_beam,i_cp);
           std::string dat_plan_file = svc::getFileName(rtplan_file);
           dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
-          //SPDLOG_INFO("Beam {} | CP {} | Jaws X: {}, {}, Y: {}, {}", i_beam, i_cp,jaw_x.first,jaw_x.second,jaw_y.first,jaw_y.second);
-          // for(const auto& mlc_position : mlc_a)
-          //   std::cout << mlc_position << ",";
-          // std::cout << std::endl;
-          // for(const auto& mlc_position : mlc_b)
-          //   std::cout << mlc_position << ",";
-          // std::cout << std::endl;
-
+          if (fieldCentre)
+            centralize_ab(mlc_a, mlc_b);
           write_dat_plan_file(dat_plan_file,jaw_x,jaw_y,mlc_a,mlc_b);
           mlc_a.clear();
           mlc_b.clear();

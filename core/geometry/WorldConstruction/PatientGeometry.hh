@@ -17,6 +17,7 @@
 #include "globals.hh"
 #include "IPhysicalVolume.hh"
 
+
 class VPatient;
 
 ///\class PatientGeometry
@@ -26,7 +27,7 @@ class PatientGeometry : public IPhysicalVolume,
   public:
   ///
   static PatientGeometry *GetInstance();
-
+                    
   ///
   void Construct(G4VPhysicalVolume *parentPV) override;
 
@@ -81,6 +82,14 @@ class PatientGeometry : public IPhysicalVolume,
 
   ///
   G4RotationMatrix* m_rotation;
+
+  ///
+  struct pair_hash {
+      template <class T1, class T2>
+      std::size_t operator() (const std::pair<T1, T2> &pair) const {
+          return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+      }
+  };
 };
 
 #endif // Dose3D_PHANTOMCONSTRUCTION_HH

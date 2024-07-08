@@ -25,6 +25,8 @@ out/*
 jobs/test/*
 
 # To prevent tracking of all directores named "Test" created on testing propouses.
-*/Test/*
-*/test/*
+**/Test
+**/test
+# To track /testbeam calatogue
+!**/test[aaaa-zzzz]
 # 

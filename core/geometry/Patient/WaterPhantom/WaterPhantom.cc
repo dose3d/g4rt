@@ -154,10 +154,6 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   regVol->AddRootLogicalVolume(waterPhantomLV);
 
 
-  // G4UserLimits* userLimits = new G4UserLimits();
-  // userLimits->SetMaxAllowedStep(1000.0 * mm);
-  // waterPhantomLV->SetUserLimits(userLimits);
-
 }
 
 

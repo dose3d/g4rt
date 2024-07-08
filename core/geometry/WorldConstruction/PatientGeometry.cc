@@ -272,13 +272,13 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
 
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = svc::round_with_prec( env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX"),4);
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX"),4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY"),4);
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY"),4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ"),4);
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ"),4);
 
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
@@ -314,6 +314,86 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   double source_to_isocentre = 1000;
   metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
 
+
+
+  // // std::vector<std::pair<double,size_t>> xMappedVoxels;
+  // std::vector<std::pair<double,std::pair<size_t,size_t>>> xMappedVoxels;
+  // std::vector<std::pair<double,std::pair<size_t,size_t>>> yMappedVoxels;
+  // std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedVoxels;
+  // std::unordered_set<std::pair<double, size_t>, pair_hash> addedPairs;
+
+  auto cp = Service<RunSvc>()->CurrentControlPoint();
+  auto run = cp->GetRun();
+    if(run){
+      std::cout << "Not Null Pointer " << std::endl;
+    }
+    else{
+      std::cout << "Null Pointer!!!!!!!!!" << std::endl;
+
+    }
+  
+  // for(auto& scoring_map: scoring_maps){
+  //   for(auto& scoring: scoring_map.second){
+  //     auto scoring_type = scoring.first;
+  //     auto& data = scoring.second;
+  //     if(scoring_type==Scoring::Type::Voxel){
+  //       std::cout << "Scoring type voxcell"  << std::endl;
+  //     }
+  //     if(scoring_type==Scoring::Type::Cell){
+  //     std::cout << "Scoring type voxcell"  << std::endl;
+  //       }
+      //   for(auto& voxel: data){
+      //     auto& voxel_data = voxel.second;
+      //     std::pair<double, size_t> pairToCheckX = std::make_pair(
+      //       voxel_data.GetCentre().getX(), 
+      //       std::hash<std::string>{}(
+      //       "XCell" + std::to_string(voxel_data.GetGlobalID(0)) + 
+      //       "Voxel" + std::to_string(voxel_data.GetID(0))
+      //       ));
+      //     std::pair<double, size_t> pairToCheckY = std::make_pair(
+      //       voxel_data.GetCentre().getY(), std::hash<std::string>{}(
+      //       "YCell" + std::to_string(voxel_data.GetGlobalID(1)) + 
+      //       "Voxel" + std::to_string(voxel_data.GetID(1))));
+
+      //     std::pair<double, size_t> pairToCheckZ = std::make_pair(
+      //       voxel_data.GetCentre().getZ(), std::hash<std::string>{}(
+      //       "ZCell" + std::to_string(voxel_data.GetGlobalID(2)) + 
+      //       "Voxel" + std::to_string(voxel_data.GetID(2))));
+
+      //     // if(addedPairs.find(pairToCheckX) == addedPairs.end()) {
+      //     //     auto idsx = std::make_pair(voxel_data.GetGlobalID(0),voxel_data.GetID(0));
+      //     //     xMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getX(),idsx));
+      //     //     addedPairs.insert(pairToCheckX);
+      //     //   }
+      //     // if(addedPairs.find(pairToCheckY) == addedPairs.end()) {
+      //     //   auto idsy = std::make_pair(voxel_data.GetGlobalID(1),voxel_data.GetID(1));
+      //     //   yMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getY(),idsy));
+      //     //   addedPairs.insert(pairToCheckY);
+      //     //   }
+      //     // if(addedPairs.find(pairToCheckZ) == addedPairs.end()) {
+      //     //   auto idsz = std::make_pair(voxel_data.GetGlobalID(2),voxel_data.GetID(2));
+      //     //   zMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getZ(),idsz));
+      //     //   addedPairs.insert(pairToCheckZ);
+      //     //   }
+      //     }
+      //   }
+    //   }
+    // }
+
+  // for (std::pair <double, std::pair<size_t, size_t>> pair : xMappedVoxels) {
+  //   std::cout << pair.first << " " << pair.second.first << " " << pair.second.second << std::endl;
+  // }
+
+
+  // auto magicLambdaToLocateDoseInCurrentPosition = [](G4ThreeVector position, const std::map <std::size_t, VoxelHit> &map) {
+  //   return 0.;
+  // };
+
+
+
+  double dose = 0.;
+
+
   for( int y = 0; y < yResolution; y++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << y+1 ;
@@ -329,7 +409,6 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
       }
     }

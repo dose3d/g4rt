@@ -14,6 +14,7 @@
 #ifdef G4MULTITHREADED
   #include "G4MTRunManager.hh"
 #endif
+#include "PatientGeometry.hh"
 
 RunAnalysis::RunAnalysis(){
   if(!m_is_initialized){
@@ -60,6 +61,7 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
     if(m_csv_run_analysis){
         m_csv_run_analysis->WriteDoseToCsv(runPtr);
         m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
+        PatientGeometry::GetInstance()->ExportDoseToCsvCT(runPtr);
     }
 
     if(m_ntuple_run_analysis){

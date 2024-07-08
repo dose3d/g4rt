@@ -66,6 +66,15 @@ int main(int argc, const char *argv[]) {
         output_dir = cmdopts["o"].as<std::string>();
       if (output_dir.empty())
         svc::invalidArgumentError("main","Please specify output directory!");
+
+      // USER OPTIONAL PARAMETERS
+      // --------------------------------------------------------------------
+      int usr_nBeams = -1000;
+      if (cmdopts.count("b")) 
+        usr_nBeams = cmdopts["b"].as<int>();
+      int usr_nCtrlPts = -1000;
+      if (cmdopts.count("c")) 
+        usr_nCtrlPts = cmdopts["c"].as<int>();
       
       // OPERATION
       // --------------------------------------------------------------------
@@ -122,9 +131,11 @@ int main(int argc, const char *argv[]) {
 
       dicomSvc->SetPlanFile(rtplan_file);
       auto nBeams = dicomSvc->GetRTPlanNumberOfBeams(rtplan_file);
+      nBeams = (usr_nBeams > 0 && usr_nBeams < nBeams) ? usr_nBeams : nBeams;
       std::cout << "Number of beams: " << nBeams << std::endl;
       for(int i_beam=0; i_beam<nBeams; i_beam++){
         auto nCtrlPts = dicomSvc->GetRTPlanNumberOfControlPoints(rtplan_file,i_beam);
+        nCtrlPts = (usr_nCtrlPts > 0 && usr_nCtrlPts < nCtrlPts) ? usr_nCtrlPts : nCtrlPts;
         std::cout << "Beam " << i_beam << "  => Number of control points: " << nCtrlPts << std::endl;
         // NOTE: For all control points in the beam the jaws aperture
         // is defined in the first control point:

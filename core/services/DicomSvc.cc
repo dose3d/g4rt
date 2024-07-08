@@ -294,18 +294,17 @@ double DicomSvc::GetRTPlanDose(int current_beam, int current_controlpoint) const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-unsigned DicomSvc::GetRTPlanNumberOfBeams() const {
-  // Implement me.
-  // To be done when you will not use the 0 beam and control point 0.
-  return 2; // dummy number
+unsigned DicomSvc::GetRTPlanNumberOfBeams(const std::string& planFile) const {
+  auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
+  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(planFile);
+  return beams_counter.cast<unsigned>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
-  // Implement me. Note: verify if given beamNumber exists!
-  // To be done when you will not use the 0 beam and control point 0.
-  return 50; // dummy number
+unsigned DicomSvc::GetRTPlanNumberOfControlPoints(const std::string& planFile,unsigned beamNumber) const{
+  auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
+  return rtplanMlcReader.attr("return_number_of_controlpoints")(planFile,beamNumber).cast<unsigned>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

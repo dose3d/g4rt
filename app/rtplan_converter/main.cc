@@ -30,6 +30,7 @@ int main(int argc, const char *argv[]) {
     options.add_options("Application run mode")
         ("b,nBeams", "Number of beams (default value ALL)", cxxopts::value<int>(), "N")
         ("c,nCtrlPts", "Number of control points (default value ALL)", cxxopts::value<int>(), "N")
+        ("nParticles", "Number of particles to be set in the plan (default value 1e3)", cxxopts::value<int>()->default_value("1000"), "N")
         ("f,File", "Specify RT-Plan file", cxxopts::value<std::string>(), "FILE")
         ("fieldCentre", "Perform Field centralization in AB sides", cxxopts::value<bool>()->default_value("false"))
         ("o,OutputDir", "Specify output directory", cxxopts::value<std::string>(), "PATH")
@@ -69,6 +70,7 @@ int main(int argc, const char *argv[]) {
       // OPERATION
       // --------------------------------------------------------------------
       bool fieldCentre = cmdopts["fieldCentre"].as<bool>();
+      int nParticles = cmdopts["nParticles"].as<int>();
       auto centralize_ab = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
         G4double min_a = 10000, min_b = 0;
         G4double max_a = 0, max_b = -10000;
@@ -102,7 +104,7 @@ int main(int argc, const char *argv[]) {
           // Write data to file
           // NOTE: There are FIXED values!!!!
           outFile << "# Rotation: 0.0\n";
-          outFile << "# Particles: 1000\n";
+          outFile << "# Particles: "<< nParticles << "\n";
           outFile << "# Jaws: X1[mm],X2[mm],Y1[mm],Y2[mm]\n";
           outFile << jaw_x.first << "," << jaw_x.second << "," << jaw_y.first << "," << jaw_y.second << "\n";
           outFile << "# MLC: Y1[mm],Y2[mm]\n";
@@ -119,9 +121,11 @@ int main(int argc, const char *argv[]) {
 
 
       dicomSvc->SetPlanFile(rtplan_file);
-      auto nBeams = dicomSvc->GetRTPlanNumberOfBeams();
+      auto nBeams = dicomSvc->GetRTPlanNumberOfBeams(rtplan_file);
+      std::cout << "Number of beams: " << nBeams << std::endl;
       for(int i_beam=0; i_beam<nBeams; i_beam++){
-        auto nCtrlPts = dicomSvc->GetRTPlanNumberOfControlPoints(i_beam);
+        auto nCtrlPts = dicomSvc->GetRTPlanNumberOfControlPoints(rtplan_file,i_beam);
+        std::cout << "Beam " << i_beam << "  => Number of control points: " << nCtrlPts << std::endl;
         // NOTE: For all control points in the beam the jaws aperture
         // is defined in the first control point:
         auto jaw_x = dicomSvc->GetPlan()->ReadJawsAperture(rtplan_file,"X",i_beam,0);

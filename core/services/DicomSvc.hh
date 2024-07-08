@@ -139,10 +139,10 @@ class DicomSvc {
     double GetRTPlanDose(int current_beam, int current_controlpoint) const;
 
     ///\brief  Describe me.
-    unsigned GetRTPlanNumberOfBeams() const;
+    unsigned GetRTPlanNumberOfBeams(const std::string& planFile) const;
 
     ///\brief  Sum of the control points for a given beam number
-    unsigned GetRTPlanNumberOfControlPoints(unsigned beamNumber) const;
+    unsigned GetRTPlanNumberOfControlPoints(const std::string& planFile,unsigned beamNumber) const;
 
     ///
     unsigned GetTotalNumberOfControlPoints() const;

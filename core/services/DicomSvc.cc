@@ -1,6 +1,5 @@
 #include "DicomSvc.hh"
 #include "Services.hh"
-
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -35,6 +34,11 @@ void DicomSvc::Initialize(const std::string& planFileType){
   // }
 }
 
+void DicomSvc::SetPlanFile(const std::string& plan_file){
+  m_rtplan_file = plan_file;
+  Initialize(svc::getFileExtenstion(m_rtplan_file));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 unsigned DicomSvc::GetTotalNumberOfControlPoints() const {
@@ -51,20 +55,20 @@ DicomSvc *DicomSvc::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
-  LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
-  LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
+  //LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
+  //LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
     G4Exception("IDicomPlan", "GetJawPossition", FatalErrorInArgument, "Wrong jaw name input given!");
 
   auto rtplanJawsReader = py::module::import("dicom_rtplan_jaws");
-  auto beams_counter = rtplanJawsReader.attr("return_number_of_beams")(planFile);
-  const int number_of_beams = beams_counter.cast<int>();
-  auto controlpoints_counter = rtplanJawsReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
-  const int number_of_controlpoints = controlpoints_counter.cast<int>();
-  auto jaws_counter = rtplanJawsReader.attr("return_number_of_jaws")(planFile);
-  const int number_of_jaws = jaws_counter.cast<int>();
-  std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
-            << number_of_jaws << " jaws." << std::endl;
+  // auto beams_counter = rtplanJawsReader.attr("return_number_of_beams")(planFile);
+  // const int number_of_beams = beams_counter.cast<int>();
+  // auto controlpoints_counter = rtplanJawsReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
+  // const int number_of_controlpoints = controlpoints_counter.cast<int>();
+  // auto jaws_counter = rtplanJawsReader.attr("return_number_of_jaws")(planFile);
+  // const int number_of_jaws = jaws_counter.cast<int>();
+  // std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
+  //           << number_of_jaws << " jaws." << std::endl;
   int jawIdx = 0; // X1
   if (jawName == "X2") jawIdx = 1;
   else if (jawName == "Y1") jawIdx = 2;
@@ -106,16 +110,16 @@ void IPlan::AcknowledgeMlcPositioning(const std::string& side, const std::vector
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
-  LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
-  LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
+  // LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
+  // LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
   if(side!="Y1" && side!="Y2")
     G4Exception("IDicomPlan", "GetMlcPositioning", FatalErrorInArgument, "Wrong input side given!");
   std::vector<G4double> mlcPositioning;
   auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
-  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(planFile);
-  const int number_of_beams = beams_counter.cast<int>();
-  auto controlpoints_counter = rtplanMlcReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
-  const int number_of_controlpoints = controlpoints_counter.cast<int>();
+  // auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(planFile);
+  // const int number_of_beams = beams_counter.cast<int>();
+  // auto controlpoints_counter = rtplanMlcReader.attr("return_number_of_controlpoints")(planFile, number_of_beams);
+  // const int number_of_controlpoints = controlpoints_counter.cast<int>();
   auto leaves_counter = rtplanMlcReader.attr("return_number_of_leaves")(planFile);
   const int number_of_leaves = leaves_counter.cast<int>();
   // std::cout << "We have " << number_of_beams << " beams, " << number_of_controlpoints << " checkpoints and "
@@ -290,18 +294,17 @@ double DicomSvc::GetRTPlanDose(int current_beam, int current_controlpoint) const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-unsigned DicomSvc::GetRTPlanNumberOfBeams() const {
-  // Implement me.
-  // To be done when you will not use the 0 beam and control point 0.
-  return 2; // dummy number
+unsigned DicomSvc::GetRTPlanNumberOfBeams(const std::string& planFile) const {
+  auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
+  auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(planFile);
+  return beams_counter.cast<unsigned>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-unsigned DicomSvc::GetRTPlanNumberOfControlPoints(unsigned beamNumber) const{
-  // Implement me. Note: verify if given beamNumber exists!
-  // To be done when you will not use the 0 beam and control point 0.
-  return 100; // dummy number
+unsigned DicomSvc::GetRTPlanNumberOfControlPoints(const std::string& planFile,unsigned beamNumber) const{
+  auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
+  return rtplanMlcReader.attr("return_number_of_controlpoints")(planFile,beamNumber).cast<unsigned>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

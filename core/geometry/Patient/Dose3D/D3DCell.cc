@@ -18,7 +18,7 @@ namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
 }
 
-G4double D3DCell::SIZE = 10.4 * mm;
+G4double D3DCell::SIZE = 10.0 * mm;
 // G4double D3DCell::SIZE = 5.4 * mm;
 // G4double D3DCell::SIZE = 2 * cm;
 

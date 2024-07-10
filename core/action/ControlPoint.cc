@@ -210,8 +210,8 @@ void ControlPointRun::FillDataTagging(){
 ///
 void ControlPointRun::FillFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-
-    for(auto& scoring_map: m_hashed_scoring_map){
+    current_cp->GetMlcFieldScalingFactor(G4ThreeVector(0,0,0)); // TEMPORARY TEST
+    /*for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for {} run collection",scoring_map.first);
         auto& hashed_scoring_map = scoring_map.second;
 
@@ -224,12 +224,28 @@ void ControlPointRun::FillFieldScalingFactor(){
                 hit.second.SetFieldScalingFactor(field_scaling_factor);
             }
         }
-    }
+    }*/
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& centre) const {
-    const auto& mlc_a_positioning = GetMlcPositioning("Y1");
-    const auto& mlc_b_positioning = GetMlcPositioning("Y2");
+    ControlPoint* current_cp = Service<RunSvc>()->CurrentControlPoint();
+    static std::vector<G4ThreeVector> mlc_a_positioning;
+    static std::vector<G4ThreeVector> mlc_b_positioning;
+    if(current_cp!=this){
+        mlc_a_positioning.clear();
+        mlc_b_positioning.clear();
+    }
+    if(mlc_a_positioning.empty()){
+        mlc_a_positioning = MLC()->GetMlcPositioning("Y1");
+        mlc_b_positioning = MLC()->GetMlcPositioning("Y2");
+    }
+    std::vector<G4ThreeVector> x_products;
+    for(size_t i=0;i<mlc_a_positioning.size();++i){
+        std::cout << "DEBUG: ControlPoint: MLC Y1: " << mlc_a_positioning.at(i) << "  Y2: " << mlc_b_positioning.at(i) << G4endl;
+    //     auto mlc_a_leaf = G4ThreeVector(mlc_a_positioning[i];
+    }
     return -1000;
 }
 
@@ -659,6 +675,8 @@ VMlc* ControlPoint::MLC() const {
     return mlc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const {
     auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
@@ -674,6 +692,8 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
     return m_mlc_a_positioning; // never reached, prevent warning
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 double ControlPoint::GetJawAperture(const std::string& side) const{
     if(side=="X1"){
         return m_jaw_x_aperture.first;

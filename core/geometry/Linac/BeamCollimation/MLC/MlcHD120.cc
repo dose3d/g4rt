@@ -46,7 +46,8 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     //  Creating the MLC world.
     /////////////////////////////////////////////////////////////////////////////
 
-    auto zShiftInLinacWorld = parentPV->GetTranslation().getZ() + 373.75 * mm;
+    // auto zShiftInLinacWorld = parentPV->GetTranslation().getZ() + 373.75 * mm;
+    auto zShiftInLinacWorld = VMlc::GetMlcZPosition(); // TO BE VALIDATED
     auto zTranslationInLinacWorld = G4ThreeVector(0.,0.,-zShiftInLinacWorld);
     auto mlcWorldPV = parentPV;
     /////////////////////////////////////////////////////////////////////////////
@@ -607,6 +608,7 @@ void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
         auto y1_translation = m_y1_leaves[leaf_idx]->GetTranslation();
         y1_translation.setX(y1_translation.getX()-mlc_a_positioning.at(leaf_idx));
         m_y1_leaves[leaf_idx]->SetTranslation(y1_translation);
+        VMlc::m_leaves_x_positioning.emplace_back(y1_translation.getX());
     }
     for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
         auto y2_translation = m_y2_leaves[leaf_idx]->GetTranslation();
@@ -640,6 +642,8 @@ void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
         auto y1_translation = m_y1_leaves[i]->GetTranslation();
         y1_translation.setX(y1_translation.getX()+pos2.at(i) );
         m_y1_leaves[i]->SetTranslation(y1_translation);
+
+        VMlc::m_leaves_x_positioning.emplace_back(y1_translation.getX());
 
         auto y2_translation = m_y2_leaves[i]->GetTranslation();
         y2_translation.setX(y2_translation.getX()+pos1.at(i) );

@@ -73,3 +73,27 @@ bool VMlc::Initialized(const ControlPoint* control_point) const {
     return true; 
 }
 
+
+std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
+    std::vector<G4ThreeVector> mlc_positioning;
+    if(m_leaves_x_positioning.empty()) // not initialized
+        return mlc_positioning;
+
+    auto z = GetMlcZPosition();
+    auto mlc_y_positioning = Service<RunSvc>()->CurrentControlPoint()->GetMlcPositioning(side);
+    for(size_t i=0; i<m_leaves_x_positioning.size(); i++){
+        auto x = m_leaves_x_positioning.at(i);
+        auto y = mlc_y_positioning.at(i);
+        mlc_positioning.push_back(G4ThreeVector(x,y,z));
+    }
+    return mlc_positioning;
+}
+
+G4double VMlc::GetMlcZPosition() {
+    auto isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
+    auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID");
+    return isocentre.z() - sid + 373.75; 
+}
+
+
+

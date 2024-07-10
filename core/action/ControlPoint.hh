@@ -47,6 +47,7 @@ class ControlPointRun : public G4Run {
 
     ///
     void FillDataTagging();
+    void FillFieldScalingFactor();
 
   public:
     ControlPointRun(bool scoring=false) {
@@ -126,7 +127,6 @@ class ControlPoint {
     std::vector<G4ThreeVector>& GetPlanMaskPoints() {return m_plan_mask_points;}
     void FillPlanFieldMask();
     VMlc* MLC() const;
-
   private:
     friend class ControlPointRun;
     friend class VPatientSD;
@@ -164,6 +164,8 @@ class ControlPoint {
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForInputPlan(double current_z);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
+    G4double GetMlcFieldScalingFactor(const G4ThreeVector& centre) const;
+
 
 };
 

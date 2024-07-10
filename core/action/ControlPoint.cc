@@ -133,7 +133,8 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
-        FillDataTagging();
+        // FillDataTagging();
+        FillFieldScalingFactor();
     }
     else {
         LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
@@ -203,6 +204,33 @@ void ControlPointRun::FillDataTagging(){
             }
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::FillFieldScalingFactor(){
+    auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+
+    for(auto& scoring_map: m_hashed_scoring_map){
+        LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for {} run collection",scoring_map.first);
+        auto& hashed_scoring_map = scoring_map.second;
+
+        for(auto& scoring: hashed_scoring_map){
+            auto scoring_type = scoring.first;
+            // LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
+            auto& data = scoring.second;
+            for(auto& hit : data){
+                auto field_scaling_factor = current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre());
+                hit.second.SetFieldScalingFactor(field_scaling_factor);
+            }
+        }
+    }
+}
+
+G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& centre) const {
+    const auto& mlc_a_positioning = GetMlcPositioning("Y1");
+    const auto& mlc_b_positioning = GetMlcPositioning("Y2");
+    return -1000;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

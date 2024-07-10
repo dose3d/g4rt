@@ -253,44 +253,66 @@ void PatientGeometry::DefineSensitiveDetector() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/**
+ * @brief Exports the patient geometry to CSV files.
+ * 
+ * This function exports the patient geometry to CSV files for CT imaging.
+ * It creates a set of CSV files for each slice of the patient and saves
+ * the position and material of each voxel in the CSV format. The CSV files
+ * are saved in the specified output directory.
+ * 
+ * @param path_to_output_dir The path to the output directory where the CSV
+ *                           files will be saved.
+ */
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
+  // Get the patient environment and check if it exists
   auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
   if (!patientEnv) {
     return;
   }
   auto patientInstance = patientEnv->GetPatient();
 
+  // Create a G4Navigator object
   auto g4Navigator = std::make_unique<G4Navigator>();
+
+  // Get the world instance and set the world volume in the G4Navigator
   auto worldInstance = Service<GeoSvc>()->World();
   g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
   
+  // Create the output directory if it does not exist
   IO::CreateDirIfNotExits(path_to_output_dir);
 
+  // Initialize variables
   G4String materialName;
   G4ThreeVector currentPos;
 
+  // Get the patient position in the world environment
   auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
 
-  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX"),4);
-
-  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY"),4);
-
-  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ"),4);
-
+  // Get the voxel size in the x, y, and z directions
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
   auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
 
+  // Get the environment size in the x, y, and z directions
+  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+
+  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+
+  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+
+  // Calculate the resolution in the x, y, and z directions
   G4int xResolution = env_size_x / sizeX;
   G4int yResolution = env_size_y / sizeY;
   G4int zResolution = env_size_z / sizeZ;
 
+  // Log the resolution
   LOGSVC_INFO("ExportToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
-  // DUMP METADATA TO FILE 
+  // Dump metadata to file
   auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
@@ -299,9 +321,9 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   metadata_file << "y_min," << ct_cube_init_y  << std::endl;
   metadata_file << "z_min," << ct_cube_init_z  << std::endl;
 
-  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z),4) << std::endl;
+  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x + sizeX),4) << std::endl;
+  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y + sizeY),4) << std::endl;
+  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z + sizeZ),4) << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;
@@ -314,29 +336,40 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   double source_to_isocentre = 1000;
   metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
 
+  // Iterate over each slice
   for( int y = 0; y < yResolution; y++ ){
-  std::ostringstream ss;
-  ss << std::setw(4) << std::setfill('0') << y+1 ;
-  std::string s2(ss.str());
-  auto file =  path_to_output_dir+"/img"+s2+".csv";
-  // G4cout << "output filepath:  " << file << G4endl;
-  std::string header = "X [mm],Y [mm],Z [mm],Material";
-  std::ofstream c_outFile;
-  c_outFile.open(file.c_str(), std::ios::out);
-  c_outFile << header << std::endl;
-  for( int x = 0; x < xResolution; x++ ){
-    for( int z = 0; z < zResolution; z++ ){
-      currentPos.setX((ct_cube_init_x+sizeX*x));
-      currentPos.setY((ct_cube_init_y+sizeY*y));
-      currentPos.setZ((ct_cube_init_z+sizeZ*z));
-      materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-      c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
+    // Create the file name
+    std::ostringstream ss;
+    ss << std::setw(4) << std::setfill('0') << y+1 ;
+    std::string s2(ss.str());
+    auto file =  path_to_output_dir+"/img"+s2+".csv";
+
+    // Create the CSV file
+    std::string header = "X [mm],Y [mm],Z [mm],Material";
+    std::ofstream c_outFile;
+    c_outFile.open(file.c_str(), std::ios::out);
+    c_outFile << header << std::endl;
+
+    // Iterate over each voxel in the slice
+    for( int x = 0; x < xResolution; x++ ){
+      for( int z = 0; z < zResolution; z++ ){
+        // Set the position of the current voxel
+        currentPos.setX((ct_cube_init_x+sizeX*x));
+        currentPos.setY((ct_cube_init_y+sizeY*y));
+        currentPos.setZ((ct_cube_init_z+sizeZ*z));
+
+        // Get the material of the current voxel
+        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+
+        // Write the position and material to the CSV file
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
+      }
     }
+    c_outFile.close();
   }
-  c_outFile.close();
 }
 
-}  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -362,18 +395,19 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
 
-  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX"),4);
-
-  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY"),4);
-
-  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ"),4);
-
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
   auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
+
+  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+
+  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+
+  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+
 
   G4int xResolution = env_size_x / sizeX;
   G4int yResolution = env_size_y / sizeY;
@@ -411,14 +445,24 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedVoxels;
   std::unordered_set<std::pair<double, size_t>, pair_hash> addedPairs;
 
+  /**
+   * Iterate over all scoring collections and extract voxel data.
+   * Create vectors of pairs to store the centre coordinates and ids
+   * of voxels. Check if the pair already exists in the set and if not
+   * add it to the vector.
+   */
   const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
+  
   for(auto& scoring_map: scoring_maps){
     for(auto& scoring: scoring_map.second){
       auto scoring_type = scoring.first;
-      auto& data = scoring.second;
+      auto data = scoring.second;
+      // Check if the scoring type is voxel
       if(scoring_type==Scoring::Type::Voxel){      
+        // Iterate over voxel data
         for(auto& voxel: data){
           auto& voxel_data = voxel.second;
+          // Create pairs to check if the pair already exists in the set
           std::pair<double, size_t> pairToCheckX = std::make_pair(
             voxel_data.GetCentre().getX(), 
             std::hash<std::string>{}(
@@ -435,6 +479,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
             "ZCell" + std::to_string(voxel_data.GetGlobalID(2)) + 
             "Voxel" + std::to_string(voxel_data.GetID(2))));
 
+          // Check if the pair already exists in the set and if not
+          // add it to the vector
           if(addedPairs.find(pairToCheckX) == addedPairs.end()) {
               auto idsx = std::make_pair(voxel_data.GetGlobalID(0),voxel_data.GetID(0));
               xMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getX(),idsx));
@@ -455,70 +501,101 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     }
   }
 
-    // Custom comparator to sort by the first element of the pair
+
+  std::cout << "Na razie idzie względnie dobrze i do przodu" << std::endl;
+  
+    /**
+     * Custom comparator function to sort a vector of pairs by the first element of the pair.
+     *
+     * @param a First pair to compare
+     * @param b Second pair to compare
+     * @return True if the first element of a is less than the first element of b, false otherwise
+     */
     auto compareByFirst = [](const std::pair<double,std::pair<size_t,size_t>>& a, const std::pair<double,std::pair<size_t,size_t>>& b) {
-        return a.first < b.first;
+        // Compare the first element of the pair a with the first element of the pair b
+        return a.first < b.first; // Return true if a is less than b, false otherwise
     };
 
   std::sort(xMappedVoxels.begin(), xMappedVoxels.end(), compareByFirst);
   std::sort(yMappedVoxels.begin(), yMappedVoxels.end(), compareByFirst);
   std::sort(zMappedVoxels.begin(), zMappedVoxels.end(), compareByFirst);
 
-  auto magicLambdaToLocateDoseInCurrentPosition = [](G4ThreeVector position, 
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> xVec, 
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> yVec, 
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> zVec, 
-  double halfsize) {
-    std::pair<size_t,size_t> closestXPoint = xVec[0].second;
-    std::pair<size_t,size_t> closestYPoint = xVec[0].second;
-    std::pair<size_t,size_t> closestZPoint = xVec[0].second;
+  const std::map<size_t, VoxelHit>* voxelData = nullptr;
+  for(auto& scoring_map: scoring_maps){
+    for(auto& scoring: scoring_map.second){
+      auto scoring_type = scoring.first;
+      if(scoring_type==Scoring::Type::Voxel){   
+        voxelData = &scoring.second;
+      }
+    }
+  }
+
+  auto getDoseInPosition = [&voxelData](const G4ThreeVector& position,
+                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& xVector,
+                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& yVector,
+                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& zVector,
+                              double halfSize) {
+                              // const std::map<size_t, VoxelHit> voxelMap) {
+    std::pair<size_t, size_t> closestX{-1, -1};
+    std::pair<size_t, size_t> closestY{-1, -1};
+    std::pair<size_t, size_t> closestZ{-1, -1};
     
-    double minX = xVec.front().first - halfsize;
-    double minY = yVec.front().first - halfsize;
-    double minZ = zVec.front().first - halfsize; 
-    double maxX = xVec.back().first + halfsize;
-    double maxY = yVec.back().first + halfsize;
-    double maxZ = zVec.back().first + halfsize;
+    double minX = xVector.front().first - halfSize;
+    double minY = yVector.front().first - halfSize;
+    double minZ = zVector.front().first - halfSize;
     
-    double minXDistance = std::abs(position.x() - xVec[0].first);
-    double minYDistance = std::abs(position.y() - yVec[0].first);
-    double minZDistance = std::abs(position.z() - zVec[0].first);
+    double maxX = xVector.back().first + halfSize;
+    double maxY = yVector.back().first + halfSize;
+    double maxZ = zVector.back().first + halfSize;
+    
+    double minDistance = std::abs(halfSize);
+    
+    if (position.x() < minX || position.x() > maxX ||
+        position.y() < minY || position.y() > maxY ||
+        position.z() < minZ || position.z() > maxZ) {
+      return 0.0;
+    }
+    // std::cout << "I jesteśmy w lambdzie... " << std::endl;
+    for (const auto& point : xVector) {
+      double distance = std::abs(position.x() - point.first);
+      if (distance <= minDistance) {
+        closestX = point.second;
+      }
+    }
+    
+    for (const auto& point : yVector) {
+      double distance = std::abs(position.y() - point.first);
+      if (distance <= minDistance) {
+        closestY = point.second;
+      }
+    }
+    
+    for (const auto& point : zVector) {
+      double distance = std::abs(position.z() - point.first);
+      if (distance <= minDistance) {
+        closestZ = point.second;
+      }
+    }
+    
+    if (closestX.first == -1 || closestY.first == -1 || closestZ.first == -1) {
+      return 0.0;
+    }
 
-    if ((position.x() > maxX) || (position.y() > maxY) || (position.z() > maxZ) || (position.x() < minX) || (position.y() < minY) || (position.z() < minZ)) {
-        return 0.;
-    }
-    for (const std::pair<double,std::pair<size_t,size_t>>& point : xVec) {
-        double distance = std::abs(position.x() - point.first);
-        if (distance < minXDistance) {
-            minXDistance = distance;
-            closestXPoint = point.second;
-        }
-    }
-
-    for (const std::pair<double,std::pair<size_t,size_t>>& point : yVec) {
-        double distance = std::abs(position.y() - point.first);
-        if (distance < minYDistance) {
-            minYDistance = distance;
-            closestYPoint = point.second;
-        }
-    }
-
-    for (const std::pair<double,std::pair<size_t,size_t>>& point : zVec) {
-        double distance = std::abs(position.z() - point.first);
-        if (distance < minZDistance) {
-            minZDistance = distance;
-            closestZPoint = point.second;
-        }
-    }
-    // std::cout << "CellIdX: " << closestXPoint.first << " VoxelIdX: " << closestXPoint.second << " CellIdY: " <<  closestYPoint.first 
-    // << " VoxelIdY: " << closestYPoint.second << " CellIdZ: " << closestZPoint.first << " VoxelIdZ: " << closestZPoint.second << std::endl;
-    return 1.0*closestZPoint.first+ zVec.size()*closestYPoint.first + zVec.size()*yVec.size()*closestXPoint.first;
+    // std::cout << "closestX: " << closestX.first << " closestY: " << closestY.first << " closestZ: " << closestZ.first << std::endl;
+    
+    // return std::hash<std::string>{}(std::to_string(closestZ.first)+std::to_string(closestY.first)+
+    //                                 std::to_string(closestX.first)+std::to_string(closestZ.second)+
+    //                                 std::to_string(closestY.second)+std::to_string(closestX.second)) * 1.0;
+    return voxelData->find(std::hash<std::string>{}(std::to_string(closestZ.first)+std::to_string(closestY.first)+
+                                    std::to_string(closestX.first)+std::to_string(closestZ.second)+
+                                    std::to_string(closestY.second)+std::to_string(closestX.second)))->second.GetDose();
   };
 
 
-
+  // std::cout << "Czyżby pętla?" << std::endl;
   double dose = 0.;
-
+  
+  std::cout << &voxelData <<std::endl; 
 
   for( int y = 0; y < yResolution; y++ ){
     std::ostringstream ss;
@@ -536,7 +613,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        dose = magicLambdaToLocateDoseInCurrentPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5);
+        // std::cout << "Ale tu choć wchodzimy? " << std::endl;
+        dose = getDoseInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5); //, *voxelData);
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << std::endl;
       }
     }

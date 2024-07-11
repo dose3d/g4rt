@@ -6,7 +6,7 @@
 #include "G4ProductionCuts.hh"
 #include "Services.hh"
 
-G4double D3DMLayer::COVER_WIDTH = 1.0 * mm;
+G4double D3DMLayer::COVER_WIDTH = 1.00 * mm;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

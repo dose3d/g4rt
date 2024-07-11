@@ -378,8 +378,6 @@ void ControlPoint::FillPlanFieldMask(){
         FillPlanFieldMaskForRegularShapes(z_position);
     }
     if(m_config.FieldType.compare("RTPlan")==0 || m_config.FieldType.compare("CustomPlan")==0){
-        // std::cout << "AaAaAaAa - I dont know what to do" << std::endl;
-        // std::cout << "AaAaAaAa - I dont know what to do" << std::endl;
         FillPlanFieldMaskForInputPlan(z_position);
     }
     if(m_plan_mask_points.empty()){

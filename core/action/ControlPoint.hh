@@ -46,8 +46,7 @@ class ControlPointRun : public G4Run {
     void InitializeScoringCollection();
 
     ///
-    void FillDataTagging();
-    void FillFieldScalingFactor();
+    void FillMlcFieldScalingFactor();
 
   public:
     ControlPointRun(bool scoring=false) {
@@ -88,7 +87,7 @@ class ControlPoint {
     G4double GetDegreeRotation() const {return m_config.RotationInDeg;}
     void SetRotation(double rotationInDegree);
     void SetNEvts(int nevts) { m_config.NEvts = nevts; }
-    G4double GetInFieldMaskTag(const G4ThreeVector& position) const;
+    G4double GetMlcFieldScalingFactor(const G4ThreeVector& position) const;
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
@@ -164,8 +163,6 @@ class ControlPoint {
     void FillPlanFieldMaskForRegularShapes(double current_z);
     void FillPlanFieldMaskForInputPlan(double current_z);
     void FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl);
-    G4double GetMlcFieldScalingFactor(const G4ThreeVector& centre) const;
-
 
 };
 

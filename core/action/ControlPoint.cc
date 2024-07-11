@@ -14,6 +14,7 @@
 #include <random>
 #include "VMlc.hh"
 #include "Services.hh"
+#include <numeric> 
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
@@ -133,8 +134,8 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
-        // FillDataTagging();
-        FillFieldScalingFactor();
+        // FillMlcFieldScalingFactor();
+        FillMlcFieldScalingFactor();
     }
     else {
         LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
@@ -144,10 +145,10 @@ void ControlPointRun::EndOfRun(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPointRun::FillDataTagging(){
+void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
     // TODO if(current_cp != this->Owner()){
-    //     LOGSVC_ERROR("ControlPointRun::FillDataTagging: current control point mismatch!");
+    //     LOGSVC_ERROR("ControlPointRun::FillMlcFieldScalingFactor: current control point mismatch!");
     // }
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
@@ -179,7 +180,7 @@ void ControlPointRun::FillDataTagging(){
         };
 
         auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
-            auto mask_tag = current_cp->GetInFieldMaskTag(hit.GetCentre());
+            auto mask_tag = current_cp->GetMlcFieldScalingFactor(hit.GetCentre());
             auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
             auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
             hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
@@ -204,49 +205,6 @@ void ControlPointRun::FillDataTagging(){
             }
         }
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void ControlPointRun::FillFieldScalingFactor(){
-    auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-    current_cp->GetMlcFieldScalingFactor(G4ThreeVector(0,0,0)); // TEMPORARY TEST
-    /*for(auto& scoring_map: m_hashed_scoring_map){
-        LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for {} run collection",scoring_map.first);
-        auto& hashed_scoring_map = scoring_map.second;
-
-        for(auto& scoring: hashed_scoring_map){
-            auto scoring_type = scoring.first;
-            // LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
-            auto& data = scoring.second;
-            for(auto& hit : data){
-                auto field_scaling_factor = current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre());
-                hit.second.SetFieldScalingFactor(field_scaling_factor);
-            }
-        }
-    }*/
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& centre) const {
-    ControlPoint* current_cp = Service<RunSvc>()->CurrentControlPoint();
-    static std::vector<G4ThreeVector> mlc_a_positioning;
-    static std::vector<G4ThreeVector> mlc_b_positioning;
-    if(current_cp!=this){
-        mlc_a_positioning.clear();
-        mlc_b_positioning.clear();
-    }
-    if(mlc_a_positioning.empty()){
-        mlc_a_positioning = MLC()->GetMlcPositioning("Y1");
-        mlc_b_positioning = MLC()->GetMlcPositioning("Y2");
-    }
-    std::vector<G4ThreeVector> x_products;
-    for(size_t i=0;i<mlc_a_positioning.size();++i){
-        std::cout << "DEBUG: ControlPoint: MLC Y1: " << mlc_a_positioning.at(i) << "  Y2: " << mlc_b_positioning.at(i) << G4endl;
-    //     auto mlc_a_leaf = G4ThreeVector(mlc_a_positioning[i];
-    }
-    return -1000;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -539,7 +497,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
+G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) const {
     // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
     G4double closest_dist{10.e9};
     auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
@@ -554,7 +512,8 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
                     closest_dist = current_dist;
             }
         }
-        return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
+        // return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
+        return  exp(-(closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
     }
     return 1.;
 }

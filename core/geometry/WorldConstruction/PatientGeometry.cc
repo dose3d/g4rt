@@ -581,25 +581,21 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
       return 0.0;
     }
 
-    // std::cout << "closestX: " << closestX.first << " closestY: " << closestY.first << " closestZ: " << closestZ.first << std::endl;
-    
-    // return std::hash<std::string>{}(std::to_string(closestZ.first)+std::to_string(closestY.first)+
-    //                                 std::to_string(closestX.first)+std::to_string(closestZ.second)+
-    //                                 std::to_string(closestY.second)+std::to_string(closestX.second)) * 1.0;
-    return voxelData->find(std::hash<std::string>{}(std::to_string(closestZ.first)+std::to_string(closestY.first)+
-                                    std::to_string(closestX.first)+std::to_string(closestZ.second)+
-                                    std::to_string(closestY.second)+std::to_string(closestX.second)))->second.GetDose();
+
+    return voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
+                                    std::to_string(closestZ.first)+std::to_string(closestX.second)+
+                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second.GetDose();
   };
 
 
-  // std::cout << "Czyżby pętla?" << std::endl;
+
   double dose = 0.;
   
   std::cout << &voxelData <<std::endl; 
 
-  for( int y = 0; y < yResolution; y++ ){
+  for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << y+1 ;
+    ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/img"+s2+".csv";
     // G4cout << "output filepath:  " << file << G4endl;
@@ -607,13 +603,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
-    for( int x = 0; x < xResolution; x++ ){
+    for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        // std::cout << "Ale tu choć wchodzimy? " << std::endl;
         dose = getDoseInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5); //, *voxelData);
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << std::endl;
       }

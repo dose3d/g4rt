@@ -88,8 +88,13 @@ class D3DDetector : public VPatient, public GeoComponet {
         bool m_initialized = false;
     };
 
+    ///
     void SetConfig(const D3DDetector::Config& config);
 
+    ///
+    G4bool IsInside(double x, double y, double z) override;
+
+    ///
   private:
 
     ///

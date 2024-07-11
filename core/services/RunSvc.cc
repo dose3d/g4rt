@@ -103,7 +103,6 @@ void RunSvc::Configure() {
   // DICOM OUTPUT MANAGEMENT
   DefineUnit<bool>("GenerateCT");
 
-
   DefineUnit<std::string>("OutputDir");
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters

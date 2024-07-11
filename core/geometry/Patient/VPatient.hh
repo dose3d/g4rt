@@ -47,6 +47,9 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     void SetTracksAnalysis(bool flag) {m_tracks_analysis = flag; }
 
     ///
+    virtual G4bool IsInside(double x, double y, double z) { return false; }
+
+    ///
     G4ThreeVector GetPatientTopPositionInWolrdEnv() {return m_patient_top_position_in_world_env; }
 
     /// TO BE DELETED

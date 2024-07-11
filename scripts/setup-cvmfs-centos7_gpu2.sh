@@ -9,7 +9,7 @@
 # ===========================================  
 LCG=103
 GEANT4=11.1.1
-PLATFORM=x86_64-centos7-gcc11-opt
+PLATFORM=x86_64-centos9-gcc11-opt
 # ===========================================
 
 #echo "Conda initialization"

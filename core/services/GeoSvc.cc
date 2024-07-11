@@ -460,6 +460,7 @@ void GeoSvc::WriteWorldToTFile() {
   auto geo_tfile = output_dir+"/"+m_world_file_name+".root";
   auto tf = std::make_unique<TFile>(geo_tfile.c_str(),"RECREATE");
   auto geo_dir = tf->mkdir("Geometry");
+  TGeoManager::SetDefaultUnits(TGeoManager::kG4Units);
   auto tgeom = TGeoManager::Import(geo_gdml_file.c_str());
   tgeom->SetTitle("G4RT World Geometry");
   tgeom->LockGeometry();

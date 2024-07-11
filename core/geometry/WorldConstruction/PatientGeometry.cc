@@ -606,7 +606,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5);
         if(voxelHit){
           dose = voxelHit->GetDose();
-          fsf = voxelHit->GetMaskTag();
+          fsf = voxelHit->GetFieldScalingFactor();
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << "," << fsf << std::endl;
       }

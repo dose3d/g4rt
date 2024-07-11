@@ -53,27 +53,19 @@ void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
             auto type = Scoring::to_string(scoring_type);
             std::vector<double> linearized_mask_vec;
             std::vector<double> infield_tag_vec;
-            std::vector<double> geo_tag_vec;
-            std::vector<double> geo_tag_weighted_vec;
             std::vector<double> dose_vec;
             for(auto& scoring : data){
                 auto pos = scoring.second.GetCentre();
                 for(const auto& i :  svc::linearizeG4ThreeVector(pos))
                     linearized_mask_vec.emplace_back(i);
-                infield_tag_vec.emplace_back(scoring.second.GetMaskTag());
-                geo_tag_vec.emplace_back(scoring.second.GetGeoTag());
-                geo_tag_weighted_vec.emplace_back(scoring.second.GetWeigthedGeoTag());
+                infield_tag_vec.emplace_back(scoring.second.GetFieldScalingFactor());
                 dose_vec.emplace_back(scoring.second.GetDose());
             }
-            std::string name_pos = collection+"_VolumeFieldMaskTagPosition_"+type;
-            std::string name_ftag = collection+"_VolumeFieldMaskTagValue_"+type;
-            std::string name_gtag = collection+"_VolumeGeoTagValue_"+type;
-            std::string name_wgtag = collection+"_VolumeWeightedGeoTagValue_"+type;
+            std::string name_pos = collection+"_VolumeFieldScalingFactorPosition_"+type;
+            std::string name_ftag = collection+"_VolumeFieldScalingFactorValue_"+type;
             std::string name_dose = collection+"_Dose_"+type;
             cp_dir->WriteObject(&linearized_mask_vec,name_pos.c_str());
             cp_dir->WriteObject(&infield_tag_vec,name_ftag.c_str());
-            cp_dir->WriteObject(&geo_tag_vec,name_gtag.c_str());
-            cp_dir->WriteObject(&geo_tag_weighted_vec,name_wgtag.c_str());
             cp_dir->WriteObject(&dose_vec,name_dose.c_str());
             file->Write();
         }

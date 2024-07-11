@@ -134,7 +134,6 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
-        // FillMlcFieldScalingFactor();
         FillMlcFieldScalingFactor();
     }
     else {
@@ -147,61 +146,11 @@ void ControlPointRun::EndOfRun(){
 ///
 void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-    // TODO if(current_cp != this->Owner()){
-    //     LOGSVC_ERROR("ControlPointRun::FillMlcFieldScalingFactor: current control point mismatch!");
-    // }
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
-        auto& hashed_scoring_map = scoring_map.second;
-
-        std::vector<const VoxelHit*> in_field_scoring_volume;
-
-        auto getActivityGeoCentre = [&](bool weighted){
-            G4ThreeVector sum{0,0,0};
-            G4double total_dose{0};
-            std::for_each(  in_field_scoring_volume.begin(),
-                            in_field_scoring_volume.end(),
-                            [&](const VoxelHit* iv) {
-                        sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
-                        total_dose += iv->GetDose();
-                        });
-            if(total_dose<1e-30){
-                LOGSVC_WARN("No activity found!");
-            }
-            if(weighted){
-                LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
-                return total_dose == 0 ? sum : sum / total_dose;
-            }
-            else{
-                auto size = in_field_scoring_volume.size();
-                LOGSVC_INFO("getActivityGeoCentre: size: {}",size);
-                return size > 0 ? sum / size : sum;
-            }
-        };
-
-        auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
-            auto mask_tag = current_cp->GetMlcFieldScalingFactor(hit.GetCentre());
-            auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
-            auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
-            hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
-        };
-
-        for(auto& scoring: hashed_scoring_map){
-            auto scoring_type = scoring.first;
-            // LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
-            auto& data = scoring.second;
-            in_field_scoring_volume.clear();
-            for(auto& hit : data){
-                if(current_cp->MLC()->IsInField(hit.second.GetCentre(),true)) // DEBUG !!!!
-                    in_field_scoring_volume.push_back(&hit.second);
-            }
-            // LOGSVC_INFO("Found InField #ScoringVolumes: {}",in_field_scoring_volume.size());
-            auto geo_centre = getActivityGeoCentre(false);
-            // LOGSVC_INFO("Geocentre: {}",geo_centre);
-            auto wgeo_centre = getActivityGeoCentre(true);
-            // LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
-            for(auto& hit : data){
-                fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
+        for(auto& scoring: scoring_map.second){
+            for(auto& hit : scoring.second){
+                hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
             }
         }
     }
@@ -484,7 +433,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
     for(auto& vol : volume_scoring){
         auto pos = vol.second.GetCentre();
         auto trans_pos = VMlc::GetPositionInMaskPlane(pos);
-        auto inFieldTag = vol.second.GetMaskTag();
+        auto inFieldTag = vol.second.GetFieldScalingFactor();
         // std::cout << "z: " << pos.getZ() << "  trans z: "<< trans_pos.getZ() << std::endl;
         c_outFile << pos.getX() << "," << pos.getY() << "," << pos.getZ();
         c_outFile << "," << trans_pos.getX() << "," << trans_pos.getY() << "," << trans_pos.getZ() << "," << inFieldTag << std::endl;

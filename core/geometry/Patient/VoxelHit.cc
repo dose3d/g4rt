@@ -296,15 +296,6 @@ void VoxelHit::PrintEvtInfo() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-// void VoxelHit::FillTagging(const ControlPoint& cp, G4ThreeVector geo_reference, G4ThreeVector wgeo_reference){
-void VoxelHit::FillTagging(double mask_tag, double geo_tag, double wgeo_tag){
-  m_mask_tag = mask_tag;  // cp.GetMlcFieldScalingFactor(GetCentre());
-  m_geo_tag = geo_tag;    // 1./sqrt(GetCentre().diff2(geo_reference));
-  m_wgeo_tag = wgeo_tag;  // 1./sqrt(GetCentre().diff2(wgeo_reference));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 std::size_t VoxelHit::GetGlobalHashedStrId() const {
   return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
                                   +std::to_string(m_Voxel.m_global_idx_y)

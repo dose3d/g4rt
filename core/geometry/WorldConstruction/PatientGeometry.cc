@@ -386,7 +386,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto cp = Service<RunSvc>()->CurrentControlPoint();
   auto run_id = std::to_string(runPtr->GetRunID());
-  auto path_to_output_dir = cp->GetOutputDir()+"_ct_dose_"+run_id;
+  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_"+run_id;
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 
@@ -501,9 +501,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     }
   }
 
-
-  std::cout << "Na razie idzie względnie dobrze i do przodu" << std::endl;
-  
     /**
      * Custom comparator function to sort a vector of pairs by the first element of the pair.
      *
@@ -530,12 +527,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     }
   }
 
-  auto getDoseInPosition = [&voxelData](const G4ThreeVector& position,
+  auto getVoxelHitInPosition = [&voxelData](const G4ThreeVector& position,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& xVector,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& yVector,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& zVector,
-                              double halfSize) {
-                              // const std::map<size_t, VoxelHit> voxelMap) {
+                              double halfSize) -> const VoxelHit* {
     std::pair<size_t, size_t> closestX{-1, -1};
     std::pair<size_t, size_t> closestY{-1, -1};
     std::pair<size_t, size_t> closestZ{-1, -1};
@@ -553,7 +549,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     if (position.x() < minX || position.x() > maxX ||
         position.y() < minY || position.y() > maxY ||
         position.z() < minZ || position.z() > maxZ) {
-      return 0.0;
+      return nullptr;
     }
     // std::cout << "I jesteśmy w lambdzie... " << std::endl;
     for (const auto& point : xVector) {
@@ -578,20 +574,16 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     }
     
     if (closestX.first == -1 || closestY.first == -1 || closestZ.first == -1) {
-      return 0.0;
+      return nullptr;
     }
 
 
-    return voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
+    return &voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
                                     std::to_string(closestZ.first)+std::to_string(closestX.second)+
-                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second.GetDose();
+                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second;
   };
 
-
-
-  double dose = 0.;
-  
-  std::cout << &voxelData <<std::endl; 
+  // std::cout << &voxelData <<std::endl; 
 
   for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
@@ -599,18 +591,24 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/img"+s2+".csv";
     // G4cout << "output filepath:  " << file << G4endl;
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy]";
+    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
+        double dose = 0.;
+        double fsf = 0.; // field scaling factor
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        dose = getDoseInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5); //, *voxelData);
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << std::endl;
+        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5);
+        if(voxelHit){
+          dose = voxelHit->GetDose();
+          fsf = voxelHit->GetMaskTag();
+        }
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();

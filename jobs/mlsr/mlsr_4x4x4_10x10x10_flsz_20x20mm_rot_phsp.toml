@@ -38,7 +38,7 @@ MLayerShift = false
 
 [D3DDetector_Cell]
 Medium = "Usr_G4AIR20C"
-Voxelization = [4,4,4]
+Voxelization = [10,10,10]
 TracksAnalysis = false
 CellVoxelisedScorer = true
 

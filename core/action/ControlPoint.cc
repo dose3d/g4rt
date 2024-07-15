@@ -150,10 +150,36 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
         for(auto& scoring: scoring_map.second){
             for(auto& hit : scoring.second){
-                hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
-            }
+                // hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
+                hit.second.SetFieldScalingFactor(current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre()));
+            } 
         }
     }
+    // _________________________________
+    // FOR TESTING PURPOSES
+    // int x_min = -50;
+    // int x_max = 50;
+    // int y_min = -50;
+    // int y_max = 50;
+    // int z = 34;
+
+    // // Open a CSV file to write the points
+    // std::ofstream outfile("weighted_influence.csv");
+
+    // // Write the header to the CSV file
+    // outfile << "x,y,z,wi\n";
+
+    // // Generate points and write them to the CSV file
+    // for (int x = x_min; x <= x_max; ++x) {
+    //     for (int y = y_min; y <= y_max; ++y) {
+    //         auto weighted_influence = current_cp->GetMlcWeightedInfluenceFactor(G4ThreeVector(x, y, z));
+    //         outfile << x << "," << y << "," << z << "," << weighted_influence << "\n";
+    //     }
+    // }
+
+    // // Close the file
+    // outfile.close();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,6 +489,28 @@ G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) c
         return  exp(-(closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
     }
     return 1.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const {
+    auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
+    auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
+
+    auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
+        G4double influence_factor = 1; 
+        for(const auto& leaf_position : mlc_positioning){
+        auto relative_position = leaf_position - position;
+        auto lambda_i = relative_position.mag() / position.mag();
+        influence_factor*=lambda_i;
+        }
+        return influence_factor;
+    };
+    
+    auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1);
+    auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2);
+
+    return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,6 +47,7 @@ class ControlPointRun : public G4Run {
 
     ///
     void FillMlcFieldScalingFactor();
+    
 
   public:
     ControlPointRun(bool scoring=false) {
@@ -88,6 +89,8 @@ class ControlPoint {
     void SetRotation(double rotationInDegree);
     void SetNEvts(int nevts) { m_config.NEvts = nevts; }
     G4double GetMlcFieldScalingFactor(const G4ThreeVector& position) const;
+    G4double GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const;
+
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;

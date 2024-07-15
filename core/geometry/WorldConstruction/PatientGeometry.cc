@@ -641,11 +641,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   // std::cout << &voxelData <<std::endl; 
 
+  IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
   for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"Voxel/img"+s2+".csv";
+    auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
     std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
@@ -669,11 +670,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     c_outFile.close();
   }
 
+    IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
     for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"Cell/img"+s2+".csv";
+    auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
     std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);

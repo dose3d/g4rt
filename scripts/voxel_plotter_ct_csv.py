@@ -30,9 +30,7 @@ def add_voxel(ax, x_center, y_center, z_center, voxel_side_len, dose, min, max):
 
 if __name__ == "__main__":
     
-    
-    
-    path = '/home/g4rt/workDir/develop/g4rt/output/test_11/sim/ct_dose_0/voxel'
+    path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_10x10x10_2/sim/ct_dose_0/voxel'
     
     dtypes_polars = {
     'X [mm]': pl.Float64,
@@ -51,7 +49,7 @@ if __name__ == "__main__":
 
     # Loop through all files and read them into a DataFrame, then append to the list
     for filename in all_files:
-        df = pl.read_csv(filename, dtypes=dtypes_polars)
+        df = pl.read_csv(filename, schema_overrides=dtypes_polars)
         df_list.append(df)
 
     # Concatenate all DataFrames in the list into a single DataFrame
@@ -68,16 +66,13 @@ if __name__ == "__main__":
 
     fig = plt.figure(figsize=(16, 12))
     ax = fig.add_subplot(111, projection='3d')
-    
-    condition = (
-        (((cell_df['X [mm]'] > -5) | (cell_df['X [mm]'] < 5)))
-    )
     print (cell_df.size)
-    # cell_df.loc[condition, "Dose"] = 0
-    cell_df = cell_df[cell_df['Z [mm]'] > 16.9]
-    cell_df = cell_df[cell_df['Z [mm]'] < 17.9]
+    
+    cell_df = cell_df[cell_df['Z [mm]'] > -4]
+    cell_df = cell_df[cell_df['Z [mm]'] < 0]
     dose_max = cell_df[observable].max()
     dose_min = cell_df[cell_df[observable]>0][observable].min()
+    
     print (cell_df.size)
     
     for _, row in cell_df.iterrows():
@@ -94,6 +89,8 @@ if __name__ == "__main__":
     x_min, x_max = cell_df['X [mm]'].min() - voxel_side_len, cell_df['X [mm]'].max() + voxel_side_len
     y_min, y_max = cell_df['Y [mm]'].min() - voxel_side_len, cell_df['Y [mm]'].max() + voxel_side_len
     z_min, z_max = cell_df['Z [mm]'].min() - voxel_side_len, cell_df['Z [mm]'].max() + voxel_side_len
+    
+    print(x_min, x_max, y_min, y_max, z_min, z_max)
 
     ax.set_xlim([x_min, x_max])
     ax.set_ylim([y_min, y_max])

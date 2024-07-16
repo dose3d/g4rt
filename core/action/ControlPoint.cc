@@ -498,11 +498,12 @@ G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& positi
     auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
 
     auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
-        G4double influence_factor = 1; 
+        G4double influence_factor = 0; 
         for(const auto& leaf_position : mlc_positioning){
         auto relative_position = leaf_position - position;
         auto lambda_i = relative_position.mag() / position.mag();
-        influence_factor*=lambda_i;
+        // influence_factor*=lambda_i;
+        influence_factor+=lambda_i;
         }
         return influence_factor;
     };
@@ -510,7 +511,8 @@ G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& positi
     auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1);
     auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2);
 
-    return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
+    // return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
+    return influence_factor_y1*influence_factor_y2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

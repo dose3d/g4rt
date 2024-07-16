@@ -1,0 +1,31 @@
+[RunSvc]
+JobName = "tld_basic"
+BeamType = "IAEA"
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = false
+BuildPatient = false
+
+# [TLD_Cell]
+# Medium = "Usr_G4AIR20C"
+# Voxelization = [10,10,10]
+# TracksAnalysis = false
+# CellVoxelisedScorer = true
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1
+nParticles = [1e4] # Per Control Point
+BeamRotation = [0.0] # Per Control Point
+FieldMask = [
+    {Type = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }
+]

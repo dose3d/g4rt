@@ -10,6 +10,7 @@
 #include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
+#include "DicomSvc.hh"
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -379,7 +380,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     return;
   }
   auto patientInstance = patientEnv->GetPatient();
-
+    
   auto g4Navigator = std::make_unique<G4Navigator>();
   auto worldInstance = Service<GeoSvc>()->World();
   g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
@@ -647,7 +648,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
+    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
@@ -659,12 +660,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
         auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5, Scoring::Type::Voxel);
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();
@@ -676,7 +678,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
+    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
@@ -688,12 +690,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
         auto voxelHit = getVoxelHitInPosition(currentPos,xMappedCells,yMappedCells,zMappedCells, 5, Scoring::Type::Cell);
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();

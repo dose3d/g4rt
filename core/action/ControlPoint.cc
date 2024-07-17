@@ -146,12 +146,40 @@ void ControlPointRun::EndOfRun(){
 ///
 void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+    // weights for each dimention
+    G4double wx = 1.;
+    G4double wy = 2.;
+    G4double wz = 3.;
+
+    // the patient parameterization
+    G4int nx = 4.;
+    G4int ny = 4.;
+    G4int nz = 2.;
+    auto patientNormalizationFactor = wx*nx+wy*ny+wz*nz;
+
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
+        G4double max = -10000.;
+        G4double min =  10000.;
         for(auto& scoring: scoring_map.second){
             for(auto& hit : scoring.second){
                 // hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
-                hit.second.SetFieldScalingFactor(current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre()));
+                auto fsf = current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre());
+                // hit.second.SetFieldScalingFactor(abs(log(fsf/patientNormalizationFactor)));
+                fsf = fsf/patientNormalizationFactor;
+                hit.second.SetFieldScalingFactor(fsf);
+                if (fsf > max) max = fsf;
+                if (fsf < min) min = fsf;
+            } 
+        }
+        // Normalization (min-max scaling):
+        G4double max_new = 0.98;
+        G4double min_new = 0.02;
+        for(auto& scoring: scoring_map.second){
+            for(auto& hit : scoring.second){
+                auto hit_fsf = hit.second.GetFieldScalingFactor();
+                auto new_fsf = (hit_fsf-min)/(max-min) * (max_new-min_new) + min_new;
+                hit.second.SetFieldScalingFactor(new_fsf);
             } 
         }
     }
@@ -497,22 +525,31 @@ G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& positi
     auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
     auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
 
+    auto mlc_centre = G4ThreeVector(0,0,mlc_positioning_y2.front().getZ());
+    // std::cout << "\nmlc_centre z = " << mlc_centre.getZ() << std::endl;
+
     auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
         G4double influence_factor = 0; 
         for(const auto& leaf_position : mlc_positioning){
-        auto relative_position = leaf_position - position;
-        auto lambda_i = relative_position.mag() / position.mag();
-        // influence_factor*=lambda_i;
-        influence_factor+=lambda_i;
+            auto relative_mlc_position = mlc_centre - position;
+            auto relative_leaf_position = leaf_position - position;
+            // auto lambda_i = relative_mlc_position.mag() / relative_leaf_position.mag();
+            auto lambda_i = relative_mlc_position.angle(relative_leaf_position);
+            // influence_factor*=lambda_i;
+            // std::cout << "position = " << position << " lambda_i = " << lambda_i << std::endl;
+            lambda_i = lambda_i * (180.0 / M_PI);
+            influence_factor+=(lambda_i*lambda_i);
         }
+        // std::cout << "position = " << position <<"  influence_factor = " << influence_factor << std::endl;
         return influence_factor;
     };
     
     auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1);
+    // std::cout << std::endl;
     auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2);
 
     // return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
-    return influence_factor_y1*influence_factor_y2;
+    return influence_factor_y1+influence_factor_y2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

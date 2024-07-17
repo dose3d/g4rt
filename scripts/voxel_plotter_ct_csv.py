@@ -30,8 +30,7 @@ def add_voxel(ax, x_center, y_center, z_center, voxel_side_len, dose, min, max):
 
 if __name__ == "__main__":
     
-    path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_10x10x10_2/sim/ct_dose_0/voxel'
-    
+    path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_10x10x10_22/sim/ct_dose_0/voxel'
     dtypes_polars = {
     'X [mm]': pl.Float64,
     'Y [mm]': pl.Float64,
@@ -58,7 +57,14 @@ if __name__ == "__main__":
     # Convert Polars DataFrame to Pandas DataFrame
     combined_pandas_df = combined_polars_df.to_pandas()
     cell_df = combined_pandas_df.sort_values(by=['X [mm]', 'Y [mm]', 'Z [mm]'])
-
+    """
+    cell_df_cp8 = pd.read_csv('cell_ct_cp1_job23.csv')
+    cell_df_cp9 = pd.read_csv('cell_ct_cp10_job22.csv')
+    
+    # Subtract FieldScalingFactor of df1 from df2
+    cell_df = cell_df_cp8.copy()
+    cell_df['FieldScalingFactor'] = abs(cell_df_cp8['FieldScalingFactor'] - cell_df_cp9['FieldScalingFactor'])
+    """
     # voxel_side_len = 10.4
     voxel_side_len = 0.985
 
@@ -68,10 +74,12 @@ if __name__ == "__main__":
     ax = fig.add_subplot(111, projection='3d')
     print (cell_df.size)
     
-    cell_df = cell_df[cell_df['Z [mm]'] > -4]
-    cell_df = cell_df[cell_df['Z [mm]'] < 0]
+    # cell_df = cell_df[cell_df['Z [mm]'] > -4]
+    # cell_df = cell_df[cell_df['Z [mm]'] < 2]
     dose_max = cell_df[observable].max()
     dose_min = cell_df[cell_df[observable]>0][observable].min()
+    
+    # cell_df.to_csv('cell_ct_cp1_job23.csv', index=False)
     
     print (cell_df.size)
     
@@ -100,10 +108,10 @@ if __name__ == "__main__":
     y_scale = y_max - y_min
     z_scale = z_max - z_min
     ax.set_box_aspect([1.2*x_scale, 1.2*y_scale, 1.2*z_scale])
-    ax.set_xlabel("x [mm]", fontsize=18,labelpad=10)
-    ax.set_ylabel("y [mm]", fontsize=18,labelpad=10)
-    ax.set_zlabel("z [mm]", fontsize=18,labelpad=10)
-    ax.tick_params(labelsize=20)
+    ax.set_xlabel("x [mm]", fontsize=16,labelpad=10)
+    ax.set_ylabel("y [mm]", fontsize=16,labelpad=10)
+    ax.set_zlabel("z [mm]", fontsize=16,labelpad=10)
+    ax.tick_params(labelsize=12)
     plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
     # scalar_mappable = cm.ScalarMappable(norm=colors.LogNorm(vmin=dose_min/100, vmax=dose_max), cmap=phantom_counts_cmap)
     scalar_mappable = cm.ScalarMappable(norm=colors.Normalize(vmin=dose_min, vmax=dose_max), cmap=phantom_counts_cmap)

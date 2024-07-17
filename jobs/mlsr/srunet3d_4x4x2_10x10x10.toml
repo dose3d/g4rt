@@ -45,5 +45,5 @@ CellVoxelisedScorer = true
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 # nParticles = [1e4] # Per Control Point
 PlanInputFile = [
-        "/home/geant4/workspace/github/g4rt/output/dat/prostate_imrt_beam0_cp0.dat"
+        "/home/geant4/workspace/github/g4rt/output/dat/prostate_imrt_beam0_cp1.dat"
 ]

@@ -159,23 +159,23 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
 
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
-        G4double max = -10000.;
-        G4double min =  10000.;
+        
         for(auto& scoring: scoring_map.second){
+            LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+            G4double max = -10000.;
+            G4double min =  10000.;
             for(auto& hit : scoring.second){
                 // hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
                 auto fsf = current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre());
-                // hit.second.SetFieldScalingFactor(abs(log(fsf/patientNormalizationFactor)));
                 fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max) max = fsf;
                 if (fsf < min) min = fsf;
             } 
-        }
-        // Normalization (min-max scaling):
-        G4double max_new = 0.98;
-        G4double min_new = 0.02;
-        for(auto& scoring: scoring_map.second){
+            LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
+            // Normalization (min-max scaling):
+            G4double max_new = 0.98;
+            G4double min_new = 0.02;
             for(auto& hit : scoring.second){
                 auto hit_fsf = hit.second.GetFieldScalingFactor();
                 auto new_fsf = (hit_fsf-min)/(max-min) * (max_new-min_new) + min_new;
@@ -183,31 +183,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             } 
         }
     }
-    // _________________________________
-    // FOR TESTING PURPOSES
-    // int x_min = -50;
-    // int x_max = 50;
-    // int y_min = -50;
-    // int y_max = 50;
-    // int z = 34;
-
-    // // Open a CSV file to write the points
-    // std::ofstream outfile("weighted_influence.csv");
-
-    // // Write the header to the CSV file
-    // outfile << "x,y,z,wi\n";
-
-    // // Generate points and write them to the CSV file
-    // for (int x = x_min; x <= x_max; ++x) {
-    //     for (int y = y_min; y <= y_max; ++y) {
-    //         auto weighted_influence = current_cp->GetMlcWeightedInfluenceFactor(G4ThreeVector(x, y, z));
-    //         outfile << x << "," << y << "," << z << "," << weighted_influence << "\n";
-    //     }
-    // }
-
-    // // Close the file
-    // outfile.close();
-
+    LOGSVC_INFO("ControlPointRun:: Data tagging processing - done!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +500,8 @@ G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) c
 G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const {
     auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
     auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
-
+    // std::vector<G4ThreeVector> mlc_positioning_y1 = {{-2,1,-600},{-1,1,-600},{1,-1,-600},{-1,1,-600}};
+    // std::vector<G4ThreeVector> mlc_positioning_y2 = {{-3,1,-600},{-1,1,-600},{1,-1,-600},{-1,2,-600}};
     auto mlc_centre = G4ThreeVector(0,0,mlc_positioning_y2.front().getZ());
     // std::cout << "\nmlc_centre z = " << mlc_centre.getZ() << std::endl;
 

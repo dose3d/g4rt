@@ -29,9 +29,6 @@ int main(int argc, const char *argv[]) {
   SPDLOG_DEBUG("End of initialize services");
 
   SPDLOG_INFO("Wellcome G4RT!");
-  // auto galHF = DicomSvc::GetHounsfieldScaleValue("G4_Galactic",true);
-  // auto airHF = DicomSvc::GetHounsfieldScaleValue("Usr_G4AIR20C",true);
-  // std::cout << "G4_Galactic: " << galHF << " Usr_G4AIR20C: " << airHF << std::endl;
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");

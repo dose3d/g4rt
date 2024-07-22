@@ -629,7 +629,7 @@ void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
         G4cout << "[DEBUG]:: MlcHd120:: posY2.size() " << pos2.size() << G4endl;
         G4Exception("MlcHd120", "SetRTPlanPositioning", FatalErrorInArgument, "Wrong MLC positioning data retrieved!");
     }
-
+    VMlc::m_leaves_x_positioning.clear();
     for(int i=0; i<pos1.size(); ++i){
         G4cout << "[DEBUG]:: MlcHd120:: Y1 "<<pos1.at(i)<<", Y2 "<< pos2.at(i) << G4endl;
         // overlap check: TODO this should be done in filling the positioning vectors?

@@ -415,21 +415,6 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
-    // const auto& mlc_a_positioning = GetMlcPositioning("Y1");
-    // const auto& mlc_b_positioning = GetMlcPositioning("Y2");
-    // auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    // auto max_a = *std::max_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    // auto min_b = *std::min_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    // auto max_b = *std::max_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    // auto min_y = std::min(min_a, min_b);
-    // auto max_y = std::max(max_a, max_b);
-    // double min_x = -20*mm; // TODO: get somehow these values
-    // double max_x = +20*mm;
-
-
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
@@ -616,24 +601,6 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
     }
     return hit_collection_names;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-///
-// G4ThreeVector ControlPoint::GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data) const {
-//   std::vector<const VoxelHit*> in_field_scoring_volume;
-//   for(auto& scoring_volume : data){
-//     auto inField = IsInField(scoring_volume.second.GetCentre());
-//     if(inField)
-//       in_field_scoring_volume.push_back(&scoring_volume.second);
-//   }
-//   G4ThreeVector sum{0,0,0};
-//   G4double total_dose{0};
-//   std::for_each(in_field_scoring_volume.begin(), in_field_scoring_volume.end(), [&](const VoxelHit* iv) {
-//         sum += iv->GetCentre() * iv->GetDose();
-//         total_dose += iv->GetDose();
-//     });
-//   return total_dose == 0 ? sum : sum / total_dose;
-// }
 
 VMlc* ControlPoint::MLC() const {
     // G4cout << "ControlPoint::MLC:: #{} CP" << Id() << G4endl;

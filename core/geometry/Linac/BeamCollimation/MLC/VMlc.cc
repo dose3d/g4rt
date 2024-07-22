@@ -75,23 +75,27 @@ bool VMlc::Initialized(const ControlPoint* control_point) const {
 
 
 std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
-    std::cout << "VMlc::GetMlcPositioning for " << side << std::endl;
+    // std::cout << "VMlc::GetMlcPositioning for " << side << std::endl;
     std::vector<G4ThreeVector> mlc_positioning;
     if(m_leaves_x_positioning.empty()){ // not initialized
-        std::cout << "VMlc::Returning empty " << std::endl;   
+        std::cout << "VMlc::Returning empty container for not initialized MLC!" << std::endl;   
         return mlc_positioning;
     }
 
     auto z = GetMlcZPosition();
     auto mlc_y_positioning = Service<RunSvc>()->CurrentControlPoint()->GetMlcPositioning(side);
-    std::cout << "mlc_y_positioning " << mlc_y_positioning.size() << " size" << std::endl;   
-    // TODO: check if the sizes are the same
+    if(mlc_y_positioning.size() != m_leaves_x_positioning.size()){
+        std::cout << "VMlc::Returning empty container for mismatched sizes!" << std::endl;   
+        std::cout << "VMlc::mlc_x_leafs size = " << m_leaves_x_positioning.size() << std::endl;   
+        std::cout << "VMlc::mlc_y_positioning size = " << mlc_y_positioning.size() << std::endl;   
+        return mlc_positioning;
+    }
+
     for(size_t i=0; i<m_leaves_x_positioning.size(); i++){
         auto x = m_leaves_x_positioning.at(i);
         auto y = mlc_y_positioning.at(i);
         mlc_positioning.push_back(G4ThreeVector(x,y,z));
     }
-    std::cout << "VMlc::Returning " << mlc_positioning.size() << " size" << std::endl;   
     return std::move(mlc_positioning);
 }
 

@@ -387,7 +387,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto cp = Service<RunSvc>()->CurrentControlPoint();
   auto run_id = std::to_string(runPtr->GetRunID());
-  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_"+run_id;
+  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_cp-"+run_id;
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 

@@ -32,6 +32,7 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
         const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
         double x_half_width = 2.5/2; // mm
         double x_init = 30 * x_half_width * 2 - x_half_width; // mm
+        VMlc::m_leaves_x_positioning.clear();
         for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
             double leaf_a_pos_y = mlc_a_positioning.at(leaf_idx);
             double leaf_a_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafAPosition(leaf_idx);

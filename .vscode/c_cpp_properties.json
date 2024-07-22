@@ -59,6 +59,23 @@
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "lhcbd2-alma",
+            "includePath": [
+                "/usr/local/include/*",
+                "/etc/anaconda/envs/d3df/include/*",
+                "/etc/anaconda/envs/d3df/include/**",
+                "/etc/anaconda/envs/d3df/include/Geant4/*",
+                "/etc/anaconda/envs/d3df/include/python3.10/*",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/etc/anaconda/envs/d3df/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

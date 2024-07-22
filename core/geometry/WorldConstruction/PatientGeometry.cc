@@ -10,6 +10,7 @@
 #include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
+#include "DicomSvc.hh"
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -379,14 +380,14 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     return;
   }
   auto patientInstance = patientEnv->GetPatient();
-
+    
   auto g4Navigator = std::make_unique<G4Navigator>();
   auto worldInstance = Service<GeoSvc>()->World();
   g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
 
   auto cp = Service<RunSvc>()->CurrentControlPoint();
   auto run_id = std::to_string(runPtr->GetRunID());
-  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_"+run_id;
+  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_cp-"+run_id;
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 
@@ -443,7 +444,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   std::vector<std::pair<double,std::pair<size_t,size_t>>> xMappedVoxels;
   std::vector<std::pair<double,std::pair<size_t,size_t>>> yMappedVoxels;
   std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedVoxels;
-  std::unordered_set<std::pair<double, size_t>, pair_hash> addedPairs;
+  std::unordered_set<std::pair<double, size_t>, pair_hash> addedVoxelsPairs;
+
+  std::vector<std::pair<double,std::pair<size_t,size_t>>> xMappedCells;
+  std::vector<std::pair<double,std::pair<size_t,size_t>>> yMappedCells;
+  std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedCells;
+  std::unordered_set<std::pair<double, size_t>, pair_hash> addedCellsPairs;
 
   /**
    * Iterate over all scoring collections and extract voxel data.
@@ -481,20 +487,53 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
           // Check if the pair already exists in the set and if not
           // add it to the vector
-          if(addedPairs.find(pairToCheckX) == addedPairs.end()) {
+          if(addedVoxelsPairs.find(pairToCheckX) == addedVoxelsPairs.end()) {
               auto idsx = std::make_pair(voxel_data.GetGlobalID(0),voxel_data.GetID(0));
               xMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getX(),idsx));
-              addedPairs.insert(pairToCheckX);            
+              addedVoxelsPairs.insert(pairToCheckX);            
           }
-          if(addedPairs.find(pairToCheckY) == addedPairs.end()) {
+          if(addedVoxelsPairs.find(pairToCheckY) == addedVoxelsPairs.end()) {
             auto idsy = std::make_pair(voxel_data.GetGlobalID(1),voxel_data.GetID(1));
             yMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getY(),idsy));
-            addedPairs.insert(pairToCheckY);
+            addedVoxelsPairs.insert(pairToCheckY);
           }
-          if(addedPairs.find(pairToCheckZ) == addedPairs.end()) {
+          if(addedVoxelsPairs.find(pairToCheckZ) == addedVoxelsPairs.end()) {
             auto idsz = std::make_pair(voxel_data.GetGlobalID(2),voxel_data.GetID(2));
             zMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getZ(),idsz));
-            addedPairs.insert(pairToCheckZ);
+            addedVoxelsPairs.insert(pairToCheckZ);
+          }
+        }
+      }
+      else if(scoring_type==Scoring::Type::Cell){      
+        // Iterate over voxel data
+        for(auto& cell: data){
+          auto& cell_data = cell.second;
+          // Create pairs to check if the pair already exists in the set
+          std::pair<double, size_t> pairToCheckX = std::make_pair(
+            cell_data.GetCentre().getX(), std::hash<std::string>{}(
+            "XCell" + std::to_string(cell_data.GetGlobalID(0))));
+          std::pair<double, size_t> pairToCheckY = std::make_pair(
+            cell_data.GetCentre().getY(), std::hash<std::string>{}(
+            "YCell" + std::to_string(cell_data.GetGlobalID(1))));
+          std::pair<double, size_t> pairToCheckZ = std::make_pair(
+            cell_data.GetCentre().getZ(), std::hash<std::string>{}(
+            "ZCell" + std::to_string(cell_data.GetGlobalID(2))));
+          // Check if the pair already exists in the set and if not
+          // add it to the vector
+          if(addedCellsPairs.find(pairToCheckX) == addedCellsPairs.end()) {
+              auto idsx = std::make_pair(cell_data.GetGlobalID(0),cell_data.GetGlobalID(0));
+              xMappedCells.push_back(std::make_pair(cell_data.GetCentre().getX(),idsx));
+              addedCellsPairs.insert(pairToCheckX);            
+          }
+          if(addedCellsPairs.find(pairToCheckY) == addedCellsPairs.end()) {
+            auto idsy = std::make_pair(cell_data.GetGlobalID(1),cell_data.GetGlobalID(1));
+            yMappedCells.push_back(std::make_pair(cell_data.GetCentre().getY(),idsy));
+            addedCellsPairs.insert(pairToCheckY);
+          }
+          if(addedCellsPairs.find(pairToCheckZ) == addedCellsPairs.end()) {
+            auto idsz = std::make_pair(cell_data.GetGlobalID(2),cell_data.GetGlobalID(2));
+            zMappedCells.push_back(std::make_pair(cell_data.GetCentre().getZ(),idsz));
+            addedCellsPairs.insert(pairToCheckZ);
           }
         }
       }
@@ -527,11 +566,25 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     }
   }
 
-  auto getVoxelHitInPosition = [&voxelData](const G4ThreeVector& position,
+  std::sort(xMappedCells.begin(), xMappedCells.end(), compareByFirst);
+  std::sort(yMappedCells.begin(), yMappedCells.end(), compareByFirst);
+  std::sort(zMappedCells.begin(), zMappedCells.end(), compareByFirst);
+
+  const std::map<size_t, VoxelHit>* cellData = nullptr;
+  for(auto& scoring_map: scoring_maps){
+    for(auto& scoring: scoring_map.second){
+      auto scoring_type = scoring.first;
+      if(scoring_type==Scoring::Type::Cell){   
+        cellData = &scoring.second;
+      }
+    }
+  }
+
+  auto getVoxelHitInPosition = [&voxelData, &cellData](const G4ThreeVector& position,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& xVector,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& yVector,
                               const std::vector<std::pair<double, std::pair<size_t, size_t>>>& zVector,
-                              double halfSize) -> const VoxelHit* {
+                              double halfSize, Scoring::Type type) -> const VoxelHit* {
     std::pair<size_t, size_t> closestX{-1, -1};
     std::pair<size_t, size_t> closestY{-1, -1};
     std::pair<size_t, size_t> closestZ{-1, -1};
@@ -577,21 +630,25 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
       return nullptr;
     }
 
-
-    return &voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
+    if (type == Scoring::Type::Voxel) {
+      return &voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
                                     std::to_string(closestZ.first)+std::to_string(closestX.second)+
-                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second;
+                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second;}
+    if (type == Scoring::Type::Cell) {
+      return &cellData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
+                                    std::to_string(closestZ.first)))->second;}
+    
   };
 
   // std::cout << &voxelData <<std::endl; 
 
+  IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
   for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/img"+s2+".csv";
-    // G4cout << "output filepath:  " << file << G4endl;
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy], FieldScalingFactor";
+    auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
+    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
@@ -603,12 +660,43 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
         materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5);
+        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
+        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5, Scoring::Type::Voxel);
         if(voxelHit){
           dose = voxelHit->GetDose();
-          fsf = voxelHit->GetMaskTag();
+          fsf = voxelHit->GetFieldScalingFactor();
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+      }
+    }
+    c_outFile.close();
+  }
+
+    IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
+    for( int x = 0; x < xResolution; x++ ){
+    std::ostringstream ss;
+    ss << std::setw(4) << std::setfill('0') << x+1 ;
+    std::string s2(ss.str());
+    auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
+    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
+    std::ofstream c_outFile;
+    c_outFile.open(file.c_str(), std::ios::out);
+    c_outFile << header << std::endl;
+    for( int y = 0; y < yResolution; y++ ){
+      for( int z = 0; z < zResolution; z++ ){
+        double dose = 0.;
+        double fsf = 0.; // field scaling factor
+        currentPos.setX((ct_cube_init_x+sizeX*x));
+        currentPos.setY((ct_cube_init_y+sizeY*y));
+        currentPos.setZ((ct_cube_init_z+sizeZ*z));
+        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
+        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedCells,yMappedCells,zMappedCells, 5, Scoring::Type::Cell);
+        if(voxelHit){
+          dose = voxelHit->GetDose();
+          fsf = voxelHit->GetFieldScalingFactor();
+        }
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();

@@ -152,6 +152,9 @@ class DicomSvc {
 
     ///
     static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
+
+    ///
+    static double GetHounsfieldScaleValue(const std::string& materialName, bool normalized = false);
 };
 
 #endif  // Dose3D_DicomSvcSVC_H

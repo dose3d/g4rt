@@ -27,16 +27,12 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
         auto vzId = hit.GetID(2);
         auto volume_centre = hit.GetCentre();
         auto dose = hit.GetDose();
-        auto geoTag = hit.GetGeoTag();
-        auto wgeoTag = hit.GetWeigthedGeoTag();
-        auto inField = hit.GetMaskTag();
+        auto inField = hit.GetFieldScalingFactor();
         file <<cxId<<","<<cyId<<","<<czId;
         if(voxelised)
             file <<","<<vxId<<","<<vyId<<","<<vzId;
         file <<","<<volume_centre.getX()<<","<<volume_centre.getY()<<","<<volume_centre.getZ();
-        file <<","<<dose<<","<< inField <<","<< geoTag<<","<< wgeoTag;
-        file <<","<< dose / ( geoTag * inField );
-        file <<","<< dose / ( wgeoTag * inField ) << std::endl;
+        file <<","<<dose<<","<< inField << std::endl;
     };
 
     auto cp = Service<RunSvc>()->CurrentControlPoint();
@@ -51,10 +47,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             auto type_str = svc::tolower(Scoring::to_string(scoring_type));
             auto coll_str = svc::tolower(scoring_map.first);
             auto file = cp->GetOutputFileName()+"_"+coll_str+"_"+type_str+".csv";
-            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
+            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,FieldScalingFactor";
 
             if(scoring_type==Scoring::Type::Voxel)
-                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,MaskTag,GeoTag,wGeoTag,GeoMaskTagDose,wGeoMaskTagDose";
+                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,FieldScalingFactor";
 
             std::ofstream c_outFile;
             c_outFile.open(file.c_str(), std::ios::out);

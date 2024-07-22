@@ -399,3 +399,29 @@ double ICustomPlan::GetRotation(const std::string& planFile) {
   return 0.; 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+double DicomSvc::GetHounsfieldScaleValue(const std::string& materialName, bool normalized){
+  static std::unique_ptr<toml::table> tconfig;
+  if(!tconfig){
+    auto hausfieldMaterialMapFile = std::string(PROJECT_DATA_PATH) + "/config/hounsfield_scale_60keV.toml";
+    tconfig = std::make_unique<toml::table>(toml::parse_file(hausfieldMaterialMapFile));
+    LOGSVC_INFO("Reading from Hounsfield Material Map File: {}",hausfieldMaterialMapFile);
+  }
+  const toml::table& config = *tconfig;
+  G4double hu_value = 0.;
+  // Access values under [Hounsfield] section
+  if (config["Hounsfield"].as_table()->find(materialName)!= config["Hounsfield"].as_table()->end()){
+    hu_value = config["Hounsfield"][materialName].value_or(0);
+    if(normalized){ // normalized (min=0.02, max=0.98 scaling)
+      G4double hu_min = config["Hounsfield"]["Vacuum"].value_or(-1000);
+      G4double hu_max = config["Hounsfield"]["Tungsten"].value_or(3072);
+      G4double new_min = 0.02;
+      G4double new_max = 0.98;
+      return (hu_value-hu_min)/(hu_max-hu_min) * (new_max-new_min) + new_min;
+    }
+  }
+  return hu_value;
+}
+
+

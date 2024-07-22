@@ -83,11 +83,7 @@ class VoxelHit final : public G4VHit {
   G4double m_global_time = 0;
 
   ///
-  G4double m_geo_tag{1.};
-  G4double m_wgeo_tag{1.}; // weigthed
-
-  /// @brief 
-  G4double m_mask_tag{1.};
+  G4double m_field_scaling_factor{1.};
 
   ///
   void FillTrack(G4Step* aStep);
@@ -234,12 +230,10 @@ class VoxelHit final : public G4VHit {
   void SetTracksAnalysis(bool flag){ m_tracks_analysis = flag; }
 
   ///
-  void FillTagging(double mask_tag, double geo_tag, double wgeo_tag);
+  void SetFieldScalingFactor(double sf) { m_field_scaling_factor = sf; }
 
   ///
-  G4double GetGeoTag() const { return m_geo_tag; }
-  G4double GetWeigthedGeoTag() const { return m_wgeo_tag; }
-  G4double GetMaskTag() const { return m_mask_tag; }
+  G4double GetFieldScalingFactor() const { return m_field_scaling_factor; }
 
   ///
   std::size_t GetGlobalHashedStrId() const;

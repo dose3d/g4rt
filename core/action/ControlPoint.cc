@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "D3DCell.hh"
+#include "D3DDetector.hh"
 #include "G4SDManager.hh"
 #ifdef G4MULTITHREADED
     #include "G4Threading.hh"
@@ -14,6 +15,7 @@
 #include <random>
 #include "VMlc.hh"
 #include "Services.hh"
+#include <numeric> 
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
@@ -133,7 +135,7 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
-        FillDataTagging();
+        FillMlcFieldScalingFactor();
     }
     else {
         LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
@@ -143,66 +145,58 @@ void ControlPointRun::EndOfRun(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPointRun::FillDataTagging(){
+void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-    // TODO if(current_cp != this->Owner()){
-    //     LOGSVC_ERROR("ControlPointRun::FillDataTagging: current control point mismatch!");
-    // }
-    for(auto& scoring_map: m_hashed_scoring_map){
-        LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
-        auto& hashed_scoring_map = scoring_map.second;
+    // weights for each dimention
+    G4double wx = 1.;
+    G4double wy = 2.;
+    G4double wz = 3.;
 
-        std::vector<const VoxelHit*> in_field_scoring_volume;
-
-        auto getActivityGeoCentre = [&](bool weighted){
-            G4ThreeVector sum{0,0,0};
-            G4double total_dose{0};
-            std::for_each(  in_field_scoring_volume.begin(),
-                            in_field_scoring_volume.end(),
-                            [&](const VoxelHit* iv) {
-                        sum += weighted ? iv->GetCentre() * iv->GetDose() : iv->GetCentre();
-                        total_dose += iv->GetDose();
-                        });
-            if(total_dose<1e-30){
-                LOGSVC_WARN("No activity found!");
-            }
-            if(weighted){
-                LOGSVC_INFO("getActivityGeoCentre:weighted: total dose: {}",total_dose);
-                return total_dose == 0 ? sum : sum / total_dose;
-            }
-            else{
-                auto size = in_field_scoring_volume.size();
-                LOGSVC_INFO("getActivityGeoCentre: size: {}",size);
-                return size > 0 ? sum / size : sum;
-            }
-        };
-
-        auto fillScoringVolumeTagging = [&](VoxelHit& hit, const G4ThreeVector& geoCentre, const G4ThreeVector& wgeoCentre){
-            auto mask_tag = current_cp->GetInFieldMaskTag(hit.GetCentre());
-            auto geo_tag = 1./sqrt(hit.GetCentre().diff2(geoCentre));
-            auto wgeo_tag = 1./sqrt(hit.GetCentre().diff2(wgeoCentre));
-            hit.FillTagging(mask_tag, geo_tag, wgeo_tag);
-        };
-
-        for(auto& scoring: hashed_scoring_map){
-            auto scoring_type = scoring.first;
-            // LOGSVC_INFO("Scoring type {}",Scoring::to_string(scoring_type));
-            auto& data = scoring.second;
-            in_field_scoring_volume.clear();
-            for(auto& hit : data){
-                if(current_cp->MLC()->IsInField(hit.second.GetCentre(),true)) // DEBUG !!!!
-                    in_field_scoring_volume.push_back(&hit.second);
-            }
-            // LOGSVC_INFO("Found InField #ScoringVolumes: {}",in_field_scoring_volume.size());
-            auto geo_centre = getActivityGeoCentre(false);
-            // LOGSVC_INFO("Geocentre: {}",geo_centre);
-            auto wgeo_centre = getActivityGeoCentre(true);
-            // LOGSVC_INFO("WGeocentre: {}",wgeo_centre);
-            for(auto& hit : data){
-                fillScoringVolumeTagging(hit.second,geo_centre,wgeo_centre);
-            }
+    // the patient parameterization
+    G4int nx = 1.;
+    G4int ny = 1.;
+    G4int nz = 1.;
+    auto patient = Service<GeoSvc>()->Patient();
+    if(patient){
+        auto d3d_det = dynamic_cast<const D3DDetector*>(patient);
+        if(d3d_det){
+            auto config = d3d_det->GetConfig();
+            nx = config.m_nX_cells;
+            ny = config.m_nY_cells;
+            nz = config.m_nZ_cells;
         }
     }
+    auto patientNormalizationFactor = wx*nx+wy*ny+wz*nz;
+    LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor with Patient Normalization Factor {},{},{}->{}",nx,ny,nz,patientNormalizationFactor);
+
+
+    for(auto& scoring_map: m_hashed_scoring_map){
+        LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
+        
+        for(auto& scoring: scoring_map.second){
+            LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+            G4double max = -10000.;
+            G4double min =  10000.;
+            for(auto& hit : scoring.second){
+                // hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
+                auto fsf = current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre());
+                fsf = fsf/patientNormalizationFactor;
+                hit.second.SetFieldScalingFactor(fsf);
+                if (fsf > max) max = fsf;
+                if (fsf < min) min = fsf;
+            } 
+            LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
+            // Normalization (min-max scaling):
+            G4double max_new = 0.98;
+            G4double min_new = 0.02;
+            for(auto& hit : scoring.second){
+                auto hit_fsf = hit.second.GetFieldScalingFactor();
+                auto new_fsf = (hit_fsf-min)/(max-min) * (max_new-min_new) + min_new;
+                hit.second.SetFieldScalingFactor(new_fsf);
+            } 
+        }
+    }
+    LOGSVC_INFO("ControlPointRun:: Field Scaling Factor processing - done!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,21 +428,6 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
-    // const auto& mlc_a_positioning = GetMlcPositioning("Y1");
-    // const auto& mlc_b_positioning = GetMlcPositioning("Y2");
-    // auto min_a = *std::min_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    // auto max_a = *std::max_element(mlc_a_positioning.begin(), mlc_a_positioning.end());
-    // auto min_b = *std::min_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    // auto max_b = *std::max_element(mlc_b_positioning.begin(), mlc_b_positioning.end());
-    // auto min_y = std::min(min_a, min_b);
-    // auto max_y = std::max(max_a, max_b);
-    // double min_x = -20*mm; // TODO: get somehow these values
-    // double max_x = +20*mm;
-
-
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
-    // std::cout << "min_y = " << min_y << " max_y = " << max_y << " min_x = " << min_x << " max_x = " << max_x << std::endl;
     auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
         return m_rotation ? *m_rotation * position : position;
     };
@@ -482,7 +461,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
     for(auto& vol : volume_scoring){
         auto pos = vol.second.GetCentre();
         auto trans_pos = VMlc::GetPositionInMaskPlane(pos);
-        auto inFieldTag = vol.second.GetMaskTag();
+        auto inFieldTag = vol.second.GetFieldScalingFactor();
         // std::cout << "z: " << pos.getZ() << "  trans z: "<< trans_pos.getZ() << std::endl;
         c_outFile << pos.getX() << "," << pos.getY() << "," << pos.getZ();
         c_outFile << "," << trans_pos.getX() << "," << trans_pos.getY() << "," << trans_pos.getZ() << "," << inFieldTag << std::endl;
@@ -493,7 +472,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
+G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) const {
     // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
     G4double closest_dist{10.e9};
     auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
@@ -508,9 +487,44 @@ G4double ControlPoint::GetInFieldMaskTag(const G4ThreeVector& position) const {
                     closest_dist = current_dist;
             }
         }
-        return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
+        // return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
+        return  exp(-(closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
     }
     return 1.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const {
+    auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
+    auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
+    // std::vector<G4ThreeVector> mlc_positioning_y1 = {{-2,1,-600},{-1,1,-600},{1,-1,-600},{-1,1,-600}};
+    // std::vector<G4ThreeVector> mlc_positioning_y2 = {{-3,1,-600},{-1,1,-600},{1,-1,-600},{-1,2,-600}};
+    auto mlc_centre = G4ThreeVector(0,0,mlc_positioning_y2.front().getZ());
+    // std::cout << "\nmlc_centre z = " << mlc_centre.getZ() << std::endl;
+
+    auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
+        G4double influence_factor = 0; 
+        for(const auto& leaf_position : mlc_positioning){
+            auto relative_mlc_position = mlc_centre - position;
+            auto relative_leaf_position = leaf_position - position;
+            // auto lambda_i = relative_mlc_position.mag() / relative_leaf_position.mag();
+            auto lambda_i = relative_mlc_position.angle(relative_leaf_position);
+            // influence_factor*=lambda_i;
+            // std::cout << "position = " << position << " lambda_i = " << lambda_i << std::endl;
+            lambda_i = lambda_i * (180.0 / M_PI);
+            influence_factor+=(lambda_i*lambda_i);
+        }
+        // std::cout << "position = " << position <<"  influence_factor = " << influence_factor << std::endl;
+        return influence_factor;
+    };
+    
+    auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1);
+    // std::cout << std::endl;
+    auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2);
+
+    // return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
+    return influence_factor_y1+influence_factor_y2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,24 +615,6 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
     return hit_collection_names;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///
-// G4ThreeVector ControlPoint::GetWeightedActivityGeoCentre(const std::map<std::size_t, VoxelHit>& data) const {
-//   std::vector<const VoxelHit*> in_field_scoring_volume;
-//   for(auto& scoring_volume : data){
-//     auto inField = IsInField(scoring_volume.second.GetCentre());
-//     if(inField)
-//       in_field_scoring_volume.push_back(&scoring_volume.second);
-//   }
-//   G4ThreeVector sum{0,0,0};
-//   G4double total_dose{0};
-//   std::for_each(in_field_scoring_volume.begin(), in_field_scoring_volume.end(), [&](const VoxelHit* iv) {
-//         sum += iv->GetCentre() * iv->GetDose();
-//         total_dose += iv->GetDose();
-//     });
-//   return total_dose == 0 ? sum : sum / total_dose;
-// }
-
 VMlc* ControlPoint::MLC() const {
     // G4cout << "ControlPoint::MLC:: #{} CP" << Id() << G4endl;
     auto mlc = Service<GeoSvc>()->MLC();
@@ -629,6 +625,8 @@ VMlc* ControlPoint::MLC() const {
     return mlc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const {
     auto dicomSvc = DicomSvc::GetInstance();
     if(side=="Y1"){
@@ -644,6 +642,8 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
     return m_mlc_a_positioning; // never reached, prevent warning
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 double ControlPoint::GetJawAperture(const std::string& side) const{
     if(side=="X1"){
         return m_jaw_x_aperture.first;

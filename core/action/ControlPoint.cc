@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "D3DCell.hh"
+#include "D3DDetector.hh"
 #include "G4SDManager.hh"
 #ifdef G4MULTITHREADED
     #include "G4Threading.hh"
@@ -152,13 +153,25 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
     G4double wz = 3.;
 
     // the patient parameterization
-    G4int nx = 4.;
-    G4int ny = 4.;
-    G4int nz = 2.;
+    G4int nx = 1.;
+    G4int ny = 1.;
+    G4int nz = 1.;
+    auto patient = Service<GeoSvc>()->Patient();
+    if(patient){
+        auto d3d_det = dynamic_cast<const D3DDetector*>(patient);
+        if(d3d_det){
+            auto config = d3d_det->GetConfig();
+            nx = config.m_nX_cells;
+            ny = config.m_nY_cells;
+            nz = config.m_nZ_cells;
+        }
+    }
     auto patientNormalizationFactor = wx*nx+wy*ny+wz*nz;
+    LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor with Patient Normalization Factor {},{},{}->{}",nx,ny,nz,patientNormalizationFactor);
+
 
     for(auto& scoring_map: m_hashed_scoring_map){
-        LOGSVC_INFO("ControlPointRun::Filling data tagging for {} run collection",scoring_map.first);
+        LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
         
         for(auto& scoring: scoring_map.second){
             LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
@@ -183,7 +196,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             } 
         }
     }
-    LOGSVC_INFO("ControlPointRun:: Data tagging processing - done!");
+    LOGSVC_INFO("ControlPointRun:: Field Scaling Factor processing - done!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

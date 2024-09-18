@@ -70,11 +70,11 @@ void TLD::WriteInfo() {
 ///
 void TLD::Destroy() {
   LOGSVC_INFO("Destroing the TLD volume.");
-  auto phantomVolume = GetPhysicalVolume();
-  if (phantomVolume) {
-    delete phantomVolume;
-    SetPhysicalVolume(nullptr);
-  }
+  // auto phantomVolume = GetPhysicalVolume();
+  // if (phantomVolume) {
+  //   delete phantomVolume;
+  //   SetPhysicalVolume(nullptr);
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

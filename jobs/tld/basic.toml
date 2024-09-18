@@ -13,8 +13,9 @@ NTupleAnalysis = true
 RunAnalysis = true
 
 [GeoSvc]
-BuildLinac = false
+BuildLinac = true
 BuildPatient = false
+ExportGeometryToGDML = true
 
 # [TLD_Cell]
 # Medium = "Usr_G4AIR20C"
@@ -24,7 +25,7 @@ BuildPatient = false
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1
-nParticles = [1e4] # Per Control Point
+nParticles = [1e2] # Per Control Point
 BeamRotation = [0.0] # Per Control Point
 FieldMask = [
     {Type = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }

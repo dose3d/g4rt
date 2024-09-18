@@ -15,19 +15,37 @@
             "configurationProvider": "ms-vscode.cmake-tools"
         },
         {
-            "name": "g4rt-jakub",
+            "name": "alma-jakub",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/local/include/**",
-                "/opt/geant4/include/**",
-                "/home/g4rt/miniconda3/envs/g4rt/include/**"
+                "~/work/dose3d/g4rt/*",
+                "/usr/local/include/*",
+                "~/miniforge3/envs/G4ImpressU/include/*",
+                "~/miniforge3/envs/G4ImpressU/include/Geant4/*",
+                "~/miniforge3/envs/G4ImpressU/include/python3.11/*",
+                "~/miniforge3/envs/G4ImpressU/include/spdlog/fmt/**",
+                "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/home/g4rt/miniconda3/envs/g4rt/bin/g++",
+            "compilerPath": "~/miniforge3/envs/G4ImpressU/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compilerPathInCppPropertiesJson": "~/miniforge3/envs/G4ImpressU/bin/g++",
+            "configurationProviderInCppPropertiesJson": "ms-vscode.cmake-tools",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "~/work/dose3d/g4rt/*",
+                    "/usr/local/include/*",
+                    "~/miniforge3/envs/G4ImpressU/include/*",
+                    "~/miniforge3/envs/G4ImpressU/include/Geant4/*",
+                    "~/miniforge3/envs/G4ImpressU/include/python3.11/*",
+                    "~/miniforge3/envs/G4ImpressU/include/spdlog/fmt/*",
+                    "${workspaceFolder}/*"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         },
         {
             "name": "wsl-ubuntu2204",
@@ -55,6 +73,23 @@
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "lhcbd2-alma",
+            "includePath": [
+                "/usr/local/include/*",
+                "/etc/anaconda/envs/d3df/include/*",
+                "/etc/anaconda/envs/d3df/include/**",
+                "/etc/anaconda/envs/d3df/include/Geant4/*",
+                "/etc/anaconda/envs/d3df/include/python3.10/*",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/etc/anaconda/envs/d3df/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",

@@ -434,10 +434,10 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> dis_x(-100*mm, 100*mm);
-    std::uniform_real_distribution<double> dis_y(-100*mm, 100*mm);
+    std::uniform_real_distribution<double> dis_x(-200*mm, 200*mm);
+    std::uniform_real_distribution<double> dis_y(-200*mm, 200*mm);
 
-    for (int i = 0; i < 1000000; ++i) {
+    for (int i = 0; i < 10000000; ++i) {
         auto x = dis_x(gen);
         auto y = dis_y(gen);
         auto in_field = MLC()->IsInField(G4ThreeVector(x,y,current_z));

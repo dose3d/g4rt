@@ -24,6 +24,23 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
     
     auto PVName = m_tray_name + "EnvPV";
     auto pv = new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0);
+    double tld_dist = 2 * TLD::SIZE + 1 * mm;
+    auto initial_x = m_config.m_top_position_in_env.x() - (m_config.m_nX_tld/2) * tld_dist;
+    auto initial_y = m_config.m_top_position_in_env.y() - (m_config.m_nX_tld/2) * tld_dist;
+    auto z = m_config.m_top_position_in_env.z();
+
+    for (int id_x = 0; id_x < m_config.m_nX_tld; ++id_x){
+        for (int id_y = 0; id_y < m_config.m_nY_tld; ++id_y){
+            std::string tld_name = "TLD_" + std::to_string(id_x) + "_" + std::to_string(id_y);
+            auto current_centre = G4ThreeVector(initial_x + id_x*tld_dist,
+                                                initial_y + id_y*tld_dist, z);
+            m_tld_detectors.push_back(new TLD(tld_name,current_centre, m_config.m_tld_medium));
+            m_tld_detectors.back()->SetIDs(id_x, id_y, 0);
+            m_tld_detectors.back()->SetNVoxels('x', m_config.m_tld_nX_voxels);
+            m_tld_detectors.back()->SetNVoxels('y', m_config.m_tld_nY_voxels);
+            m_tld_detectors.back()->SetNVoxels('z', m_config.m_tld_nZ_voxels);
+        }
+    }
 
     for (auto& tld : m_tld_detectors){
         tld->Construct(pv);
@@ -49,10 +66,6 @@ void TLDTray::LoadConfiguration(){
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
     m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
-
-    m_config.m_tld_nX_voxels = 4;
-    m_config.m_tld_nY_voxels = 4;
-    m_config.m_tld_nZ_voxels = 4;
 
     m_config.m_tld_medium = "RMPS470";
 

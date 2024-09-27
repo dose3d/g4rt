@@ -19,15 +19,15 @@ class TLDTray : public IPhysicalVolume, public TomlConfigModule {
             public:
                 std::string m_tld_medium = "None";
 
-                G4int m_nX_tld = 0;
-                G4int m_nY_tld = 0;
-                G4int m_nZ_tld = 0;
+                G4int m_nX_tld = 4;
+                G4int m_nY_tld = 4;
+                G4int m_nZ_tld = 1;
                 
                 G4ThreeVector m_top_position_in_env;
                 
-                G4int m_tld_nX_voxels = 0;
-                G4int m_tld_nY_voxels = 0;
-                G4int m_tld_nZ_voxels = 0;
+                G4int m_tld_nX_voxels = 10;
+                G4int m_tld_nY_voxels = 10;
+                G4int m_tld_nZ_voxels = 10;
                 
                 bool m_initialized = false;
             };

@@ -108,7 +108,7 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   auto tldLV = new G4LogicalVolume(tldBox, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
+  LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for TLD construction... "); 
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", tldLV, m_parentPV, false, 0));
 
   SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 

@@ -419,7 +419,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   LOGSVC_INFO("ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // DUMP METADATA TO FILE 
-  auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
+  auto meta =  path_to_output_dir+"/../ct_dose_"+plan_file_name+"_series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
 
@@ -645,19 +645,22 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   // std::cout << &voxelData <<std::endl; 
 
   IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
+  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  double dose = 0.;
+  double fsf = 0.; // field scaling factor
+  int cellIdX = 0;
+  int cellIdY = 0;
+  int cellIdZ = 0;
   for( int x = 0; x < xResolution; x++ ){
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
-        double dose = 0.;
-        double fsf = 0.; // field scaling factor
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
@@ -667,8 +670,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          cellIdX = voxelHit->GetGlobalID(0);
+          cellIdY = voxelHit->GetGlobalID(1);
+          cellIdZ = voxelHit->GetGlobalID(2);
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();
@@ -680,14 +686,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
-        double dose = 0.;
-        double fsf = 0.; // field scaling factor
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
@@ -697,8 +700,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          cellIdX = voxelHit->GetGlobalID(0);
+          cellIdY = voxelHit->GetGlobalID(1);
+          cellIdZ = voxelHit->GetGlobalID(2);
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();

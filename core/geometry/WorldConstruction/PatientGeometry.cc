@@ -652,6 +652,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   int cellIdY = 0;
   int cellIdZ = 0;
   for( int x = 0; x < xResolution; x++ ){
+    dose = 0.;
+    fsf = 0.;
+    cellIdX = -1;
+    cellIdY = -1;
+    cellIdZ = -1;
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
@@ -673,6 +678,10 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdX = voxelHit->GetGlobalID(0);
           cellIdY = voxelHit->GetGlobalID(1);
           cellIdZ = voxelHit->GetGlobalID(2);
+        } else {
+          cellIdX = -1;
+          cellIdY = -1;
+          cellIdZ = -1;
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
@@ -682,6 +691,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
     for( int x = 0; x < xResolution; x++ ){
+    dose = 0.;
+    fsf = 0.;
+    cellIdX = -1;
+    cellIdY = -1;
+    cellIdZ = -1;
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
@@ -703,6 +717,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdX = voxelHit->GetGlobalID(0);
           cellIdY = voxelHit->GetGlobalID(1);
           cellIdZ = voxelHit->GetGlobalID(2);
+        } else {
+          dose = 0.;
+          fsf = 0.;
+          cellIdX = -1;
+          cellIdY = -1;
+          cellIdZ = -1;
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }

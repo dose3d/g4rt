@@ -1,8 +1,10 @@
 [RunSvc]
-JobName = "srunet3d_64x64x64_4x4x2_beam0_cp35-39"
+JobName = "srunet3d_64x64x64_4x4x2_beam0_cp0"
 BeamType = "IAEA"
 #PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # LHCbD2 location
-PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+#PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = false

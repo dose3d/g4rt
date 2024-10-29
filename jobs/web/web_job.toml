@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "web_job_example"
-BeamType = "IAEA" 
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+BeamType = "gps" 
+GpsMacFileName = "gps/gpsCLinac_pre.mac"
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 GenerateCT = true

@@ -643,6 +643,14 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   };
 
   // std::cout << &voxelData <<std::endl; 
+  auto c_file_merged =  path_to_output_dir+"/cell_ct3d.csv";
+  auto v_file_merged =  path_to_output_dir+"/voxel_ct3d.csv";
+  std::ofstream c_outFile_merged, v_outFile_merged;
+  c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
+  v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
+  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  c_outFile_merged << header_merged << std::endl;
+  v_outFile_merged << header_merged << std::endl;
 
   IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
   std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
@@ -684,10 +692,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdZ = -1;
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();
   }
+  v_outFile_merged.close();
+
 
     IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
     for( int x = 0; x < xResolution; x++ ){
@@ -725,9 +736,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdZ = -1;
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();
   }
+  c_outFile_merged.close();
+
 }
 

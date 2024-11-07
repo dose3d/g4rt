@@ -1,0 +1,41 @@
+[RunSvc]
+JobName = "tb16112024-profx"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = -200.0
+EnviromentSizeX = 500.0
+EnviromentSizeY = 500.0
+EnviromentSizeZ = 400.0
+EnviromentMedium = "Usr_G4AIR20C"
+
+[D3DDetector_Detector]
+TopPositionInEnv = [0.0,0.0,-14.0] # In mm
+# Geomertry = "dose3d/geo/full_tower.stl"
+
+[D3DDetector_Layer]
+Positioning = "dose3d/geo/Tower/pdd_2x1x32.csv"
+
+[D3DDetector_Cell]
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [5,5,5]
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+PlanInputFile = [
+    "/home/geant4/workspace/github/g4rt/jobs/testbeam/16112024/plan/cp10x10.dat"
+]

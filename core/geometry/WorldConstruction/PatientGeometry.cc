@@ -151,7 +151,7 @@ bool PatientGeometry::design(void) {
       m_patient->SetTomlConfigFile(projectPath+configFile);
     }
     configFile = m_patient->GetTomlConfigFile();
-    G4cout << "PatientGeometry::ConfigFile:: Importing configuration from:\n"<< configFile << "\n" << G4endl;
+    G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""<< patientType <<"\" from: "<< configFile << "\n" << G4endl;
   }
   return true;
 }
@@ -172,8 +172,6 @@ void PatientGeometry::Destroy() {
 void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   PrintConfig();
   design(); // a call to select the right phantom
-  auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
-
   auto mediumName = thisConfig()->GetValue<std::string>("EnviromentMedium");
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", mediumName);
 

@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "tb16112024-profx"
+JobName = "tb16112024-pdd"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
@@ -25,8 +25,12 @@ EnviromentSizeZ = 400.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-14.0] # In mm
 # Geomertry = "dose3d/geo/full_tower.stl"
+TopPositionInEnv = [0.0,0.0,15.0] # Job 5.a Top cell position at Z=0 mm
+# TopPositionInEnv = [0.0,0.0,13.0] # Job 5.b Top cell position at Z=2 mm (centre of the first cell at Z=1.4 mm)
+# TopPositionInEnv = [0.0,0.0,11.0] # Job 5.c Top cell position at Z=4 mm
+# TopPositionInEnv = [0.0,0.0,9.0] # Job 5.d Top cell position at Z=6 mm
+# TopPositionInEnv = [0.0,0.0,7.0] # Job 5.e Top cell position at Z=8 mm
 
 [D3DDetector_Layer]
 Positioning = "dose3d/geo/Tower/pdd_2x1x32.csv"
@@ -37,5 +41,6 @@ Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 PlanInputFile = [
-    "/home/geant4/workspace/github/g4rt/jobs/testbeam/16112024/plan/cp10x10.dat"
+    "plan/custom/cp5x5.dat",
+    "plan/custom/cp10x10.dat"
 ]

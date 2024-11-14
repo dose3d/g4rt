@@ -18,7 +18,7 @@ BuildPatient = true
 Type = "D3DDetector"
 EnviromentPositionX = 0.0
 EnviromentPositionY = 0.0
-EnviromentPositionZ = -200.0
+EnviromentPositionZ = 200.0
 EnviromentSizeX = 500.0
 EnviromentSizeY = 500.0
 EnviromentSizeZ = 400.0
@@ -26,11 +26,7 @@ EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
 # Geomertry = "dose3d/geo/full_tower.stl"
-TopPositionInEnv = [0.0,0.0,15.0] # Job 5.a Top cell position at Z=0 mm
-# TopPositionInEnv = [0.0,0.0,13.0] # Job 5.b Top cell position at Z=2 mm (centre of the first cell at Z=1.4 mm)
-# TopPositionInEnv = [0.0,0.0,11.0] # Job 5.c Top cell position at Z=4 mm
-# TopPositionInEnv = [0.0,0.0,9.0] # Job 5.d Top cell position at Z=6 mm
-# TopPositionInEnv = [0.0,0.0,7.0] # Job 5.e Top cell position at Z=8 mm
+TopPositionInEnv = [0.0,0.0,-195.0] # Job 5.a Top cell position at Z=0 mm
 
 [D3DDetector_Layer]
 Positioning = "dose3d/geo/Tower/pdd_2x1x32.csv"

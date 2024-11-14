@@ -41,6 +41,6 @@ Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 PlanInputFile = [
-    "plan/custom/cp5x5.dat",
-    "plan/custom/cp10x10.dat"
+    "plan/custom/cp5x5.dat"
+    # "plan/custom/cp10x10.dat"
 ]

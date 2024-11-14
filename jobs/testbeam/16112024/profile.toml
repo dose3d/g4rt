@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "tb16112024-xy"
+JobName = "tb16112024-y"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File

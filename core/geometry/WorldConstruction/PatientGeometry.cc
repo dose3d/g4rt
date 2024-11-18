@@ -11,7 +11,7 @@
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
-
+#include "CADMesh.hh"
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -50,6 +50,10 @@ void PatientGeometry::Configure() {
   DefineUnit<double>("EnviromentSizeZ");
   DefineUnit<std::string>("EnviromentMedium");
   DefineUnit<std::string>("SupplementaryGeometry");
+  DefineUnit<std::string>("SupplementaryGeometryMaterial");
+  DefineUnit<double>("SupplementaryGeometryPositionX");
+  DefineUnit<double>("SupplementaryGeometryPositionY");
+  DefineUnit<double>("SupplementaryGeometryPositionZ");
   DefineUnit<std::string>("ConfigFile");
   DefineUnit<std::string>("ConfigPrefix");
   DefineUnit<double>("VoxelSizeXCT");
@@ -182,6 +186,11 @@ void PatientGeometry::Destroy() {
     delete pv;
     SetPhysicalVolume(nullptr);
   }
+  if (m_suplementary_volume){
+    delete m_suplementary_volume;
+    m_suplementary_volume = nullptr;
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,18 +231,22 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 //  auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
 //  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
 //  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0));
-if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")==0) {
+if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
+  if (supplementaryGeometryPath.at(0)!='/'){
+    std::string data_path = PROJECT_DATA_PATH;
+    supplementaryGeometryPath = data_path+"/"+supplementaryGeometryPath;
+  }
   auto supplementaryGeometryMaterial = thisConfig()->GetValue<std::string>("SupplementaryGeometryMaterial");
-  auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryMaterialPositionX");
-  auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryMaterialPositionY");
-  auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryMaterialPositionZ");
+  auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryGeometryPositionX");
+  auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryGeometryPositionY");
+  auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryGeometryPositionZ");
 
   auto mesh = CADMesh::TessellatedMesh::FromSTL(supplementaryGeometryPath);
   G4VSolid* solid = mesh->GetSolid();
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", supplementaryGeometryMaterial);
   auto supplementaryGeometryLV = new G4LogicalVolume(solid, Medium.get(), "LVStl_Supplementary");
-  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0));
+  m_suplementary_volume = new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0);
 
 }
 

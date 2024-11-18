@@ -23,6 +23,11 @@ EnviromentSizeX = 500.0
 EnviromentSizeY = 500.0
 EnviromentSizeZ = 400.0
 EnviromentMedium = "Usr_G4AIR20C"
+SupplementaryGeometryMaterial = ["PMMA"]
+SupplementaryGeometry = ["/home/jackie/work/dose3d/g4rt/data/dose3d/geo/WaterPhantom/PhantomTop.axsi.stl"]
+SupplementaryGeometryPositionX = 0.0
+SupplementaryGeometryPositionY = 0.0
+SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
 # Geomertry = "dose3d/geo/full_tower.stl"

@@ -214,6 +214,12 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->Construct(parentWorld);
     }
   }
+  if(geo_type.compare("PositioningFromCsv")==0 ||
+     geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
+  m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();
+  m_config.m_nY_cells = 2;
+  m_config.m_nZ_cells = 32;
+  }
   ///////////////////////////////////////////
   /// Building standard procedural generated geometry
   if(geo_type.compare("Standard")==0){

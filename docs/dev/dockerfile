@@ -34,7 +34,7 @@ SHELL ["/bin/bash", "-c"]
 # Geant4 env & G4RT
 # ----------------------------------------
 RUN conda init && /bin/bash && \
-    cd & git clone --single-branch --branch 20-simulation-output-format-to-hdf https://github.com/dose3d/g4rt.git && \
+    cd /root/ && git clone --single-branch --branch 20-simulation-output-format-to-hdf https://github.com/dose3d/g4rt.git && \
     conda env create --name geant4 -f g4rt/docs/dev/g4rt.yml && \
     source /opt/conda/etc/profile.d/conda.sh && conda activate geant4 && \
-    cd /root/g4rt/ && mkdir build && cd build && cmake ../ make -j2
+    cd /root/ && mkdir g4rt/build && cd g4rt/build && cmake ../ && make -j 4

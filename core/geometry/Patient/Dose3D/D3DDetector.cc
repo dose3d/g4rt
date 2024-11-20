@@ -168,6 +168,18 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   auto geo_type = D3DDetector::SetGeometrySource();
   G4cout<< "Zaczyna konstrukcję... "<< geo_type <<G4endl;
 
+  // Set to store unique Y and Z values, this is for calculate dimensions for
+  // StlDetectorWithPositioningFromCsv or PositioningFromCsv
+  std::set<double> nY_cells;
+  std::set<double> nZ_cells;
+
+  auto processLayerDimensionality = [&nY_cells, &nZ_cells](const std::vector<G4ThreeVector>& vecs) {
+      for(const auto& vec:vecs){
+        nY_cells.insert(vec.getY());
+        nZ_cells.insert(vec.getZ());
+      }
+  };
+
   if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
     std::string path = PROJECT_DATA_PATH;
     path = path + "/" + m_config.m_stl_geometry_file_path;
@@ -194,7 +206,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
-
+      processLayerDimensionality(cells_in_layer_positioning);
     }
   }
 
@@ -212,13 +224,14 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
+      processLayerDimensionality(cells_in_layer_positioning);
     }
   }
   if(geo_type.compare("PositioningFromCsv")==0 ||
      geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
-  m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();
-  m_config.m_nY_cells = 2;
-  m_config.m_nZ_cells = 32;
+    m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();
+    m_config.m_nY_cells = nY_cells.size();
+    m_config.m_nZ_cells = nZ_cells.size();
   }
   ///////////////////////////////////////////
   /// Building standard procedural generated geometry

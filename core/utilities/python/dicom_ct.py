@@ -126,8 +126,11 @@ class CtSvc():
         ds.StudyTime = "123030"
         ds.SeriesTime = "123100"
         ds.StudyDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.StudyDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.SeriesDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.SeriesDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.ContentDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.ContentDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.Manufacturer = "Dose3D"
         ds.InstitutionName = "AGH WFiIS"
         ds.InstitutionAddress = "Kraków"
@@ -136,6 +139,7 @@ class CtSvc():
         ds.PatientName = self.__label
         ds.StudyDescription = "Describe me!"
         ds.PatientID = "0123456789"
+        ds.PatientBirthDate = '20000101'
         ds.SoftwareVersions = "DICOMaker alpha v0.15"
         # Should it be set at same distance?
         ds.DistanceSourceToDetector = self.__SSD

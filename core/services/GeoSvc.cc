@@ -528,7 +528,7 @@ void GeoSvc::WritePatientToCsvCT(){
 ///
 void GeoSvc::WritePatientToDicomCT(){
   // NOTE: Currently this service is using the csv data, 
-  // hence the GeoSvc::WritePatientToCsvCT has to be called!
+  //       hence the GeoSvc::WritePatientToCsvCT has to be called!
   auto output_dir = GetOutputDir()+"/dicom/ct_csv";
   auto dicomSvc = Service<DicomSvc>();
   auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";

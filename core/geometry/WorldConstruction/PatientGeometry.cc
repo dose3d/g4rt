@@ -709,9 +709,9 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
     auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
+    std::ofstream v_outFile;
+    v_outFile.open(file.c_str(), std::ios::out);
+    v_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
         currentPos.setX((ct_cube_init_x+sizeX*x));
@@ -727,15 +727,18 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdY = voxelHit->GetGlobalID(1);
           cellIdZ = voxelHit->GetGlobalID(2);
         } else {
+          dose = 0.;
+          fsf = 0.;
           cellIdX = -1;
           cellIdY = -1;
           cellIdZ = -1;
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+
         v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
-    c_outFile.close();
+    v_outFile.close();
   }
   v_outFile_merged.close();
 
@@ -776,6 +779,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           cellIdZ = -1;
         }
         c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+
         c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }

@@ -124,12 +124,45 @@ int main(int argc, const char *argv[]) {
             if(mlc_b.at(i_leaf) > max_b) max_b = mlc_b.at(i_leaf);
           }
         }
-        auto shift_ab = (max_b - min_a)/2;
+        double shift_ab = 0;
+        if (min_a<0 && max_b>0){
+          shift_ab = -(max_b + min_a);
+        } else if (min_a<0 && max_b<0) {
+          shift_ab = -min_a/2;
+        } else if (min_a>0 && max_b>0) {
+          shift_ab = min_b/2;
+        }
         std::cout << "Shift A-B: " << shift_ab << std::endl;
         for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
           mlc_a.at(i_leaf) = mlc_a.at(i_leaf) + shift_ab;
           mlc_b.at(i_leaf) = mlc_b.at(i_leaf) + shift_ab;
         }
+      };
+      int not_x_cetral{0};
+      auto centralize_x = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
+        int start_x_closed = 0, end_x_closed = 0;
+        bool got_open = false;
+        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
+          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) == 0 && !got_open){ // check if mlc is closed
+            ++start_x_closed;
+          } else {
+            got_open=true;
+          }
+        }
+        got_open = false;
+        for(int i_leaf=mlc_a.size()-1; i_leaf >=0; i_leaf--){
+          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) == 0 && !got_open){ // check if mlc is closed
+            ++end_x_closed;
+          } else {
+            got_open=true;
+          }
+        }
+        if(start_x_closed != end_x_closed){
+          std::cout << "NOT X CENTRAL" << start_x_closed << std::endl;
+          ++not_x_cetral;
+        }
+        // std::cout << "Start #leafs closed: " << start_x_closed << std::endl;
+        // std::cout << "End   #leafs closed: " << end_x_closed << std::endl;
       };
       
       auto isPassingFieldConstrain = [&](std::vector<G4double>& mlc_a,
@@ -217,9 +250,11 @@ int main(int argc, const char *argv[]) {
           auto mlc_b = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y2",i_beam,i_cp);
           std::string dat_plan_file = svc::getFileName(rtplan_file);
           dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
-          if (fieldCentre)
+          if (fieldCentre){
             centralize_ab(mlc_a, mlc_b);
-          auto passed = isPassingFieldConstrain(mlc_a, mlc_b);
+            centralize_x(mlc_a, mlc_b);
+          }
+          auto passed = true;//= isPassingFieldConstrain(mlc_a, mlc_b);
           if (passed){
             write_dat_plan_file(dat_plan_file,jaw_x,jaw_y,mlc_a,mlc_b);
             ++passing_rate_counter;
@@ -230,7 +265,7 @@ int main(int argc, const char *argv[]) {
         }
       }
       std::cout << "#Processed CP: " << cp_counter << " filtered and saved: " << passing_rate_counter << "("<< double(passing_rate_counter)*100/cp_counter <<"%)" << std::endl;
-
+      std::cout << "# Not centralized in X: " << not_x_cetral << std::endl;
     } catch (const cxxopts::OptionException &e) {
       std::cout << "Error parsing options: " << e.what() << std::endl;
       std::exit(EXIT_FAILURE);

@@ -290,7 +290,9 @@ std::string ControlPoint::GetOutputDir() {
 ///
 std::string ControlPoint::GetOutputFileName() const {
     auto job = Service<RunSvc>()->GetJobNameLabel();
-    return GetOutputDir()+"/cp-"+ std::to_string(GetId()); // No extension here!  
+    auto plan_file_name = std::filesystem::path(GetPlanFile()).stem().string();
+    IO::CreateDirIfNotExits(GetOutputDir()+"/"+plan_file_name);
+    return GetOutputDir()+"/"+plan_file_name+"/"+plan_file_name; // No extension here!  
 }
 
 ////////////////////////////////////////////////////////////////////////////////

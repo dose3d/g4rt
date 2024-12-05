@@ -429,7 +429,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto cp = Service<RunSvc>()->CurrentControlPoint();
   auto run_id = std::to_string(runPtr->GetRunID());
   auto plan_file_name = std::filesystem::path(cp->GetPlanFile()).stem().string();
-  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_"+plan_file_name;
+  auto path_to_output_dir = cp->GetOutputDir()+"/"+plan_file_name;
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 
@@ -459,7 +459,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   LOGSVC_INFO("ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // DUMP METADATA TO FILE 
-  auto meta =  path_to_output_dir+"/../ct_dose_"+plan_file_name+"_series_metadata.csv";
+  auto meta =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
 
@@ -683,16 +683,16 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   };
 
   // std::cout << &voxelData <<std::endl; 
-  auto c_file_merged =  cp->GetOutputDir()+"/"+plan_file_name+"_ct_dose_3d_cell.csv";
-  auto v_file_merged =  cp->GetOutputDir()+"/"+plan_file_name+"_ct_dose_3d_voxel.csv";
+  auto c_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
+  auto v_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
   std::ofstream c_outFile_merged, v_outFile_merged;
   c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
   v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
   std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
   c_outFile_merged << header_merged << std::endl;
   v_outFile_merged << header_merged << std::endl;
-
-  IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
+  std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
+  IO::CreateDirIfNotExits(csv_slices_path);
   std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
   double dose = 0.;
   double fsf = 0.; // field scaling factor
@@ -708,7 +708,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
+    auto file =  csv_slices_path+"/img"+s2+".csv";
     std::ofstream v_outFile;
     v_outFile.open(file.c_str(), std::ios::out);
     v_outFile << header << std::endl;
@@ -742,8 +742,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   }
   v_outFile_merged.close();
 
-
-    IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
+    csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
+    IO::CreateDirIfNotExits(csv_slices_path);
     for( int x = 0; x < xResolution; x++ ){
     dose = 0.;
     fsf = 0.;
@@ -753,7 +753,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
+    auto file =  csv_slices_path+"/img"+s2+".csv";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;

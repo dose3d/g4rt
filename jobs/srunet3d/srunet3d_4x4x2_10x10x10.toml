@@ -47,7 +47,7 @@ CellVoxelisedScorer = true
 PlanInputFile = [
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
         "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp0.dat",
-        "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp55.dat",
+        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp55.dat",
         "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp73.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp91.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp4.dat",
@@ -61,7 +61,7 @@ PlanInputFile = [
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp33.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp45.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp57.dat",
-        "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp99.dat",
+        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp99.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp42.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp43.dat",
         # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp44.dat",

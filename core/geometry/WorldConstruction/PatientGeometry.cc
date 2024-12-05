@@ -683,8 +683,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   };
 
   // std::cout << &voxelData <<std::endl; 
-  auto c_file_merged =  path_to_output_dir+"/cell_ct3d.csv";
-  auto v_file_merged =  path_to_output_dir+"/voxel_ct3d.csv";
+  auto c_file_merged =  cp->GetOutputDir()+"/"+plan_file_name+"_ct_dose_3d_cell.csv";
+  auto v_file_merged =  cp->GetOutputDir()+"/"+plan_file_name+"_ct_dose_3d_voxel.csv";
   std::ofstream c_outFile_merged, v_outFile_merged;
   c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
   v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);

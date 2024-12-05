@@ -2,7 +2,7 @@
 JobName = "tb16112024-x"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = false
@@ -21,20 +21,20 @@ EnviromentPositionY = 0.0
 EnviromentPositionZ = 200.0
 EnviromentSizeX = 500.0
 EnviromentSizeY = 500.0
-EnviromentSizeZ = 400.0
+EnviromentSizeZ = 500.0
 EnviromentMedium = "G4_WATER"
-SupplementaryGeometryMaterial = "PMMA"
-SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
-SupplementaryGeometryPositionX = 0.0
-SupplementaryGeometryPositionY = 0.0
-SupplementaryGeometryPositionZ = 0.0
+# SupplementaryGeometryMaterial = "PMMA"
+# SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
+# SupplementaryGeometryPositionX = 0.0
+# SupplementaryGeometryPositionY = 0.0
+# SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-# Geomertry = "dose3d/geo/full_tower.stl"
-TopPositionInEnv = [0.0,0.0,-181.0] # Z=1.4cm in water
+Geomertry = "dose3d/geo/Tower/Waterphantom_Tower_Shell.stl"
+TopPositionInEnv = [0.0,0.0,-240.0] # Z=1.4cm in water
 
 [D3DDetector_Layer]
-Positioning = "dose3d/geo/Tower/x_16x1x1_ext-shift-2mm.csv"
+Positioning = "dose3d/geo/Tower/Waterphantom_Cell_Positioning.csv"
 # Positioning = "dose3d/geo/Tower/y_1x16x1.csv"
 
 [D3DDetector_Cell]

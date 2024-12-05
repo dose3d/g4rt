@@ -99,10 +99,12 @@ int main(int argc, const char *argv[]) {
         usr_nCtrlPts = cmdopts["c"].as<int>();
       
       auto input = cmdopts["fieldConstrain"].as<std::string>();
+      bool fieldConstrain = false;
       std::pair<float, float> field{-1,-1};
       try {
           field = parsePair(input);
           std::cout << "Parsed pair: (" << field.first << ", " << field.second << ")\n";
+          fieldConstrain = true;
       } catch (const std::invalid_argument& e) {
           std::cerr << e.what() << '\n';
           return 1;
@@ -126,11 +128,11 @@ int main(int argc, const char *argv[]) {
         }
         double shift_ab = 0;
         if (min_a<0 && max_b>0){
-          shift_ab = -(max_b + min_a);
-        } else if (min_a<0 && max_b<0) {
+          shift_ab = -(max_b + min_a)/2;
+        } else if (min_a<0 && max_b<=0) {
           shift_ab = -min_a/2;
-        } else if (min_a>0 && max_b>0) {
-          shift_ab = min_b/2;
+        } else if (min_a>=0 && max_b>0) {
+          shift_ab = -max_b/2;
         }
         std::cout << "Shift A-B: " << shift_ab << std::endl;
         for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
@@ -190,14 +192,14 @@ int main(int argc, const char *argv[]) {
         }
         min_leaf_y = min_a < min_b ? min_a : min_b;
         max_leaf_y = max_a > max_b ? max_a : max_b;
-        // std::cout << "X range: " << min_leaf_x << " : " << max_leaf_x << std::endl;
-        // std::cout << "Y range: " << min_leaf_y << " : " << max_leaf_y << std::endl;
+        std::cout << "X range: " << min_leaf_x << " : " << max_leaf_x << std::endl;
+        std::cout << "Y range: " << min_leaf_y << " : " << max_leaf_y << std::endl;
         if (field.first > max_leaf_x - min_leaf_x &&
             field.second > max_leaf_y - min_leaf_y){
               std::cout << "Field Constrain PASSED" << std::endl;
             return true;
             }
-            std::cout << "Field Constrain NOT PASSED" << std::endl;
+            std::cout << "Field Constrain NOT PASSED: X:" << max_leaf_x - min_leaf_x << "  Y: " << max_leaf_y - min_leaf_y  << std::endl;
         return false;
       };
 
@@ -254,7 +256,9 @@ int main(int argc, const char *argv[]) {
             centralize_ab(mlc_a, mlc_b);
             centralize_x(mlc_a, mlc_b);
           }
-          auto passed = true;//= isPassingFieldConstrain(mlc_a, mlc_b);
+          auto passed = true;
+          if (fieldConstrain)
+            passed = isPassingFieldConstrain(mlc_a, mlc_b);
           if (passed){
             write_dat_plan_file(dat_plan_file,jaw_x,jaw_y,mlc_a,mlc_b);
             ++passing_rate_counter;

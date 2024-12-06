@@ -22,7 +22,7 @@ EnviromentPositionZ = 200.0
 EnviromentSizeX = 500.0
 EnviromentSizeY = 500.0
 EnviromentSizeZ = 500.0
-EnviromentMedium = "G4_WATER"
+EnviromentMedium = "G4_Galactic"
 # SupplementaryGeometryMaterial = "PMMA"
 # SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
 # SupplementaryGeometryPositionX = 0.0
@@ -31,7 +31,7 @@ EnviromentMedium = "G4_WATER"
 
 [D3DDetector_Detector]
 Geomertry = "dose3d/geo/Tower/Waterphantom_Tower_Shell.stl"
-TopPositionInEnv = [0.0,0.0,-240.0] # Z=1.4cm in water
+TopPositionInEnv = [0.0,0.0,-198.0] # Top on the surface of the water
 
 [D3DDetector_Layer]
 Positioning = "dose3d/geo/Tower/Waterphantom_Cell_Positioning.csv"

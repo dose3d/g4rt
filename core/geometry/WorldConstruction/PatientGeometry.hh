@@ -16,6 +16,7 @@
 #include "G4VPhysicalVolume.hh"
 #include "globals.hh"
 #include "IPhysicalVolume.hh"
+#include <G4SubtractionSolid.hh>
 
 
 class VPatient;

@@ -7,6 +7,7 @@
 #include "G4SystemOfUnits.hh"
 #include "Services.hh"
 #include "G4Box.hh"
+#include "G4Tubs.hh"
 #include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
@@ -221,8 +222,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
   // create the actual phantom
-  m_patient->Construct(pv);
-  m_patient->WriteInfo();
+
 
  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
@@ -242,6 +242,34 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
  auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
  auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
 
+
+// if (assemblyImRTPhantom){
+if (true){
+    auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
+    auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
+    auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
+    auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
+
+    auto FullPhantomLV = new G4LogicalVolume(centreOFPhantomBox, boxMaterial.get(), "phantomLV");
+    auto my_rotation = new G4RotationMatrix;
+    my_rotation->rotateY(90.0*deg);
+    my_rotation->rotateX(90.0*deg);
+
+    auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
+
+    m_patient->Construct(FullPhantomPV);
+    m_patient->WriteInfo();
+}
+else{
+    m_patient->Construct(pv);
+    m_patient->WriteInfo();
+
+  }
+
+
+
+//  if(assemblyWaterPhantom){
+ if(false){
  auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
                                       "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
  auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
@@ -266,6 +294,8 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
                                       "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
  auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
                                       "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
+ }
+
 
 // Creation of bed?
 

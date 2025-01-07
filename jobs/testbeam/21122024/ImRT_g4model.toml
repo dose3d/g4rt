@@ -1,8 +1,8 @@
 [RunSvc]
 JobName = "better_plan"
 BeamType = "IAEA"
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = false
@@ -34,7 +34,7 @@ TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm
 # Voxelization = [5,5,5] # Number of cels in every direction
 
 [D3DDetector_Layer]
-Positioning = "dose3d/geo/Tower/imRt.csv"
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
 # MRowShift = false
 # MLayerShift = false
 

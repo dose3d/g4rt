@@ -30,11 +30,13 @@ EnviromentMedium = "G4_Galactic"
 # SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm
+# TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
+TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
 # Voxelization = [5,5,5] # Number of cels in every direction
 
 [D3DDetector_Layer]
-Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
+# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
 # MRowShift = false
 # MLayerShift = false
 

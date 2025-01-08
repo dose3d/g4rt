@@ -250,7 +250,7 @@ if (true){
     auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
     auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
 
-    auto FullPhantomLV = new G4LogicalVolume(centreOFPhantomBox, boxMaterial.get(), "phantomLV");
+    auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
     auto my_rotation = new G4RotationMatrix;
     my_rotation->rotateY(90.0*deg);
     my_rotation->rotateX(90.0*deg);
@@ -260,11 +260,11 @@ if (true){
     m_patient->Construct(FullPhantomPV);
     m_patient->WriteInfo();
 }
-else{
-    m_patient->Construct(pv);
-    m_patient->WriteInfo();
+// else{
+//     m_patient->Construct(pv);
+//     m_patient->WriteInfo();
 
-  }
+//   }
 
 
 

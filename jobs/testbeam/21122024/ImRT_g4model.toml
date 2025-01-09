@@ -1,11 +1,11 @@
 [RunSvc]
 JobName = "better_plan"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
-GenerateCT = false
+GenerateCT = true
 PrimariesAnalysis = false
 NTupleAnalysis = true
 RunAnalysis = true
@@ -31,8 +31,8 @@ EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 # SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-# TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
-TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
+TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
+# TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
 # Voxelization = [5,5,5] # Number of cels in every direction
 
 [D3DDetector_Layer]

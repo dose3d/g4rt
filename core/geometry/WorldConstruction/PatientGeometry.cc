@@ -50,6 +50,7 @@ void PatientGeometry::Configure() {
   DefineUnit<double>("EnviromentSizeY");
   DefineUnit<double>("EnviromentSizeZ");
   DefineUnit<std::string>("EnviromentMedium");
+  DefineUnit<std::string>("EnviromentPatientEnvelop");
   DefineUnit<std::string>("SupplementaryGeometry");
   DefineUnit<std::string>("SupplementaryGeometryMaterial");
   DefineUnit<double>("SupplementaryGeometryPositionX");
@@ -106,6 +107,11 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
  if (unit.compare("EnviromentMedium") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
+  
+  if (unit.compare("EnviromentPatientEnvelop")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
   if (unit.compare("SupplementaryGeometryPositionX") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
@@ -199,6 +205,9 @@ void PatientGeometry::Destroy() {
 void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   PrintConfig();
   design(); // a call to select the right phantom
+  auto envPatientEnvelop = thisConfig()->GetValue<std::string>("EnviromentPatientEnvelop");
+  G4cout << "EnvPatientEnvelop: " << envPatientEnvelop << G4endl; 
+
   auto mediumName = thisConfig()->GetValue<std::string>("EnviromentMedium");
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", mediumName);
 
@@ -221,35 +230,27 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->AddRootLogicalVolume(patientEnvLV);
   SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
+
   // create the actual phantom
+  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
+  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
+  auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
+  auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
+  auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+  auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
 
+  auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
+  auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
+  auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+  auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
 
- auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
- auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
- auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
- auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
- auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
- auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
-
- auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
- auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
- auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
- auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
-
-
- auto smallAquaBoxLV =  new G4LogicalVolume(smallAquariumBox, boxMaterial.get(), "smallAquaBoxLV");
- auto bigAquaBoxLV =    new G4LogicalVolume(bigAquariumBox, boxMaterial.get(), "bigAquaBoxLV");
- auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
- auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
-
-
-// if (assemblyImRTPhantom){
-if (true){
+  if (envPatientEnvelop.compare("IbaImRT") == 0){
     auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
     auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
     auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
     auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
 
+    // auto FullPhantomLV = new G4LogicalVolume(FullPhantom, waterMaterial.get(), "phantomLV");
     auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
     auto my_rotation = new G4RotationMatrix;
     my_rotation->rotateY(90.0*deg);
@@ -259,43 +260,43 @@ if (true){
 
     m_patient->Construct(FullPhantomPV);
     m_patient->WriteInfo();
-}
-// else{
-//     m_patient->Construct(pv);
-//     m_patient->WriteInfo();
+  }
+  else{
+    m_patient->Construct(pv);
+    m_patient->WriteInfo();
 
-//   }
+  }
 
-
-
-//  if(assemblyWaterPhantom){
- if(false){
- auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                      "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
- auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                      "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, pv, false, 0);
- auto pv2 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                      "smallAquaBoxPV2", smallAquaBoxLV, pv, false, 0);
- auto pv2_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                      "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, pv, false, 0);
- auto pv3 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                      "bigAquaBoxPV3",   bigAquaBoxLV,   pv, false, 0);
- auto pv3_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                      "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, pv, false, 0);
- auto pv4 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                      "bigAquaBoxPV4",   bigAquaBoxLV,   pv, false, 0);
- auto pv4_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                      "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, pv, false, 0);
- auto pv5 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                      "bigAquaBoxPV5",   bigAquaBoxLV,   pv, false, 0);
- auto pv5_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                      "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, pv, false, 0);
- auto pv6 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                      "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
- auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                      "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
- }
-
+  if(envPatientEnvelop.compare("ModularWaterPhantom") == 0){
+    auto smallAquaBoxLV =  new G4LogicalVolume(smallAquariumBox, boxMaterial.get(), "smallAquaBoxLV");
+    auto bigAquaBoxLV =    new G4LogicalVolume(bigAquariumBox, boxMaterial.get(), "bigAquaBoxLV");
+    auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
+    auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
+    auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
+                                          "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
+    auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
+                                          "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, pv, false, 0);
+    auto pv2 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-260.0*mm), 
+                                          "smallAquaBoxPV2", smallAquaBoxLV, pv, false, 0);
+    auto pv2_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-235.0*mm), 
+                                          "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, pv, false, 0);
+    auto pv3 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV3",   bigAquaBoxLV,   pv, false, 0);
+    auto pv3_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv4 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV4",   bigAquaBoxLV,   pv, false, 0);
+    auto pv4_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv5 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV5",   bigAquaBoxLV,   pv, false, 0);
+    auto pv5_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv6 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
+    auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
+  }
 
 // Creation of bed?
 

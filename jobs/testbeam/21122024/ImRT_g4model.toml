@@ -23,6 +23,7 @@ EnviromentSizeX = 500.0
 EnviromentSizeY = 500.0
 EnviromentSizeZ = 500.0
 EnviromentMedium = "G4_Galactic"
+EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 # SupplementaryGeometryMaterial = "PMMA"
 # SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
 # SupplementaryGeometryPositionX = 0.0

@@ -492,6 +492,7 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const {
+    angle = 45; // TEMP HARDCODED FOR start production!!!
     if (angle==180)
         angle+=0.01;
     double angleInRadians = angle * M_PI / 180.0;

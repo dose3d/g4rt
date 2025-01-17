@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "srunet3d_4x4x2_64x64x64_beam3"
+JobName = "srunet3d_4x4x2_64x64x64"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
@@ -21,16 +21,16 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX = 0.0
-PatientIsocentreY = 0.0
-PatientIsocentreZ = 0.0
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = 0.0
 EnviromentSizeX = 64.0
 EnviromentSizeY = 64.0
 EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TranslationInLocalFrame = [0.0,0.0,0.0] # In mm
+TopPositionInEnv = [0.0,0.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
 [D3DDetector_Layer]

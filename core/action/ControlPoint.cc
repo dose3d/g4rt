@@ -190,6 +190,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
+    m_config.RotationInDeg = 45.; // TEMP HARDCODED!!!!!
     G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << m_config.RotationInDeg << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldType: " << m_config.FieldType << G4endl;

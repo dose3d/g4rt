@@ -101,7 +101,7 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     return imageData
 
 def main():
-    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_2x2x2_64x64x64_3/sim/cp5x5/cp5x5_d3ddetector_voxel.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
     if not os.path.exists(csv_path):
         print(f"CSV file not found at {csv_path}")
         return

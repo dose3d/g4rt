@@ -74,25 +74,26 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     }
 
     scalar_data = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
+    # observable = 'Dose [Gy]'
+    observable = "FieldScalingFactor"
+    # cell_df = cell_df[cell_df['Z [mm]'] < 5]
+    # cell_df = cell_df[cell_df['Z [mm]'] > -5]
 
-    cell_df = cell_df[cell_df['Z [mm]'] < 5]
-    cell_df = cell_df[cell_df['Z [mm]'] > -5]
-
-    dose_min = cell_df['Dose'].min()
-    dose_max = cell_df['Dose'].max()
+    # dose_min = cell_df[observable].min()
+    # dose_max = cell_df[observable].max()
     
     # Normalize doses
-    if dose_min == dose_max:
-        cell_df['NormalizedDose'] = 0
-    else:
-        cell_df['NormalizedDose'] = (cell_df['Dose'] - dose_min) / (dose_max - dose_min)
+    # if dose_min == dose_max:
+    #     cell_df['NormalizedDose'] = 0
+    # else:
+    #     cell_df['NormalizedDose'] = (cell_df[observable] - dose_min) / (dose_max - dose_min)
     
     print("Filling vtkImageData with voxel values...")
     for index, row in cell_df.iterrows():
         x_idx = coord_to_index['x'][row['X [mm]']]
         y_idx = coord_to_index['y'][row['Y [mm]']]
         z_idx = coord_to_index['z'][row['Z [mm]']]
-        scalar_data[z_idx, y_idx, x_idx] = row['NormalizedDose']
+        scalar_data[z_idx, y_idx, x_idx] = row[observable]
 
     vtk_data_array = numpy_support.numpy_to_vtk(scalar_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
     imageData.GetPointData().SetScalars(vtk_data_array)
@@ -101,7 +102,7 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     return imageData
 
 def main():
-    csv_path = '/home/jackie/Pobrane/cp-0_d3ddetector_voxel.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_2x2x2_64x64x64_3/sim/cp5x5/cp5x5_d3ddetector_voxel.csv'
     if not os.path.exists(csv_path):
         print(f"CSV file not found at {csv_path}")
         return
@@ -153,10 +154,10 @@ def main():
     # Add axes
     print("Adding axes...")
     axes = vtk.vtkAxesActor()
-    axes.SetTotalLength(50, 50, 50)
+    axes.SetTotalLength(25, 25, 25)
     axes.SetShaftTypeToLine()
     axes.SetTipTypeToCone()
-    axes.SetConeRadius(0.5)
+    axes.SetConeRadius(0.2)
     axes.SetXAxisLabelText("X")
     axes.SetYAxisLabelText("Y")
     axes.SetZAxisLabelText("Z")
@@ -166,7 +167,7 @@ def main():
     print("Adding scalar bar...")
     scalar_bar = vtk.vtkScalarBarActor()
     scalar_bar.SetLookupTable(colorFunc)
-    scalar_bar.SetTitle("Dose")
+    # scalar_bar.SetTitle("FSF")
     scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
     scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
     renderer.AddActor2D(scalar_bar)

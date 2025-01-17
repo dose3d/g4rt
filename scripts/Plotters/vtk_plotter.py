@@ -75,6 +75,7 @@ def create_vtk_image_data(cell_df, voxel_side_len):
 
     scalar_data = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
     # observable = 'Dose [Gy]'
+    # observable = "AngleScalingFactor"
     observable = "FieldScalingFactor"
     # cell_df = cell_df[cell_df['Z [mm]'] < 5]
     # cell_df = cell_df[cell_df['Z [mm]'] > -5]
@@ -102,7 +103,8 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     return imageData
 
 def main():
-    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
+    # csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_ct_dose_voxel.csv'
     if not os.path.exists(csv_path):
         print(f"CSV file not found at {csv_path}")
         return
@@ -144,7 +146,7 @@ def main():
 
     actor.GetProperty().SetColor(colorFunc)
     actor.GetProperty().SetScalarOpacity(opacityFunc)
-    actor.GetProperty().SetInterpolationTypeToLinear()
+    actor.GetProperty().SetInterpolationTypeToNearest()
 
     print("Creating renderer and adding actor...")
     renderer = vtk.vtkRenderer()
@@ -192,6 +194,8 @@ def main():
     else:
         print("Volume successfully added to renderer.")
 
+    interactor_style = vtk.vtkInteractorStyleTrackballCamera()
+    renderWindowInteractor.SetInteractorStyle(interactor_style)
     print("Starting visualization...")
     renderWindow.Render()
     renderWindowInteractor.Start()

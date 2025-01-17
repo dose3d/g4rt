@@ -16,6 +16,7 @@
 #include "VMlc.hh"
 #include "Services.hh"
 #include <numeric> 
+#include <cmath>
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
@@ -175,17 +176,21 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
         
         for(auto& scoring: scoring_map.second){
             LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
-            G4double max = -10000.;
-            G4double min =  10000.;
+            G4double max_fsf = -10000.;
+            G4double min_fsf =  10000.;
+            G4double max_asf = max_fsf;
+            G4double min_asf = min_fsf;
             for(auto& hit : scoring.second){
                 auto fsf = current_cp->GetFieldScalingFactor(hit.second.GetCentre());
                 fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
-                if (fsf > max) max = fsf;
-                if (fsf < min) min = fsf;
+                if (fsf > max_fsf) max_fsf = fsf;
+                if (fsf < min_fsf) min_fsf = fsf;
 
-                auto asf = current_cp->GetAngleScalingFactor(hit.second.GetCentre());
+                auto asf = current_cp->GetAngleScalingFactor(current_cp->GetDegreeRotation(),hit.second.GetCentre());
                 hit.second.SetAngleScalingFactor(asf);
+                if (asf > max_asf) max_asf = asf;
+                if (asf < min_asf) min_asf = asf;
             } 
             LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
             // Normalization (min-max scaling):
@@ -193,8 +198,12 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             G4double min_new = 0.02;
             for(auto& hit : scoring.second){
                 auto hit_fsf = hit.second.GetFieldScalingFactor();
-                auto new_fsf = (hit_fsf-min)/(max-min) * (max_new-min_new) + min_new;
+                auto new_fsf = (hit_fsf-min_fsf)/(max_fsf-min_fsf) * (max_new-min_new) + min_new;
                 hit.second.SetFieldScalingFactor(new_fsf);
+
+                auto hit_asf = hit.second.GetAngleScalingFactor();
+                auto new_asf = (hit_asf-min_asf)/(max_asf-min_asf) * (max_new-min_new) + min_new;
+                hit.second.SetAngleScalingFactor(new_asf);
             } 
         }
     }
@@ -512,8 +521,32 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double ControlPoint::GetAngleScalingFactor(const G4ThreeVector& position) const {
-    return 0.1;
+G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const {
+    if (angle==180)
+        angle+=0.01;
+    double angleInRadians = angle * M_PI / 180.0;
+    
+    // Make the angle symmetric [-M_PI,M_PI] insted of [0,2M_PI]
+    angleInRadians = angleInRadians - M_PI;
+
+    G4ThreeVector isocentre(0.0, 0.0, 0.0); // Point on the beam line
+    G4ThreeVector beamDirection(std::sin(angleInRadians), 0.0, std::cos(angleInRadians)); // Direction of the line (in the XZ plane)
+
+    // Calculate the vector from the isocentre to the given point
+    G4ThreeVector isoToPoint = position - isocentre;
+
+    // Calculate the cross product of the direction and the vector to the point
+    G4ThreeVector crossProduct = beamDirection.cross(isoToPoint);
+
+    // Calculate the distance
+    double distance = crossProduct.mag() / beamDirection.mag();
+
+    // Modified sigmoid function:
+    auto sig = [](double x){ 
+        return -2./(1 + std::exp(-x))+1;
+    };
+
+    return distance * sig(angleInRadians);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

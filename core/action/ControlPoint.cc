@@ -178,8 +178,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             G4double max = -10000.;
             G4double min =  10000.;
             for(auto& hit : scoring.second){
-                // hit.second.SetFieldScalingFactor(current_cp->GetMlcFieldScalingFactor(hit.second.GetCentre()));
-                auto fsf = current_cp->GetMlcWeightedInfluenceFactor(hit.second.GetCentre());
+                auto fsf = current_cp->GetFieldScalingFactor(hit.second.GetCentre());
                 fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max) max = fsf;
@@ -474,30 +473,7 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) const {
-    // TODO: DESCRIBE ME - HOW IT WORSKS !!!!
-    G4double closest_dist{10.e9};
-    auto maskLevelPosition = VMlc::GetPositionInMaskPlane(position);
-    if(MLC()->IsInField(maskLevelPosition)){
-        return 1;
-    }
-    else{
-        for(const auto& mp : m_plan_mask_points){
-            auto current_dist = sqrt(mp.diff2(maskLevelPosition));
-            if(current_dist>0){
-                if(closest_dist>current_dist)
-                    closest_dist = current_dist;
-            }
-        }
-        // return 1. / ((closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
-        return  exp(-(closest_dist+FIELD_MASK_POINTS_DISTANCE)/(FIELD_MASK_POINTS_DISTANCE));
-    }
-    return 1.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const {
+G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) const {
     auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
     auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
     // G4cout << "mlc_positioning Y1 | Y2: " << G4endl;

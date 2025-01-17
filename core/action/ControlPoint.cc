@@ -183,6 +183,9 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max) max = fsf;
                 if (fsf < min) min = fsf;
+
+                auto asf = current_cp->GetAngleScalingFactor(hit.second.GetCentre());
+                hit.second.SetAngleScalingFactor(asf);
             } 
             LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
             // Normalization (min-max scaling):
@@ -505,6 +508,12 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 
     // return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
     return influence_factor_y1+influence_factor_y2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4double ControlPoint::GetAngleScalingFactor(const G4ThreeVector& position) const {
+    return 0.1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

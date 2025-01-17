@@ -161,13 +161,11 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 auto fsf = current_cp->GetFieldScalingFactor(hit.second.GetCentre());
                 fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
-                if (fsf > max_fsf) max_fsf = fsf;
-                if (fsf < min_fsf) min_fsf = fsf;
+                if (fsf > max) max = fsf;
+                if (fsf < min) min = fsf;
 
-                auto asf = current_cp->GetAngleScalingFactor(current_cp->GetDegreeRotation(),hit.second.GetCentre());
+                auto asf = current_cp->GetAngleScalingFactor(hit.second.GetCentre());
                 hit.second.SetAngleScalingFactor(asf);
-                if (asf > max_asf) max_asf = asf;
-                if (asf < min_asf) min_asf = asf;
             } 
             LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
             // Normalization (min-max scaling):
@@ -491,32 +489,8 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const {
-    if (angle==180) // Edge case, not to divide by 0
-        angle+=0.01;
-    double angleInRadians = angle * M_PI / 180.0;
-    
-    // Make the angle symmetric [-M_PI,M_PI] insted of [0,2M_PI]
-    angleInRadians = angleInRadians - M_PI;
-
-    G4ThreeVector isocentre(0.0, 0.0, 0.0); // Point on the beam line
-    G4ThreeVector beamDirection(std::sin(angleInRadians), 0.0, std::cos(angleInRadians)); // Direction of the line (in the XZ plane)
-
-    // Calculate the vector from the isocentre to the given point
-    G4ThreeVector isoToPoint = position - isocentre;
-
-    // Calculate the cross product of the direction and the vector to the point
-    G4ThreeVector crossProduct = beamDirection.cross(isoToPoint);
-
-    // Calculate the distance
-    double distance = crossProduct.mag() / beamDirection.mag();
-
-    // Modified sigmoid function:
-    auto sig = [](double x){ 
-        return -2./(1 + std::exp(-x))+1;
-    };
-
-    return distance * sig(angleInRadians);
+G4double ControlPoint::GetAngleScalingFactor(const G4ThreeVector& position) const {
+    return 0.1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

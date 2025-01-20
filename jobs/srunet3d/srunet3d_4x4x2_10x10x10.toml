@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "srunet3d_4x4x2_64x64x64"
+JobName = "test_srunet3d_4x4x2_64x64x64"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
@@ -45,5 +45,6 @@ CellVoxelisedScorer = true
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 # nParticles = [1e4] # Per Control Point
 PlanInputFile = [
-        "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+        "/home/geant4/workspace/github/g4rt/build/prostate_imrt_beam0_cp0.dat"
 ]

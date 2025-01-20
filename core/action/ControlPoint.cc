@@ -220,7 +220,7 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeA: " << m_config.FieldSizeA << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldSizeB: " << m_config.FieldSizeB << G4endl;
     m_scoring_types = Service<RunSvc>()->GetScoringTypes();
-    SetRotation(config.RotationInDeg);
+    SetRotation(m_config.RotationInDeg);
     if(m_config.FieldType=="RTPlan" || m_config.FieldType=="CustomPlan"){
         auto dicomSvc = DicomSvc::GetInstance();
         m_jaw_x_aperture = dicomSvc->GetPlan()->ReadJawsAperture(m_config.PlanFile,"X",0,0); // file, side, beamId, cpId

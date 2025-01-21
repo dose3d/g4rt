@@ -410,33 +410,42 @@ void RunSvc::ParseTomlConfig(){
     }
   }
   // __________________________________________________________________________
-  // Reading the plan from custom TOML inteface is defined with the next priority
-  LOGSVC_INFO("Importing control point configuration from file: {}",configFile);
+  // Reading the plan from custom TOML inteface is defined with the highest priority
+  LOGSVC_INFO("Verifying control point configuration from file: {}",configFile);
   G4double rotationInDeg = 0.;
-  auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
-  if(numberOfCP>0){
-    std::cout << "Number of CP " << numberOfCP << " continue... " << std::endl;
-    auto n_fmask = config[configObj]["FieldMask"].as_array()->size();
-    if(n_fmask != numberOfCP)
-      criticalError("The number of field masks is not equal to the number of control points");
-    auto n_beam_rot = config[configObj]["BeamRotation"].as_array()->size();
-    if(n_beam_rot != numberOfCP)
-      criticalError("The number of beam rotations is not equal to the number of control points");
-    auto n_stat = config[configObj]["nParticles"].as_array()->size();
-    if(n_stat != numberOfCP)
-      criticalError("The number of particles statistics is not equal to the number of control points");
-    
-    for( int i = 0; i < numberOfCP; i++ ){
-      rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
-      int nEvents = config[configObj]["nParticles"][i].value_or(-1);
-      if(nEvents<0)
-        nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
-      std::cout << "Rotation " << rotationInDeg << "nEvents " << nEvents << std::endl;
+  auto n_beam_rot = config[configObj]["BeamRotation"].value_or(-1);
+  if(n_beam_rot >= 0) {
+    if (m_control_points_config.size()>0){ // configs already exist from plan files
+      LOGSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot); 
+      for(auto& config: m_control_points_config){
+        config.RotationInDeg = n_beam_rot;
+      }
+    }
+  }
+
+  auto n_stat = config[configObj]["nParticles"].value_or(-1);
+  if(n_stat >= 0){
+    if (m_control_points_config.size()>0){ // configs already exist from plan files
+      LOGSVC_INFO("Putting simulation statistic to: {} particles...",n_stat); 
+      for(auto& config: m_control_points_config){
+        config.NEvts = n_stat;
+      }
+    }
+  }
+  if (m_control_points_config.size()>0)
+    return; // we relay on configs created based on the plan files
+
+  if (_numberOfCP>0){
+    if(n_beam_rot < 0){
+      n_beam_rot = 0;
+      LOGSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot);
+    }
+    for( int i = 0; i < _numberOfCP; i++ ){
+      if(n_stat<0)
+        criticalError("RunSvc_Plan should include nParticles value");
       /// _______________________________________________________________________
       /// Define the new control point configuration
-      std::cout << "CP# " << i << " constructing... " << std::endl;
-      m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
-      std::cout << "CP#" << i << " constructed " << std::endl;
+      m_control_points_config.emplace_back(i,n_stat,n_beam_rot);
       m_control_points_config.back().FieldType = (config[configObj]["FieldMask"][i]["Type"].value_or(std::string()));
       m_control_points_config.back().FieldSizeA = (config[configObj]["FieldMask"][i]["SizeA"].value_or(G4double(0.0)));
       m_control_points_config.back().FieldSizeB = (config[configObj]["FieldMask"][i]["SizeB"].value_or(G4double(0.0)));

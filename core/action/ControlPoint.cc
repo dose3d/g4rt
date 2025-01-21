@@ -213,7 +213,6 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
-    m_config.RotationInDeg = 45.; // TEMP HARDCODED!!!!!
     G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: rotation: " << m_config.RotationInDeg << G4endl;
     G4cout << " DEBUG: ControlPoint:Ctr: FieldType: " << m_config.FieldType << G4endl;
@@ -523,8 +522,7 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const {
-    angle = 45; // TEMP HARDCODED FOR start production!!!
-    if (angle==180)
+    if (angle==180) // Edge case, not to divide by 0
         angle+=0.01;
     double angleInRadians = angle * M_PI / 180.0;
     

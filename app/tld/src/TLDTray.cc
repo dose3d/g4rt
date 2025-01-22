@@ -6,9 +6,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 ///
 TLDTray::TLDTray(G4VPhysicalVolume *parentPV, const std::string& name)
-:IPhysicalVolume(name), TomlConfigModule(name), m_tray_name(name) {
+// :IPhysicalVolume(name), TomlConfigModule(name), m_tray_name(name) {
+:VPatient(name), m_tray_name(name) {
     LoadConfiguration();
     Construct(parentPV);
+    Service<GeoSvc>()->RegisterPatient(this);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,3 +118,9 @@ void TLDTray::ParseTomlConfig(){
         m_rot.rotateZ(rotZ*deg);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const {
+    G4cout << "Getting ScoringHashedMap for " << scoring_name << "/" << Scoring::to_string(type) << G4endl;
+    return std::map<std::size_t, VoxelHit>();
+}

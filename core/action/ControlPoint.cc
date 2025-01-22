@@ -60,7 +60,7 @@ void ControlPointRun::InitializeScoringCollection(){
                 }
             }
             if(sc.empty()){
-                LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
+                LOGSVC_WARN("Couldn't get scoring collection for {}/{}",run_collection_name,Scoring::to_string(scoring_type));
             }
             // LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
             scoring_collection[scoring_type] = sc;

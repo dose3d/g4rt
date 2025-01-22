@@ -351,6 +351,8 @@ EMlcModel GeoSvc::GetMlcModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatient* GeoSvc::Patient(){
+  if (m_patient)
+    return m_patient;
   if(World()->PatientEnvironment())
     return World()->PatientEnvironment()->GetPatient();
   return nullptr;

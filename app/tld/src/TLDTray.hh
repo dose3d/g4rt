@@ -7,7 +7,8 @@
 #include "TLD.hh"
 
 ///
-class TLDTray : public IPhysicalVolume, public TomlConfigModule {
+// class TLDTray : public IPhysicalVolume, public TomlConfigModule {
+class TLDTray : public VPatient {
     private:
         ///
         void ParseTomlConfig() override;
@@ -71,6 +72,10 @@ class TLDTray : public IPhysicalVolume, public TomlConfigModule {
 
     ///
     TLDTray::Config m_config;
+
+    ///
+    std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
+
 };
 
 

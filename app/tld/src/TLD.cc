@@ -146,9 +146,6 @@ void TLD::DefineSensitiveDetector(){
   if(m_patientSD.Get()==0){
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre; // wrap this to VPatient::GetGlobalTranslation
-    
-    LOGSVC_DEBUG("Construct SD >> current centre {} {} {}", centre.x(),centre.y(),centre.z());
-
     auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
     auto label = GetName();
     m_patientSD.Put(new TLDSD(label+"_SD",centre,m_id_x,m_id_y,m_id_z));
@@ -170,7 +167,7 @@ void TLD::DefineSensitiveDetector(){
     // TEMPORARY METHOD TO GET RUN COLLECTION NAME:
     // TODO: extract this from Detector::name scope
     std::string runCollName = name.substr(0, name.find('_', 0));
-    //G4cout << "[DEBUG]:: TLD::DefineSensitiveDetector name " << name << " runCollName " << runCollName << G4endl;
+    G4cout << "[DEBUG]:: TLD::DefineSensitiveDetector name " << name << " runCollName " << runCollName << " centre: "<< centre <<" #voxels: " << nvx <<","<<nvy<<","<<nvz<< G4endl;
     patientSD->AddScoringVolume(runCollName,hcName,*envBox,nvx,nvy,nvz);
 
 

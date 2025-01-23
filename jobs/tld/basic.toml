@@ -1,3 +1,9 @@
+[Log_Global]
+LogLevel = "debug"
+
+[Log_GeoAndScoring]
+LogLevel = "debug"
+
 [RunSvc]
 JobName = "tld_basic"
 BeamType = "IAEA"
@@ -24,9 +30,9 @@ MlcModel = "Simplified"
 # CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nControlPoints = 1
-nParticles = 10000
+# nControlPoints = 1
+nParticles = 1000
 BeamRotation = 0.0
 PlanInputFile = [
-    "plan/custom/cp5x5.dat"
+    "plan/custom/cp10x10.dat"
 ]

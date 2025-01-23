@@ -2,6 +2,7 @@
 #include "TLDTray.hh"
 #include "Services.hh"
 #include "G4Box.hh"
+#include "VPatientSD.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -63,7 +64,7 @@ void TLDTray::LoadConfiguration(){
 
     // Deafult configuration
     m_rot = G4RotationMatrix(); //.rotateY(180.*deg);
-    m_tray_world_halfSize = G4ThreeVector(102.,111.,9.2);
+    m_tray_world_halfSize = G4ThreeVector(120,120,10); //102.,111.,9.2
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
@@ -129,6 +130,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
 
     for (auto& tld : m_tld_detectors){
         auto centre = tld->GetGlobalCentre();
+        // G4cout << tld->GetName() << " centre: " << centre << G4endl;
         auto idX = tld->GetIdX();
         auto idY = tld->GetIdY();
         auto idZ = tld->GetIdZ();
@@ -137,7 +139,29 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
         hashedCellString+=std::to_string(idZ);
 
         if( type==Scoring::Type::Voxel ){ 
-            // TODO
+            auto tld_sv = tld->GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name,true);
+        if(tld_sv==nullptr) // no voxelisation for this tld cell, continue
+          continue;
+
+        for(int ix=0; ix < tld_sv->m_nVoxelsX; ix++ ){
+          for(int iy=0; iy < tld_sv->m_nVoxelsY; iy++ ){
+            for(int iz=0; iz < tld_sv->m_nVoxelsZ; iz++ ){
+              auto hashedVoxelString = hashedCellString;
+              hashedVoxelString+=std::to_string(ix);
+              hashedVoxelString+=std::to_string(iy);
+              hashedVoxelString+=std::to_string(iz);
+              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+              hashed_map_scoring[voxelHash] = VoxelHit();
+              auto voxelCentre = tld_sv->GetVoxelCentre(ix,iy,iz);
+            //   G4cout << " voxel "<< ix <<","<<iy<<","<<iz<<" centre: " << voxelCentre << G4endl;
+              hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
+              hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
+              hashed_map_scoring[voxelHash].SetGlobalId(idX,idY,idZ);
+              hashed_map_scoring[voxelHash].SetVolume( tld_sv->GetVoxelVolume() );
+              hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity() * tld_sv->GetVoxelVolume());
+            }
+          }
+        }
         } else if (type==Scoring::Type::Cell){
             auto tldHash = std::hash<std::string>{}(hashedCellString);
             hashed_map_scoring[tldHash] = VoxelHit();

@@ -122,5 +122,31 @@ void TLDTray::ParseTomlConfig(){
 ///
 std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const {
     G4cout << "Getting ScoringHashedMap for " << scoring_name << "/" << Scoring::to_string(type) << G4endl;
-    return std::map<std::size_t, VoxelHit>();
+    std::map<std::size_t, VoxelHit> hashed_map_scoring;
+
+    // We have to intialize VoxelHits, so get any parameters as needed:
+    auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_tld_medium);
+
+    for (auto& tld : m_tld_detectors){
+        auto centre = tld->GetGlobalCentre();
+        auto idX = tld->GetIdX();
+        auto idY = tld->GetIdY();
+        auto idZ = tld->GetIdZ();
+        auto hashedCellString = std::to_string(idX);
+        hashedCellString+=std::to_string(idY);
+        hashedCellString+=std::to_string(idZ);
+
+        if( type==Scoring::Type::Voxel ){ 
+            // TODO
+        } else if (type==Scoring::Type::Cell){
+            auto tldHash = std::hash<std::string>{}(hashedCellString);
+            hashed_map_scoring[tldHash] = VoxelHit();
+            hashed_map_scoring[tldHash].SetCentre(centre);
+            hashed_map_scoring[tldHash].SetId(idX,idY,idZ);
+            hashed_map_scoring[tldHash].SetGlobalId(idX,idY,idZ); // Id == GlobalId
+            hashed_map_scoring[tldHash].SetVolume( tld->GetVolume() );
+            hashed_map_scoring[tldHash].SetMass(Medium->GetDensity()*tld->GetVolume());
+        }
+    }
+    return hashed_map_scoring;
 }

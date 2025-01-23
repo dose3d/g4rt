@@ -102,6 +102,7 @@ void RunSvc::Configure() {
   DefineUnit<bool>("PrimariesAnalysis");
   DefineUnit<bool>("BeamAnalysis");
 
+  DefineUnit<bool>("WriteFieldMaskToCsv");
 
   // DICOM OUTPUT MANAGEMENT
   DefineUnit<bool>("GenerateCT");
@@ -211,6 +212,9 @@ void RunSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("BeamAnalysis") == 0) 
     thisConfig()->SetTValue<bool>(unit, false);
   if (unit.compare("PrimariesAnalysis") == 0) 
+    thisConfig()->SetTValue<bool>(unit, false);
+  
+  if (unit.compare("WriteFieldMaskToCsv") == 0) 
     thisConfig()->SetTValue<bool>(unit, false);
 
   if (unit.compare("GenerateCT") == 0) 

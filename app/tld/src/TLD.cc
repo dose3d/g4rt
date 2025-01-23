@@ -122,6 +122,7 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   tldLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(tldLV);
 
+  SetVolume(size.getX()*size.getY()*size.getZ());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

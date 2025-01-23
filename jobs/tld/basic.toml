@@ -7,7 +7,6 @@ PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3
 # PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
-GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = true
 RunAnalysis = true
@@ -16,6 +15,7 @@ RunAnalysis = true
 BuildLinac = true
 BuildPatient = false
 ExportGeometryToGDML = true
+MlcModel = "Simplified"
 
 # [TLD_Cell]
 # Medium = "Usr_G4AIR20C"
@@ -25,8 +25,8 @@ ExportGeometryToGDML = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1
-nParticles = [1e2] # Per Control Point
-BeamRotation = [0.0] # Per Control Point
-FieldMask = [
-    {Type = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }
+nParticles = 10000
+BeamRotation = 0.0
+PlanInputFile = [
+    "plan/custom/cp5x5.dat"
 ]

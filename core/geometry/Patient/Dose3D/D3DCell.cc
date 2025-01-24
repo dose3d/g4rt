@@ -105,7 +105,12 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto size = G4ThreeVector(D3DCell::SIZE,D3DCell::SIZE,D3DCell::SIZE);
   // std::cout << "Parent world was set. " << std::endl;
   m_parentPV = parentWorld;
-
+  auto parentRotation = m_parentPV->GetRotation();
+  auto parentTransalation = m_parentPV->GetTranslation();
+  G4RotationMatrix my_rotation;
+  // my_rotation.rotateX(-90.0*deg);
+  m_centre = *parentRotation * m_centre;
+  // m_centre = my_rotation * m_centre;
   // auto dose3dPaintedCellBox = new G4Box(label+"PreBox",0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.));
   // auto myMedium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "TiO2");
   // auto dose3dPaintLV = new G4LogicalVolume(dose3dPaintedCellBox, myMedium.get(), label+"PaintedLV");
@@ -126,8 +131,10 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
 
-  SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 
-  LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
+  // m_global_centre = *parentRotation * m_centre + parentTransalation;
+  m_global_centre = m_centre + parentTransalation;
+  // SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); // set m_global_centre
+  // LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
   // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
     // Region for cuts
   //G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;

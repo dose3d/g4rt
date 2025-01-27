@@ -345,3 +345,46 @@ G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
   return G4ThreeVector(solid->GetXHalfLength(),solid->GetYHalfLength(),solid->GetZHalfLength());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, G4VPhysicalVolume* volumeOfLocalFrame){
+  G4cout << "getPositionInGlobalFrame: " << localPosition << "..." << G4endl;
+  G4ThreeVector globalPosition = localPosition; // Start with local position
+  // Traverse up the hierarchy
+  G4VPhysicalVolume* currentVolume = volumeOfLocalFrame;
+  while (currentVolume) {
+    G4cout << " current volume of local frame: " << currentVolume->GetName() << G4endl;
+    // Get the frame rotation and translation of the current volume
+    auto frameRotation = currentVolume->GetFrameRotation();
+    auto frameTranslation = currentVolume->GetFrameTranslation();
+
+    auto is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
+    auto is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
+
+    if(is_rotated){
+      G4cout << " got frame rotation: " << is_rotated << "  ;" << *frameRotation << G4endl;
+      G4cout << " performing inverse rotation... " << G4endl;
+      globalPosition = frameRotation->inverse() * globalPosition;
+    } else {
+      G4cout << " no rotation. " << G4endl;
+    }
+    if(is_translated){
+      G4cout << " got frame translation: " << frameTranslation << G4endl;
+      G4cout << " performing inverse translation... " << G4endl;
+      globalPosition -= frameTranslation;
+    } else {
+      G4cout << " no translation. " << G4endl;
+    }
+    // Move to the parent volume
+    G4LogicalVolume* motherLogical = currentVolume->GetMotherLogical();
+    if (motherLogical) {
+        // G4cout << " end of geoemtry tree... " << G4endl;
+        break; // This is the world volume, stop traversal
+    }
+    // Find the physical volume corresponding to the mother
+    currentVolume = motherLogical->GetDaughter(0); // Traverse upwards
+  }
+  return globalPosition;
+}
+
+

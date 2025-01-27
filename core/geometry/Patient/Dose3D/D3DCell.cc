@@ -105,11 +105,15 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto size = G4ThreeVector(D3DCell::SIZE,D3DCell::SIZE,D3DCell::SIZE);
   // std::cout << "Parent world was set. " << std::endl;
   m_parentPV = parentWorld;
-  auto parentRotation = m_parentPV->GetRotation();
+  auto parentRotation = m_parentPV->GetFrameRotation()->inverse();
+  // auto parentRotation = m_parentPV->GetFrameRotation();
   auto parentTransalation = m_parentPV->GetTranslation();
   G4RotationMatrix my_rotation;
+  m_global_centre = parentRotation * m_centre;
+
+
   // my_rotation.rotateX(-90.0*deg);
-  m_centre = *parentRotation * m_centre;
+  // m_centre = *parentRotation * m_centre;
   // m_centre = my_rotation * m_centre;
   // auto dose3dPaintedCellBox = new G4Box(label+"PreBox",0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.));
   // auto myMedium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "TiO2");
@@ -124,15 +128,17 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
-  G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
+  // G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
 
 
   // For Painted
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
+  auto global = svc::getPositionInGlobalFrame(m_centre,m_parentPV);
+  G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << "(local), " << m_global_centre << " vs "<< global << " (global)" <<G4endl;
 
   // m_global_centre = *parentRotation * m_centre + parentTransalation;
-  m_global_centre = m_centre + parentTransalation;
+  // m_global_centre = m_centre + parentTransalation;
   // SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); // set m_global_centre
   // LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
   // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;

@@ -362,7 +362,7 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
     auto is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
 
     if(is_rotated){
-      G4cout << " got frame rotation: " << is_rotated << "  ;" << *frameRotation << G4endl;
+      G4cout << " got frame rotation: " << *frameRotation << G4endl;
       G4cout << " performing inverse rotation... " << G4endl;
       globalPosition = frameRotation->inverse() * globalPosition;
     } else {

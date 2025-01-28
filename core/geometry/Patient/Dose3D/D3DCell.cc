@@ -14,6 +14,7 @@
 #include <vector>
 #include "Services.hh"
 
+
 namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
 }
@@ -113,7 +114,8 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto dose3dCellLV = new G4LogicalVolume(dose3dCellBox, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
+  auto tempCentre = svc::getPositionInLocalFrame(m_centre, m_parentPV);
+  SetPhysicalVolume(new G4PVPlacement(nullptr, tempCentre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
   G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << "(local), " << m_global_centre << "(global)" <<G4endl;
 
   // std::cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;

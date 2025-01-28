@@ -244,10 +244,11 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
     // auto FullPhantomLV = new G4LogicalVolume(FullPhantom, waterMaterial.get(), "phantomLV");
     auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
     auto my_rotation = new G4RotationMatrix;
-    my_rotation->rotateY(90.0*deg);
-    my_rotation->rotateX(90.0*deg);
+    // my_rotation->rotateY(90.0*deg);
+    // my_rotation->rotateX(90.0*deg);
 
     auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
+    // auto FullPhantomPV = new G4PVPlacement(nullptr, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
 
     m_patient->Construct(FullPhantomPV);
     m_patient->WriteInfo();

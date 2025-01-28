@@ -155,8 +155,9 @@ bool WorldConstruction::Create() {
   auto worldLV = new G4LogicalVolume(worldB, Air.get(), "worldLV", 0, 0, 0);
   auto isocentre = thisConfig()->GetValue<G4ThreeVector>("Isocentre");
   SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
+  m_worldPV = GetPhysicalVolume();
 
-  ConstructWorldModules(GetPhysicalVolume());
+  ConstructWorldModules(m_worldPV);
 
   // auto treeDepth = GetWorldVolumesTreeDepth();
   // G4cout << "[DEBUG]::  WorldConstruction the tree depth " << treeDepth << G4endl;

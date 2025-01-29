@@ -239,27 +239,12 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
   if (envPatientEnvelop.compare("IbaImRT") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
-    ibaImRT->Construct(GetPhysicalVolume(),G4ThreeVector(envPosX, envPosY, envPosZ));
-    /*
-    auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
-    auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
-    auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
-    auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
-
-    // auto FullPhantomLV = new G4LogicalVolume(FullPhantom, waterMaterial.get(), "phantomLV");
-    auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
-    auto my_rotation = new G4RotationMatrix;
-    // my_rotation->rotateY(90.0*deg);
-    // my_rotation->rotateX(90.0*deg);
-
-    auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
-    // auto FullPhantomPV = new G4PVPlacement(nullptr, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
-    */
-    m_patient->Construct(ibaImRT->GetPhysicalVolume());
+    ibaImRT->IPhysicalVolume::Construct(this,G4ThreeVector(envPosX, envPosY, envPosZ));
+    m_patient->IPhysicalVolume::Construct(ibaImRT);
     m_patient->WriteInfo();
   }
   else{
-    m_patient->Construct(pv);
+    m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }
 

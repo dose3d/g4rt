@@ -143,3 +143,29 @@ G4LogicalVolume* IPhysicalVolume::GetLogicalVolume(const std::string& name ) con
   G4cout << "[ERROR]:: IPhysicalVolume::GetLogicalVolume: not found asked LV with the name: "<< name << G4endl;
   return nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& position){
+  auto is_logical = false;
+  m_position = position;
+  m_parent = parent;
+  m_parentPV = parent->GetPhysicalVolume();
+  if(!m_parentPV){ // parent is logical level
+    is_logical = true;
+    while (!m_parentPV){ // find nearest pv in hierarchy
+      parent = parent->GetParentPtr();
+      if(parent){
+        m_parentPV = parent->GetPhysicalVolume();
+      } else { // reached the top level
+        G4cout << "[FATAL]:: IPhysicalVolume::Construct: not found any parent with physical volume!" << G4endl;
+        throw std::invalid_argument("Invalid IPhysicalVolume hierarchy");
+      }
+    }
+  }
+  
+  auto parentpv = m_parentPV;
+  if (is_logical)
+    m_parentPV = nullptr; // this is logical level, reset the pv pointer (it's not belongs to this level)
+  Construct(parentpv);
+}

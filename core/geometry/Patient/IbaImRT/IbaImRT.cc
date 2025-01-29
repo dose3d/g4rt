@@ -17,16 +17,9 @@ IbaImRT* IbaImRT::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void IbaImRT::Construct(G4VPhysicalVolume *parentPV, const G4ThreeVector& position){
-    m_position = position;
-    Construct(parentPV);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
     m_parentPV = parentPV;
-    auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
+    auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
 
     auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
     auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);

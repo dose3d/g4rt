@@ -111,7 +111,7 @@ namespace svc {
 
   G4ThreeVector getHalfSize(G4VPhysicalVolume* volume);
 
-  G4ThreeVector getPositionInGlobalFrame(const G4ThreeVector& localPosition, G4VPhysicalVolume* volumeOfLocalFrame);
+  G4ThreeVector getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame);
   G4ThreeVector getPositionInLocalFrame(const G4ThreeVector& globalPosition, G4VPhysicalVolume* volumeOfLocalFrame);
 
 }

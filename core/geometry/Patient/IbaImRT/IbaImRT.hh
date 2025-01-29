@@ -26,18 +26,12 @@ class IbaImRT: public IPhysicalVolume {
         IbaImRT(IbaImRT &&) = delete;
         IbaImRT &operator=(IbaImRT &&) = delete;
 
-        ///
-        G4ThreeVector m_position;
-
     public:
         /// 
         static IbaImRT *GetInstance();
 
         ///
         void Construct(G4VPhysicalVolume *parentPV) override;
-
-        ///
-        void Construct(G4VPhysicalVolume *parentPV, const G4ThreeVector& position);
 
         ///
         void Destroy() override {}

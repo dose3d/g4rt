@@ -11,6 +11,7 @@
 #include <set>
 #include "G4PVPlacement.hh"
 #include "G4LogicalVolume.hh"
+#include "G4ThreeVector.hh"
 #include "GeoSvc.hh"
 
 class G4Run;
@@ -28,6 +29,9 @@ class IPhysicalVolume {
   virtual void Construct(G4VPhysicalVolume*) = 0;
 
   ///
+  void Construct(IPhysicalVolume* parent, const G4ThreeVector& position=G4ThreeVector());
+
+  ///
   virtual void Destroy() = 0;
 
   ///
@@ -41,6 +45,9 @@ class IPhysicalVolume {
 
   ///
   inline G4VPhysicalVolume* GetParentG4PVPtr() { return m_parentPV; }
+
+  ///
+  inline IPhysicalVolume* GetParentPtr() { return m_parent; }
 
   ///
   void ParameterisationInstantiation(IParameterisation type);
@@ -90,9 +97,15 @@ class IPhysicalVolume {
 
   ///
   GeoSvc *m_geoSvc = GeoSvc::GetInstance();
+  
+  ///
+  mutable IPhysicalVolume* m_parent = nullptr;
 
   ///
   G4VPhysicalVolume* m_parentPV = nullptr;
+
+  ///
+  G4ThreeVector m_position;
 
   ///
   G4bool IsParameterised() const { return is_parameterised; }

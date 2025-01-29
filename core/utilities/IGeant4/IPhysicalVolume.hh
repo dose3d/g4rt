@@ -91,7 +91,7 @@ class IPhysicalVolume {
   ///
   GeoSvc *m_geoSvc = GeoSvc::GetInstance();
 
-  /// TODO: Consider if this is really needed? It can extarcted from m_physical_volume
+  ///
   G4VPhysicalVolume* m_parentPV = nullptr;
 
   ///

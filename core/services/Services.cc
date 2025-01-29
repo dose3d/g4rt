@@ -387,15 +387,13 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
   }
   return globalPosition;
 }
-////////////////////////////////////////////////////////////////////////////////
-///
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4ThreeVector svc::getPositionInLocalFrame(const G4ThreeVector& globalPosition, G4VPhysicalVolume* volumeOfLocalFrame) {
   G4cout << "getPositionInLocalFrame: " << globalPosition << "..." << G4endl;
   G4ThreeVector localPosition = globalPosition; // Start with global position
-  
-  // Traverse down the hierarchy
+  // Traverse up the hierarchy
   G4VPhysicalVolume* currentVolume = volumeOfLocalFrame;
   while (currentVolume) {
     G4cout << " current volume: " << currentVolume->GetName() << G4endl;
@@ -420,20 +418,20 @@ G4ThreeVector svc::getPositionInLocalFrame(const G4ThreeVector& globalPosition, 
     } else {
       G4cout << " no rotation. " << G4endl;
     }
-    auto worldInstance = Service<GeoSvc>()->World();
-    // g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
-    // Check if this is the world volume
-    if (currentVolume == worldInstance->GetWorldPV()) {
-      G4cout << " reached world volume, stopping traversal... " << G4endl;
-      break;
-    }
+    // auto worldInstance = Service<GeoSvc>()->World();
+    // // g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
+    // // Check if this is the world volume
+    // if (currentVolume == worldInstance->GetWorldPV()) {
+    //   G4cout << " reached world volume, stopping traversal... " << G4endl;
+    //   break;
+    // }
     
     // Move to the daughter volume
     G4LogicalVolume* motherLogical = currentVolume->GetMotherLogical();
     if (motherLogical) {
       currentVolume = motherLogical->GetDaughter(0); // Traverse downwards
     } else {
-      break;
+      break; // This is the world volume, stop traversal
     }
   }
   

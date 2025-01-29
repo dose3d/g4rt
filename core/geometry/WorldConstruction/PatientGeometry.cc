@@ -12,6 +12,7 @@
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
+#include "IbaImRT.hh"
 #include "CADMesh.hh"
 
 namespace {
@@ -237,6 +238,9 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
 
   if (envPatientEnvelop.compare("IbaImRT") == 0){
+    auto ibaImRT = IbaImRT::GetInstance();
+    ibaImRT->Construct(GetPhysicalVolume(),G4ThreeVector(envPosX, envPosY, envPosZ));
+    /*
     auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
     auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
     auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
@@ -250,14 +254,13 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
     auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
     // auto FullPhantomPV = new G4PVPlacement(nullptr, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
-
-    m_patient->Construct(FullPhantomPV);
+    */
+    m_patient->Construct(ibaImRT->GetPhysicalVolume());
     m_patient->WriteInfo();
   }
   else{
     m_patient->Construct(pv);
     m_patient->WriteInfo();
-
   }
 
   if(envPatientEnvelop.compare("ModularWaterPhantom") == 0){

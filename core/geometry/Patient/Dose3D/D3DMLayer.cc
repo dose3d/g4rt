@@ -176,7 +176,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_cells.back()->SetNVoxels('y',m_cell_voxelization_y);
       m_d3d_cells.back()->SetNVoxels('z',m_cell_voxelization_z);
       m_d3d_cells.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_cells.back()->Construct(parentWorld);
+      m_d3d_cells.back()->IPhysicalVolume::Construct(this);
       if(idx >= m_n_cells_in_layer_x) {
         idx = 0;
         idz++;

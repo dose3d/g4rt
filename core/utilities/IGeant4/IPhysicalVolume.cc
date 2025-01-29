@@ -152,7 +152,8 @@ void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& po
   m_parent = parent;
   m_parentPV = parent->GetPhysicalVolume();
   if(!m_parentPV){ // parent is logical level
-    is_logical = true;
+    G4cout << "[INFO]:: no direct pv" << G4endl;
+    // is_logical = true;
     while (!m_parentPV){ // find nearest pv in hierarchy
       parent = parent->GetParentPtr();
       if(parent){
@@ -162,10 +163,10 @@ void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& po
         throw std::invalid_argument("Invalid IPhysicalVolume hierarchy");
       }
     }
+    G4cout << "[INFO]:: Link logical "<< GetName() << " with G4PV: " << m_parentPV->GetName() << G4endl;
   }
   
-  auto parentpv = m_parentPV;
-  if (is_logical)
-    m_parentPV = nullptr; // this is logical level, reset the pv pointer (it's not belongs to this level)
-  Construct(parentpv);
+  // if (is_logical)
+    // m_physical_volume = nullptr; // this is logical level, reset the pv pointer (it's not belongs to this level)
+  Construct(m_parentPV);
 }

@@ -30,8 +30,8 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
 
     // We have to rotate it in order to right alignement in the world
     auto my_rotation = new G4RotationMatrix;
-    // my_rotation->rotateY(90.0*deg);
-    // my_rotation->rotateX(90.0*deg);
+    my_rotation->rotateY(90.0*deg);
+    my_rotation->rotateX(90.0*deg);
 
     SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position, "IbaImRTPV", FullPhantomLV, m_parentPV, false, 0));
 }

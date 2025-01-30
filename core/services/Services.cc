@@ -349,7 +349,7 @@ G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame){
+G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, bool localToGlobal){
   G4cout << "getPositionInGlobalFrame: " << localPosition << "..." << G4endl;
   G4ThreeVector globalPosition = localPosition; // Start with local position
   // Traverse up the hierarchy
@@ -374,17 +374,20 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
       if(is_rotated){
         G4cout << " got frame rotation: " << *frameRotation << G4endl;
         G4cout << " performing inverse rotation... " << G4endl;
-        globalPosition = frameRotation->inverse() * globalPosition;
+        if (localToGlobal)
+          globalPosition = frameRotation->inverse() * globalPosition;
+        else
+         globalPosition = *frameRotation * globalPosition;
       } else {
         G4cout << " no rotation. " << G4endl;
       }
-      if(is_translated){
-        G4cout << " got frame translation: " << frameTranslation << G4endl;
-        G4cout << " performing inverse translation... " << G4endl;
-        globalPosition -= frameTranslation;
-      } else {
-        G4cout << " no translation. " << G4endl;
-      }
+      // if(is_translated){
+      //   G4cout << " got frame translation: " << frameTranslation << G4endl;
+      //   G4cout << " performing inverse translation... " << G4endl;
+      //   globalPosition -= frameTranslation;
+      // } else {
+      //   G4cout << " no translation. " << G4endl;
+      // }
     } else {
         G4cout << " no physical volume found." << G4endl;
     }

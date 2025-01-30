@@ -18,7 +18,6 @@ IbaImRT* IbaImRT::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
-    m_parentPV = parentPV;
     auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
 
     auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
@@ -33,5 +32,5 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
     my_rotation->rotateY(90.0*deg);
     my_rotation->rotateX(90.0*deg);
 
-    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position, "IbaImRTPV", FullPhantomLV, m_parentPV, false, 0));
+    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
 }

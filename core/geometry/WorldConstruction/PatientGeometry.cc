@@ -204,7 +204,6 @@ void PatientGeometry::Destroy() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
-  m_parentPV = parentPV;
   PrintConfig();
   design(); // a call to select the right phantom
   auto envPatientEnvelop = thisConfig()->GetValue<std::string>("EnviromentPatientEnvelop");

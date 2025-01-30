@@ -353,17 +353,23 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
   G4cout << "getPositionInGlobalFrame: " << localPosition << "..." << G4endl;
   G4ThreeVector globalPosition = localPosition; // Start with local position
   // Traverse up the hierarchy
-  auto currentVolume = volumeOfLocalFrame;
+  auto currentVolume = volumeOfLocalFrame->GetParentPtr();
   while (currentVolume) {
     G4cout << " current volume of local frame: " << currentVolume->GetName() << G4endl;
-    auto pv = volumeOfLocalFrame->GetPhysicalVolume();
+    auto pv = currentVolume->GetPhysicalVolume();
     if (pv){
+      G4cout << " got physical volume: " << pv->GetName() << G4endl;
+
+      auto is_rotated = false;
+      auto is_translated = false;
       // Get the frame rotation and translation of the current volume
       auto frameRotation = pv->GetFrameRotation();
       auto frameTranslation = pv->GetFrameTranslation();
 
-      auto is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
-      auto is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
+      if (frameRotation)
+        is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
+
+      is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
 
       if(is_rotated){
         G4cout << " got frame rotation: " << *frameRotation << G4endl;

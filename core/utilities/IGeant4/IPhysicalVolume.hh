@@ -44,9 +44,6 @@ class IPhysicalVolume {
   virtual void WriteInfo() = 0;
 
   ///
-  inline G4VPhysicalVolume* GetParentG4PVPtr() { return m_parentPV; }
-
-  ///
   inline IPhysicalVolume* GetParentPtr() { return m_parent; }
 
   ///
@@ -100,9 +97,6 @@ class IPhysicalVolume {
   
   ///
   mutable IPhysicalVolume* m_parent = nullptr;
-
-  ///
-  G4VPhysicalVolume* m_parentPV = nullptr;
 
   ///
   G4ThreeVector m_position;

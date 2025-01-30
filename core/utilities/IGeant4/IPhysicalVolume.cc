@@ -6,7 +6,7 @@
 void IPhysicalVolume::ParameterisationInstantiation(IParameterisation instanceType) {
   if (IsParameterised()) {
     G4cout << "[INFO]:: ParameterisationInstantiation ";
-    G4cout << " for " << GetParentG4PVPtr()->GetLogicalVolume()->GetName() << G4endl;
+    G4cout << " for " << GetParentPtr()->GetPhysicalVolume()->GetLogicalVolume()->GetName() << G4endl;
     if (instanceType == IParameterisation::SIMULATION)
       SimulationParameterisation(); // supposed to call overridden function!
     if (instanceType == IParameterisation::EXPORT)
@@ -147,26 +147,25 @@ G4LogicalVolume* IPhysicalVolume::GetLogicalVolume(const std::string& name ) con
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& position){
-  auto is_logical = false;
   m_position = position;
-  m_parent = parent;
-  m_parentPV = parent->GetPhysicalVolume();
-  if(!m_parentPV){ // parent is logical level
-    G4cout << "[INFO]:: no direct pv" << G4endl;
-    // is_logical = true;
-    while (!m_parentPV){ // find nearest pv in hierarchy
-      parent = parent->GetParentPtr();
-      if(parent){
-        m_parentPV = parent->GetPhysicalVolume();
+  m_parent = parent;                           // logical structure
+  auto thisPV = GetPhysicalVolume();
+  auto parentPV = parent->GetPhysicalVolume(); // physical structure
+  if(!parentPV){
+    G4cout << "[INFO]:: IPhysicalVolume::Construct: No direct pv to link..." << G4endl;
+    while (!parentPV){ // find nearest pv in hierarchy
+      auto next_parent = parent->GetParentPtr();
+      if(next_parent){
+        parentPV = next_parent->GetPhysicalVolume();
       } else { // reached the top level
-        G4cout << "[FATAL]:: IPhysicalVolume::Construct: not found any parent with physical volume!" << G4endl;
-        throw std::invalid_argument("Invalid IPhysicalVolume hierarchy");
+        if(parent->GetName() != "WorldConstruction"){
+          G4cout << "[FATAL]:: IPhysicalVolume::Construct: not found any parent with physical volume!" << G4endl;
+          throw std::invalid_argument("Invalid IPhysicalVolume hierarchy");
+        }
       }
+      parent = next_parent;
     }
-    G4cout << "[INFO]:: Link logical "<< GetName() << " with G4PV: " << m_parentPV->GetName() << G4endl;
+    G4cout << "[INFO]:: Link logical "<< GetName() << " with G4PV: " << parentPV->GetName() << G4endl;
   }
-  
-  // if (is_logical)
-    // m_physical_volume = nullptr; // this is logical level, reset the pv pointer (it's not belongs to this level)
-  Construct(m_parentPV);
+  Construct(parentPV);
 }

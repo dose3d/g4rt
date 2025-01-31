@@ -42,6 +42,7 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     # Przygotowanie macierzy scalar_data
     scalar_data: np.ndarray = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
 
+<<<<<<< HEAD
     # Pobieramy kolumny jako tablice NumPy
     x_arr: np.ndarray = cell_df["X [mm]"].to_numpy()
     y_arr: np.ndarray = cell_df["Y [mm]"].to_numpy()
@@ -53,6 +54,30 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     else:
         logger.info("Używanie oryginalnych wartości dawki do wypełnienia voxelów.")
         dose_arr: np.ndarray = cell_df["Dose [Gy]"].to_numpy().astype(np.float32)
+=======
+    scalar_data = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
+    # observable = 'Dose [Gy]'
+    # observable = "AngleScalingFactor"
+    observable = "FieldScalingFactor"
+    # cell_df = cell_df[cell_df['Z [mm]'] < 5]
+    # cell_df = cell_df[cell_df['Z [mm]'] > -5]
+
+    # dose_min = cell_df[observable].min()
+    # dose_max = cell_df[observable].max()
+    
+    # Normalize doses
+    # if dose_min == dose_max:
+    #     cell_df['NormalizedDose'] = 0
+    # else:
+    #     cell_df['NormalizedDose'] = (cell_df[observable] - dose_min) / (dose_max - dose_min)
+    
+    print("Filling vtkImageData with voxel values...")
+    for index, row in cell_df.iterrows():
+        x_idx = coord_to_index['x'][row['X [mm]']]
+        y_idx = coord_to_index['y'][row['Y [mm]']]
+        z_idx = coord_to_index['z'][row['Z [mm]']]
+        scalar_data[z_idx, y_idx, x_idx] = row[observable]
+>>>>>>> 9dccbe9 (31 add asf for pgsrunet (#37))
 
     # Wektoryzowane obliczenie indeksów voxelowych
     x_idx: np.ndarray = ((x_arr - x_min) / voxel_side_len).astype(np.int32)
@@ -78,9 +103,15 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     logger.info("vtkImageData utworzone.")
     return imageData
 
+<<<<<<< HEAD
 
 def main() -> None:
     csv_path: str = '/home/jackie/data/cp10x10_ct_dose_voxel_noImRT_v2.csv'
+=======
+def main():
+    # csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_ct_dose_voxel.csv'
+>>>>>>> 9dccbe9 (31 add asf for pgsrunet (#37))
     if not os.path.exists(csv_path):
         logger.error(f"Plik CSV nie znaleziony w {csv_path}")
         return
@@ -148,6 +179,7 @@ def main() -> None:
     # Opcjonalnie: ustawienie jednostkowej odległości dla opacity (może pomóc w widoczności)
     # volume.GetProperty().SetScalarOpacityUnitDistance(0.1)
 
+<<<<<<< HEAD
     # Konfiguracja renderera i okna renderowania
     renderer: vtk.vtkRenderer = vtk.vtkRenderer()
     renderer.AddVolume(volume)
@@ -158,10 +190,62 @@ def main() -> None:
     renderer.AddActor(axes)
 
     renderWindow: vtk.vtkRenderWindow = vtk.vtkRenderWindow()
+=======
+    actor.GetProperty().SetColor(colorFunc)
+    actor.GetProperty().SetScalarOpacity(opacityFunc)
+    actor.GetProperty().SetInterpolationTypeToNearest()
+
+    print("Creating renderer and adding actor...")
+    renderer = vtk.vtkRenderer()
+    renderer.AddVolume(actor)
+    renderer.SetBackground(1, 1, 1)
+
+    # Add axes
+    print("Adding axes...")
+    axes = vtk.vtkAxesActor()
+    axes.SetTotalLength(25, 25, 25)
+    axes.SetShaftTypeToLine()
+    axes.SetTipTypeToCone()
+    axes.SetConeRadius(0.2)
+    axes.SetXAxisLabelText("X")
+    axes.SetYAxisLabelText("Y")
+    axes.SetZAxisLabelText("Z")
+    renderer.AddActor(axes)
+
+    # Add scalar bar
+    print("Adding scalar bar...")
+    scalar_bar = vtk.vtkScalarBarActor()
+    scalar_bar.SetLookupTable(colorFunc)
+    # scalar_bar.SetTitle("FSF")
+    scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
+    scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
+    renderer.AddActor2D(scalar_bar)
+
+    # Add grid
+    print("Adding grid...")
+    bounds = imageData.GetBounds()
+    grid_actor = create_grid_actor(bounds, 10.0)
+    renderer.AddActor(grid_actor)
+
+    print("Creating render window and adding renderer...")
+    renderWindow = vtk.vtkRenderWindow()
+>>>>>>> 9dccbe9 (31 add asf for pgsrunet (#37))
     renderWindow.AddRenderer(renderer)
     renderWindowInteractor: vtk.vtkRenderWindowInteractor = vtk.vtkRenderWindowInteractor()
     renderWindowInteractor.SetRenderWindow(renderWindow)
 
+<<<<<<< HEAD
+=======
+    print("Checking renderer setup...")
+    if renderer.GetVolumes().GetNumberOfItems() == 0:
+        print("Warning: No volumes added to renderer.")
+    else:
+        print("Volume successfully added to renderer.")
+
+    interactor_style = vtk.vtkInteractorStyleTrackballCamera()
+    renderWindowInteractor.SetInteractorStyle(interactor_style)
+    print("Starting visualization...")
+>>>>>>> 9dccbe9 (31 add asf for pgsrunet (#37))
     renderWindow.Render()
     renderWindowInteractor.Start()
 

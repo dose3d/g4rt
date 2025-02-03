@@ -99,8 +99,6 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   // std::cout << "[INFO]:: TLD construction... " << std::endl;
   auto label = GetName();
   auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,TLD::SIZE);
-  // std::cout << "Parent world was set. " << std::endl;
-  m_parentPV = parentWorld;
 
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_tld_medium);
   // create a cell box filled with PMMA, with given side dimensions
@@ -109,9 +107,8 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for TLD construction... "); 
-  SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", tldLV, m_parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", tldLV, parentWorld, false, 0));
 
-  SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 
   LOGSVC_DEBUG("Construct() >> current TLD translation {}", m_global_centre);
 
   // std::cout << "[DEBUG]:: TLD:: creating cuts " << label <<"_G4RegionCuts" << G4endl;

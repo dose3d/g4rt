@@ -26,7 +26,7 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
     G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), LVName, 0, 0, 0);
     
     auto PVName = m_tray_name + "EnvPV";
-    auto pv = new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0);
+    SetPhysicalVolume(new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0));
     double tld_dist = 2 * TLD::SIZE + 1 * mm;
     auto initial_x = m_config.m_top_position_in_env.x() - (m_config.m_nX_tld/2) * tld_dist;
     auto initial_y = m_config.m_top_position_in_env.y() - (m_config.m_nX_tld/2) * tld_dist;
@@ -46,7 +46,7 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
     }
 
     for (auto& tld : m_tld_detectors){
-        tld->Construct(pv);
+        tld->IPhysicalVolume::Construct(this);
         tld->WriteInfo();
     }
 }

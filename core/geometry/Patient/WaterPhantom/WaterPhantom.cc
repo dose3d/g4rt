@@ -55,7 +55,7 @@ void WaterPhantom::ParseTomlConfig(){
   m_sizeY = config[configObjDetector]["Size"][1].value_or(0.0);
   m_sizeZ = config[configObjDetector]["Size"][2].value_or(0.0);
   /// 
-  detectorMediumName = config[configObjDetector]["Medium"].value_or("");
+  m_phantomMedium = config[configObjDetector]["Medium"].value_or("G4_WATER");
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
@@ -133,7 +133,7 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   
   LoadParameterization();
   
-  auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", detectorMediumName);
+  auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_phantomMedium);
 
   // create a phantom box filled with water, with given side dimensions
   auto waterPhantomBox = new G4Box("waterPhantomBox", m_sizeX / 2., m_sizeY / 2., m_sizeZ / 2.);
@@ -216,7 +216,48 @@ void WaterPhantom::DefineSensitiveDetector(){
 ///
 std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const{
 
-  return std::map<std::size_t, VoxelHit>();
+  std::map<std::size_t, VoxelHit> hashed_map_scoring;
+
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_phantomMedium);
+
+  std::string hashedPhantomString = "000";
+
+  if( type==Scoring::Type::Voxel ){
+    auto sv = GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name,true);
+    if(sv==nullptr) return hashed_map_scoring; // no voxelisation for this volume, return empty map
+      
+    for(int ix=0; ix < sv->m_nVoxelsX; ix++ ){
+      for(int iy=0; iy < sv->m_nVoxelsY; iy++ ){
+        for(int iz=0; iz < sv->m_nVoxelsZ; iz++ ){
+          auto hashedVoxelString = hashedPhantomString;
+          hashedVoxelString+=std::to_string(ix);
+          hashedVoxelString+=std::to_string(iy);
+          hashedVoxelString+=std::to_string(iz);
+          auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+          hashed_map_scoring[voxelHash] = VoxelHit();
+          auto voxelCentre = sv->GetVoxelCentre(ix,iy,iz);
+          hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
+          hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
+          hashed_map_scoring[voxelHash].SetGlobalId(0,0,0);
+          hashed_map_scoring[voxelHash].SetVolume( sv->GetVoxelVolume() );
+          hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity() * sv->GetVoxelVolume());
+        } // z
+      }   // y
+    }     // x
+  } 
+  else if (type==Scoring::Type::Cell){
+    auto phantomHash = std::hash<std::string>{}(hashedPhantomString);
+    hashed_map_scoring[phantomHash] = VoxelHit();
+    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
+    hashed_map_scoring[phantomHash].SetCentre(centre);
+    hashed_map_scoring[phantomHash].SetId(0,0,0);
+    hashed_map_scoring[phantomHash].SetGlobalId(0,0,0); // Id == GlobalId
+    auto volume = m_sizeX*m_sizeY*m_sizeZ;
+    hashed_map_scoring[phantomHash].SetVolume( volume );
+    hashed_map_scoring[phantomHash].SetMass(Medium->GetDensity()*volume);
+  }
+
+  return hashed_map_scoring;
 }
 
 

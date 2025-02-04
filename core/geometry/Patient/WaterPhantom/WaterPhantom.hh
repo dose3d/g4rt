@@ -66,7 +66,7 @@ class WaterPhantom : public VPatient {
   void ConstructFarmerVolumeScoring(const G4String& name);
 
   ///
-  std::string detectorMediumName = "None";
+  std::string m_phantomMedium = "None";
 
   /// 
   G4double m_centrePositionX = 0.0;

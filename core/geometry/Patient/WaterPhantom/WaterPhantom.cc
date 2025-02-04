@@ -212,4 +212,11 @@ void WaterPhantom::DefineSensitiveDetector(){
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const{
+
+  return std::map<std::size_t, VoxelHit>();
+}
+
 

@@ -40,11 +40,7 @@ class WaterPhantom : public VPatient {
   void DefineSensitiveDetector() override;
 
   ///
-  std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override {
-    return std::map<std::size_t, VoxelHit>(); // TODO
-  }
-
-
+  std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
   ///
   friend class PatientTest_WaterPhantomScoring_Test;

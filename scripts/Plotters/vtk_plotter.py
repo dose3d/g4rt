@@ -17,7 +17,7 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     Jeśli dostępna jest kolumna "NormalizedDose", używa jej do wypełnienia voxelów.
     """
     logger.info("Tworzenie vtkImageData...")
-
+    cell_df = cell_df.sort(['Y [mm]'])
     # Znajdowanie zakresów współrzędnych
     x_min: float = cell_df["X [mm]"].min()
     x_max: float = cell_df["X [mm]"].max()
@@ -25,6 +25,8 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     y_max: float = cell_df["Y [mm]"].max()
     z_min: float = cell_df["Z [mm]"].min()
     z_max: float = cell_df["Z [mm]"].max()
+    
+    print(x_min, x_max, y_min, y_max, z_min, z_max)
 
     # Obliczanie wymiarów siatki (dodanie 1, aby uwzględnić ostatni voxel)
     x_dim: int = int((x_max - x_min) / voxel_side_len) + 1
@@ -47,6 +49,9 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
     x_arr: np.ndarray = cell_df["X [mm]"].to_numpy()
     y_arr: np.ndarray = cell_df["Y [mm]"].to_numpy()
     z_arr: np.ndarray = cell_df["Z [mm]"].to_numpy()
+    
+    print(cell_df["X [mm]"], cell_df["Y [mm]"], cell_df["Z [mm]"])
+    print(x_arr, y_arr, z_arr)
     # Używamy znormalizowanej dawki, jeśli jest dostępna
     if "NormalizedDose" in cell_df.columns:
         logger.info("Używanie znormalizowanej dawki do wypełnienia voxelów.")
@@ -106,12 +111,16 @@ def create_vtk_image_data(cell_df: pl.DataFrame, voxel_side_len: float) -> vtk.v
 <<<<<<< HEAD
 
 def main() -> None:
+<<<<<<< HEAD
     csv_path: str = '/home/jackie/data/cp10x10_ct_dose_voxel_noImRT_v2.csv'
 =======
 def main():
     # csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
     csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_ct_dose_voxel.csv'
 >>>>>>> 9dccbe9 (31 add asf for pgsrunet (#37))
+=======
+    csv_path: str = '/mnt/c/Users/Jakub/Desktop/Zuz/cp10x10_ct_dose_voxel.csv'
+>>>>>>> 7023cf8 (Work in progress.)
     if not os.path.exists(csv_path):
         logger.error(f"Plik CSV nie znaleziony w {csv_path}")
         return
@@ -131,7 +140,7 @@ def main():
         csv_path,
         columns=["X [mm]", "Y [mm]", "Z [mm]", "Dose [Gy]"],
         schema_overrides=schema_overrides,
-        infer_schema_length=10000,
+        infer_schema_length=250000,
     )
     logger.info(f"Liczba wierszy w CSV: {cell_df.height}")
 
@@ -151,6 +160,8 @@ def main():
     else:
         normalized = (cell_df["Dose [Gy]"] - dose_min) / (dose_max - dose_min)
         cell_df = cell_df.with_columns(normalized.alias("NormalizedDose"))
+        dose_min: float = cell_df["Dose [Gy]"].min()
+        dose_max: float = cell_df["Dose [Gy]"].max()
         logger.info(f"Dawki znormalizowane: min={dose_min}, max={dose_max}")
 
     # Tworzenie danych voxelowych

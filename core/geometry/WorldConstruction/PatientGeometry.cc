@@ -531,9 +531,9 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   metadata_file << "y_min," << ct_cube_init_y  << std::endl;
   metadata_file << "z_min," << ct_cube_init_z  << std::endl;
 
-  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z),4) << std::endl;
+  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+(env_size_x)),4) << std::endl;
+  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+(env_size_y)),4) << std::endl;
+  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+(env_size_z)),4) << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;
@@ -778,8 +778,10 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     std::ofstream v_outFile;
     v_outFile.open(file.c_str(), std::ios::out);
     v_outFile << header << std::endl;
+    // Get voxel hit for slice here
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
+        // Get hit in slice here
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));

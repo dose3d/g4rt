@@ -225,6 +225,7 @@ std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String
   if( type==Scoring::Type::Voxel ){
     auto sv = GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name,true);
     if(sv==nullptr) return hashed_map_scoring; // no voxelisation for this volume, return empty map
+    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
       
     for(int ix=0; ix < sv->m_nVoxelsX; ix++ ){
       for(int iy=0; iy < sv->m_nVoxelsY; iy++ ){
@@ -232,7 +233,9 @@ std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String
           auto voxelHash = svc::getHashedStrFromIndexes({0,0,0,ix,iy,iz});
           hashed_map_scoring[voxelHash] = VoxelHit();
           auto voxelCentre = sv->GetVoxelCentre(ix,iy,iz);
+          // std::cout << voxelCentre.getZ() << std::endl;
           hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
+          hashed_map_scoring[voxelHash].SetGlobalCentre(centre);
           hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
           hashed_map_scoring[voxelHash].SetGlobalId(0,0,0);
           hashed_map_scoring[voxelHash].SetVolume( sv->GetVoxelVolume() );
@@ -247,6 +250,7 @@ std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String
     hashed_map_scoring[phantomHash] = VoxelHit();
     auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
     hashed_map_scoring[phantomHash].SetCentre(centre);
+    hashed_map_scoring[phantomHash].SetGlobalCentre(centre);
     hashed_map_scoring[phantomHash].SetId(0,0,0);
     hashed_map_scoring[phantomHash].SetGlobalId(0,0,0); // Id == GlobalId
     auto volume = m_sizeX*m_sizeY*m_sizeZ;

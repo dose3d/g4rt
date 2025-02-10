@@ -338,14 +338,6 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   LOGSVC_DEBUG("VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
   LOGSVC_DEBUG("VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
 
-
-  //G4cout << "[DEBUG]:: VPatientSD:: Defined Collection: " << hcName << G4endl;
-  // G4cout << "[DEBUG]:: Voxelized SD range: X " << xMin << " - " << xMax << G4endl;
-  // G4cout << "[DEBUG]:: Voxelized SD range: Y " << yMin << " - " << yMax << G4endl;
-  // std::cout << "[DEBUG]:: Voxelized SD range: Z " << std::setprecision(16) << zMin*10000000000 <<  " - " << zMax*10000000000 << std::endl;
-  // G4cout <<   << " - " << zMax*1000000  << G4endl;
-  // G4cout << G4endl;
-
   // Fill the information about voxels positioning
   auto nvX = sdHColPtr->m_nVoxelsX;
   auto nvY = sdHColPtr->m_nVoxelsY;
@@ -374,7 +366,8 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
       for (int iz = 0; iz < nvZ; ++iz){
         auto z = minZ + dz/2. + iz*dz;
         auto current_idx = sdHColPtr->LinearizeIndex(ix,iy,iz);
-        voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z) - m_centre_in_global_coordinates,4); // go back to global origin if needed
+        // voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z) - m_centre_in_global_coordinates,4); // go back to global origin if needed
+        voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z),4); // alredy used in min/max X,Y,Z 
       }
     }
   }

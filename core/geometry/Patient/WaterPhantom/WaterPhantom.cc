@@ -61,7 +61,7 @@ void WaterPhantom::ParseTomlConfig(){
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  auto top_position_in_env = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ + m_sizeZ);
+  auto top_position_in_env = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ - m_sizeZ/2);
   m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + top_position_in_env;
 
   
@@ -229,11 +229,7 @@ std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String
     for(int ix=0; ix < sv->m_nVoxelsX; ix++ ){
       for(int iy=0; iy < sv->m_nVoxelsY; iy++ ){
         for(int iz=0; iz < sv->m_nVoxelsZ; iz++ ){
-          auto hashedVoxelString = hashedPhantomString;
-          hashedVoxelString+=std::to_string(ix);
-          hashedVoxelString+=std::to_string(iy);
-          hashedVoxelString+=std::to_string(iz);
-          auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+          auto voxelHash = svc::getHashedStrFromIndexes({0,0,0,ix,iy,iz});
           hashed_map_scoring[voxelHash] = VoxelHit();
           auto voxelCentre = sv->GetVoxelCentre(ix,iy,iz);
           hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
@@ -246,7 +242,8 @@ std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String
     }     // x
   } 
   else if (type==Scoring::Type::Cell){
-    auto phantomHash = std::hash<std::string>{}(hashedPhantomString);
+    // auto phantomHash = std::hash<std::string>{}(hashedPhantomString);
+    auto phantomHash = svc::getHashedStrFromIndexes({0,0,0});
     hashed_map_scoring[phantomHash] = VoxelHit();
     auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
     hashed_map_scoring[phantomHash].SetCentre(centre);

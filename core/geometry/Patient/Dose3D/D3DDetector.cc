@@ -512,9 +512,6 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       auto cIdX = cell->GetIdX();
       auto cIdY = cell->GetIdY();
       auto cIdZ = cell->GetIdZ();
-      auto hashedCellString = std::to_string(cIdX);
-      hashedCellString+=std::to_string(cIdY);
-      hashedCellString+=std::to_string(cIdZ);
 
       if( type==Scoring::Type::Voxel ){ 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -534,11 +531,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
         for(int ix=0; ix<nvx; ix++ ){
           for(int iy=0; iy<nvy; iy++ ){
             for(int iz=0; iz<nvz; iz++ ){
-              auto hashedVoxelString = hashedCellString;
-              hashedVoxelString+=std::to_string(ix);
-              hashedVoxelString+=std::to_string(iy);
-              hashedVoxelString+=std::to_string(iz);
-              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+              auto voxelHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ,ix,iy,iz});
               hashed_map_scoring[voxelHash] = VoxelHit();
               auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
               auto y_centre = centre.getY() - size/2 + (iy) * pix_size_y + pix_size_y/2.;  
@@ -552,7 +545,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
           }
         }
       } else if (type==Scoring::Type::Cell){
-        auto cellHash = std::hash<std::string>{}(hashedCellString);
+        auto cellHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ});
         hashed_map_scoring[cellHash] = VoxelHit();
         hashed_map_scoring[cellHash].SetCentre(centre);
         hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);

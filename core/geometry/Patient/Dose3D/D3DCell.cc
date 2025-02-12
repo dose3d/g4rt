@@ -47,7 +47,7 @@ void D3DCell::CellVoxelisedScorer(G4bool val) {
 ///
 D3DCell::D3DCell(const G4String& label, const G4ThreeVector& centre, G4String cellMediumName)
 : VPatient(label),m_cell_medium(cellMediumName){
-    m_centre = centre;
+    m_global_centre = centre;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,11 +112,9 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto dose3dCellLV = new G4LogicalVolume(dose3dCellBox, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  //auto tempCentre = svc::getPositionInLocalFrame(m_centre, parentWorld);
-  m_global_centre = m_centre;
-  m_centre = svc::getPositionInGlobalFrame(m_centre,this,false);
+  m_centre = svc::getPositionInGlobalFrame(m_global_centre,this,false); // Global -> Local
+
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, parentWorld, false, 0));
-  //m_global_centre = svc::getPositionInGlobalFrame(m_centre,this);
   G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << "(local), " << m_global_centre << "(global)" <<G4endl;
 
   // std::cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;

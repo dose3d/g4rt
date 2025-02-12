@@ -14,7 +14,7 @@ VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName),Loga
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
-  :G4VSensitiveDetector(sdName),m_centre_in_global_coordinates(centre),Logable("GeoAndScoring"){}
+  :G4VSensitiveDetector(sdName),m_sd_centre(centre),Logable("GeoAndScoring"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Note that a SD can declare more than one hits collection being groupped by runCollName!
@@ -326,12 +326,12 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   auto& minZ = sdHColPtr->m_rangeMinZ;
   auto& maxZ = sdHColPtr->m_rangeMaxZ;
   //
-  minX = svc::round_with_prec((m_centre_in_global_coordinates.x() + translation.x() - sdHColPtr->GetSizeX() / 2.),8);
-  maxX = svc::round_with_prec((m_centre_in_global_coordinates.x() + translation.x() + sdHColPtr->GetSizeX() / 2.),8);
-  minY = svc::round_with_prec((m_centre_in_global_coordinates.y() + translation.y() - sdHColPtr->GetSizeY() / 2.),8);
-  maxY = svc::round_with_prec((m_centre_in_global_coordinates.y() + translation.y() + sdHColPtr->GetSizeY() / 2.),8);
-  minZ = svc::round_with_prec((m_centre_in_global_coordinates.z() + translation.z() - sdHColPtr->GetSizeZ() / 2.),8);
-  maxZ = svc::round_with_prec((m_centre_in_global_coordinates.z() + translation.z() + sdHColPtr->GetSizeZ() / 2.),8);
+  minX = svc::round_with_prec((m_sd_centre.x() + translation.x() - sdHColPtr->GetSizeX() / 2.),8);
+  maxX = svc::round_with_prec((m_sd_centre.x() + translation.x() + sdHColPtr->GetSizeX() / 2.),8);
+  minY = svc::round_with_prec((m_sd_centre.y() + translation.y() - sdHColPtr->GetSizeY() / 2.),8);
+  maxY = svc::round_with_prec((m_sd_centre.y() + translation.y() + sdHColPtr->GetSizeY() / 2.),8);
+  minZ = svc::round_with_prec((m_sd_centre.z() + translation.z() - sdHColPtr->GetSizeZ() / 2.),8);
+  maxZ = svc::round_with_prec((m_sd_centre.z() + translation.z() + sdHColPtr->GetSizeZ() / 2.),8);
 
   LOGSVC_DEBUG("VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
   LOGSVC_DEBUG("VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
@@ -366,12 +366,10 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
       for (int iz = 0; iz < nvZ; ++iz){
         auto z = minZ + dz/2. + iz*dz;
         auto current_idx = sdHColPtr->LinearizeIndex(ix,iy,iz);
-        // voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z) - m_centre_in_global_coordinates,4); // go back to global origin if needed
-        voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z),4); // alredy used in min/max X,Y,Z 
+        voxelsCentre.at(current_idx)= svc::round_with_prec(G4ThreeVector(x,y,z),4);
       }
     }
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -514,7 +512,7 @@ G4bool VPatientSD::ScoringVolume::IsInsideFarmer30013(const G4ThreeVector& posit
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4ThreeVector VPatientSD::GetSDCentre() const {
-  return m_centre_in_global_coordinates;
+  return m_sd_centre;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

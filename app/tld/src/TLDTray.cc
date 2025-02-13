@@ -98,13 +98,13 @@ void TLDTray::ParseTomlConfig(){
     m_global_centre.setZ(config[configPrefix]["Position"][2].value_or(0.0));
     // G4cout << "global_centre: " << m_global_centre << G4endl;
 
-    auto vox_nX = config[configPrefix]["CellVoxelization"][0].value_or(0);
+    auto vox_nX = config[configPrefix]["TLDVoxelization"][0].value_or(0);
     if(vox_nX > 0 ) 
         m_config.m_tld_nX_voxels = vox_nX;
-    auto vox_nY = config[configPrefix]["CellVoxelization"][1].value_or(0);
+    auto vox_nY = config[configPrefix]["TLDVoxelization"][1].value_or(0);
     if(vox_nY > 0 ) 
         m_config.m_tld_nY_voxels = vox_nY;
-    auto vox_nZ = config[configPrefix]["CellVoxelization"][2].value_or(0);
+    auto vox_nZ = config[configPrefix]["TLDVoxelization"][2].value_or(0);
     if(vox_nZ > 0 ) 
         m_config.m_tld_nZ_voxels = vox_nZ;
 
@@ -117,6 +117,10 @@ void TLDTray::ParseTomlConfig(){
     auto rotZ = config[configPrefix]["Rotation"][2].value_or(0);
     if(rotZ > 0 )           
         m_rot.rotateZ(rotZ*deg);
+
+    std::string medium = config[configPrefix]["TLDMedium"].value_or("");
+    if (!medium.empty())
+        m_config.m_tld_medium = medium;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

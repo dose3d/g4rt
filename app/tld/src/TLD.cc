@@ -102,16 +102,23 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
 
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_tld_medium);
   // create a cell box filled with PMMA, with given side dimensions
-  auto tldBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
-  auto tldLV = new G4LogicalVolume(tldBox, Medium.get(), label+"LV");
+  // auto tldBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
+  G4double innerRadius = 0.0;  // Solid cylinder
+  G4double outerRadius = size.getX() / 2.;  // Assuming X dimension represents diameter
+  G4double halfHeight = size.getZ() / 4.;  // Z dimension
+  G4double startAngle = 0.0;
+  G4double spanningAngle = 360.0 * deg;  // Full cylinder
+  auto tldTube = new G4Tubs(label + "Tube", innerRadius, outerRadius, halfHeight, startAngle, spanningAngle);
+
+  auto tldLV = new G4LogicalVolume(tldTube, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for TLD construction... "); 
+  m_global_centre = m_centre;
+  m_centre = svc::getPositionInGlobalFrame(m_centre,this,false);
+  G4cout << "TLD w/ medium: "<< m_tld_medium << " & centre: " << m_centre << " for TLD construction... "<<G4endl;
+
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", tldLV, parentWorld, false, 0));
 
-  LOGSVC_DEBUG("Construct() >> current TLD translation {}", m_global_centre);
-
-  // std::cout << "[DEBUG]:: TLD:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
   auto regVol = new G4Region(label+"_G4RegionCuts");
   auto cuts = new G4ProductionCuts;
   cuts->SetProductionCut(0.1 * mm);
@@ -143,7 +150,9 @@ void TLD::DefineSensitiveDetector(){
   if(m_patientSD.Get()==0){
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre; // wrap this to VPatient::GetGlobalTranslation
-    auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
+    //auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
+    auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,TLD::SIZE);
+    auto envBox = G4Box("TlDBox", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
     auto label = GetName();
     m_patientSD.Put(new TLDSD(label+"_SD",centre,m_id_x,m_id_y,m_id_z));
     auto patientSD = m_patientSD.Get();
@@ -165,7 +174,7 @@ void TLD::DefineSensitiveDetector(){
     // TODO: extract this from Detector::name scope
     std::string runCollName = name.substr(0, name.find('_', 0));
     G4cout << "[DEBUG]:: TLD::DefineSensitiveDetector name " << name << " runCollName " << runCollName << " centre: "<< centre <<" #voxels: " << nvx <<","<<nvy<<","<<nvz<< G4endl;
-    patientSD->AddScoringVolume(runCollName,hcName,*envBox,nvx,nvy,nvz);
+    patientSD->AddScoringVolume(runCollName,hcName,envBox,nvx,nvy,nvz);
 
 
     // ________________________________________________________________________

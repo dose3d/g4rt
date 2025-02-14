@@ -88,8 +88,6 @@ void D3DDetector::ParseTomlConfig(){
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + m_config.m_top_position_in_env;
-
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)
   m_config.m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);

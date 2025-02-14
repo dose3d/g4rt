@@ -43,27 +43,23 @@ void WaterPhantom::ParseTomlConfig(){
   }
   
   auto config = toml::parse_file(configFile);
-
-  m_centrePositionX = config[configObjDetector]["TranslationFromCentre"][0].value_or(0.0);
-  m_centrePositionY = config[configObjDetector]["TranslationFromCentre"][1].value_or(0.0);
-  m_centrePositionZ = config[configObjDetector]["TranslationFromCentre"][2].value_or(0.0);
-  m_detectorVoxelizationX = config[configObjDetector]["Voxelization"][0].value_or(0);
-  m_detectorVoxelizationY = config[configObjDetector]["Voxelization"][1].value_or(0);
-  m_detectorVoxelizationZ = config[configObjDetector]["Voxelization"][2].value_or(0);
+  
   ///
   m_sizeX = config[configObjDetector]["Size"][0].value_or(0.0);
   m_sizeY = config[configObjDetector]["Size"][1].value_or(0.0);
   m_sizeZ = config[configObjDetector]["Size"][2].value_or(0.0);
+  m_centrePositionX = config[configObjDetector]["Centre"][0].value_or(0.0);
+  m_centrePositionY = config[configObjDetector]["Centre"][1].value_or(0.0);
+  m_centrePositionZ = config[configObjDetector]["Centre"][2].value_or(0.0);
+  m_detectorVoxelizationX = config[configObjDetector]["Voxelization"][0].value_or(0);
+  m_detectorVoxelizationY = config[configObjDetector]["Voxelization"][1].value_or(0);
+  m_detectorVoxelizationZ = config[configObjDetector]["Voxelization"][2].value_or(0);
   /// 
   m_phantomMedium = config[configObjDetector]["Medium"].value_or("G4_WATER");
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
-
-  auto top_position_in_env = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ - m_sizeZ/2);
-  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + top_position_in_env;
-
   
   ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);

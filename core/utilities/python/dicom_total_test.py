@@ -102,7 +102,7 @@ if __name__ == "__main__":
         
         for cp in range(cp_count):
             try:
-                bank1, bank2 = plan.get_mlc_leaf_positions(b, cp_index=cp)
-                print(bank1, bank2)
+                bank1 = plan.get_mlc_leaf_positions(b, "Y1" cp_index=cp)
+
             except Exception as e:
                 print(f"Nie udało się odczytać pozycji MLC dla wiązki {b+1}, CP {cp+1}: {e}")

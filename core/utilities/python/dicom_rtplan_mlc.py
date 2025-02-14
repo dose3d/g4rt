@@ -23,7 +23,10 @@ def return_possition(dataFile, side, current_beam, current_controlpoint, num_of_
     try:
         cp = ds[0x300a, 0x00b0][current_beam][0x300a, 0x0111][current_controlpoint]
         # Zakładamy, że indeks 2 w sekwencji odpowiada pozycjom MLC
-        mlc_seq = cp[0x300a, 0x011a][2]
+        if cp[0x300a, 0x011a].value._list == 3:
+            mlc_seq = cp[0x300a, 0x011a][2]
+        if cp[0x300a, 0x011a].value._list == 1:
+            mlc_seq = cp[0x300a, 0x011a][0]
         mlc_positions_list = mlc_seq[0x300a, 0x011c].value
         mlc_positions = np.array(mlc_positions_list, dtype=np.single)
     except Exception as e:

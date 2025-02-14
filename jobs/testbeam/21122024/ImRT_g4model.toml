@@ -1,8 +1,8 @@
 [RunSvc]
 JobName = "static"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
@@ -17,9 +17,21 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+
+# # Here PhantomWorkld in Isocentre
+# EnviromentPositionX = 0.0
+# EnviromentPositionY = 0.0
+# EnviromentPositionZ = 0.0
+
+# # Here - iba_orinin in our isocentre
+# EnviromentPositionX = 45.0
+# EnviromentPositionY = 82,5.0
+# EnviromentPositionZ = 45.0
+
+# Here RTDOSE Isocentre in our isocentre
+EnviromentPositionX = -50.0
+EnviromentPositionY = 30.0
+EnviromentPositionZ = 5.0
 EnviromentSizeX = 380.0
 EnviromentSizeY = 380.0
 EnviromentSizeZ = 200.0
@@ -27,8 +39,8 @@ EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 
 [D3DDetector_Detector]
-TopPositionInEnv = [-59.45,-117.05,-30.55] # In mm | 21.12.2024 testbeam
-# TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
+TopPositionInEnv = [-90.00,-165.00,-90.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
+
 
 [D3DDetector_Layer]
 Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
@@ -46,7 +58,7 @@ PlanInputFile = [
     # "plan/custom/cp5x5.dat"
     # "plan/custom/cp10x10.dat"
     "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam0_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
 ]

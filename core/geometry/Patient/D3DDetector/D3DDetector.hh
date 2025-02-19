@@ -56,6 +56,9 @@ class D3DDetector : public VPatient, public GeoComponet {
     void ExportToGateCsv(const std::string& path_to_output_dir) const override;
 
     //
+    bool iba_imrt_rotation = false;
+
+    //
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
     //
@@ -73,10 +76,6 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
         G4int m_nZ_cells = 0;
-
-        G4ThreeVector m_cell_position = {0., 0., 0.};
-
-
         /// 
         G4ThreeVector m_translation_in_local_frame;
 

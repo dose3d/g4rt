@@ -46,7 +46,7 @@ class IbaImRT: public IPhysicalVolume {
         void WriteInfo() override {};
 
         /// Static member variable for translation to Iba Origin
-        static G4ThreeVector IbaToLocalTranslation;
+        static G4ThreeVector translationToIbaOrigin;
 
 };
 

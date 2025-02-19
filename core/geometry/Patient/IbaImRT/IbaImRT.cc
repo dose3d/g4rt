@@ -17,7 +17,7 @@ IbaImRT* IbaImRT::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector IbaImRT::translationToIbaOrigin(-90.0, 165.0, -90.0);
+G4ThreeVector IbaImRT::IbaToLocalTranslation(-90.0, 165.0, -90.0);
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
@@ -31,10 +31,11 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
 
     auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "IbaImRTLV");
 
-    // We have to rotate it in order to right alignement in the world
+    // We have to rotate it in order to right alignement of the Geant4 volumes in the world
     auto my_rotation = new G4RotationMatrix;
     my_rotation->rotateY(90.0*deg);
     my_rotation->rotateX(90.0*deg);
 
-    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position+translationToIbaOrigin, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
+    // Note: the position is interpreated as an isocentre nad it's injected in real Iba Frame, thus we have to translate to local frame
+    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position+IbaImRT::IbaToLocalTranslation, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
 }

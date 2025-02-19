@@ -22,7 +22,7 @@ class D3DMLayer : public VPatient {
     D3DMLayer(const G4String& label,G4String cellMediumName, G4bool shiftZ);
 
     ///
-    D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer, bool iba_rotation);
+    D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer);
 
     ///
     ~D3DMLayer();
@@ -86,9 +86,6 @@ class D3DMLayer : public VPatient {
     ///
     G4String m_label;
 
-    /// 
-    bool iba_imrt_rotation;
-    
     ///
     std::vector<std::vector<G4int>> m_layer_mapping;
 

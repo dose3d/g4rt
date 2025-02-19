@@ -19,8 +19,8 @@ D3DMLayer::D3DMLayer(const G4String& label, G4String cellMediumName ,G4bool shif
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-D3DMLayer::D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer, bool iba_rotation)
-: VPatient(label), m_label(label), m_cell_medium_name(cellMediumName), m_cells_in_layer_positioning(cellsInLayer), iba_imrt_rotation(iba_rotation)
+D3DMLayer::D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer)
+: VPatient(label), m_label(label), m_cell_medium_name(cellMediumName), m_cells_in_layer_positioning(cellsInLayer)
 {
   SetNCells();
 }

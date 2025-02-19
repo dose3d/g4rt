@@ -13,9 +13,9 @@ NTupleAnalysis = true
 [PatientGeometry]
 Type = "Dose3D" # "WaterPhantom" "Dose3D"
 ConfigPrefix = "Dose3D" # WP  Dose3D
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 410.0
 EnviromentSizeY = 410.0
 EnviromentSizeZ = 410.0

@@ -16,9 +16,9 @@ FieldSize = 60 # mm
 [PatientGeometry]
 Type = "Dose3D" # "WaterPhantom" "Dose3D"
 ConfigPrefix = "Dose3D" # WP  Dose3D
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 42.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 42.0
 EnviromentSizeX = 50.0
 EnviromentSizeY = 50.0
 EnviromentSizeZ = 288.0

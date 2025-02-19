@@ -84,9 +84,9 @@ void D3DDetector::ParseTomlConfig(){
   m_config.m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
   m_config.m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
 
-  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
-  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
-  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
+  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
+  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
 
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)
@@ -96,6 +96,10 @@ void D3DDetector::ParseTomlConfig(){
   ///
   m_config.m_stl_geometry_file_path = config[configObjDetector]["Geometry"].value_or("None");
   m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
+
+  if (Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT"){
+    iba_imrt_rotation = true;
+  }
 
   ///
   m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
@@ -196,7 +200,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
       G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: " << cells_in_layer_positioning.size() << G4endl;
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
+      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning, iba_imrt_rotation));
       m_d3d_layers.back()->SetId(i_layer++);
       m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
       m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
@@ -214,7 +218,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: "
       << cells_in_layer_positioning.size() << G4endl;
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
+      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning, iba_imrt_rotation));
       m_d3d_layers.back()->SetId(i_layer++);
       m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
       m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);

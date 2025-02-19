@@ -19,19 +19,21 @@ BuildPatient = true
 Type = "D3DDetector"
 
 # # Here PhantomWorkld in Isocentre
-# EnviromentPositionX = 0.0
-# EnviromentPositionY = 0.0
-# EnviromentPositionZ = 0.0
+# PatientIsocentreX = 0.0
+# PatientIsocentreY = 0.0
+# PatientIsocentreZ = 0.0
 
 # # Here - iba_orinin in our isocentre
-# EnviromentPositionX = 45.0
-# EnviromentPositionY = 82,5.0
-# EnviromentPositionZ = 45.0
+# # Convention: These coordinates are in patient frame!
+# PatientIsocentreX = 55.5 #-90.0+145.5
+# PatientIsocentreY = 20 #165.0-145
+# PatientIsocentreZ = -7 #-90.0+83
 
-# Here RTDOSE Isocentre in our isocentre
-EnviromentPositionX = -50.0
-EnviromentPositionY = 30.0
-EnviromentPositionZ = 5.0
+
+PatientIsocentreX = 145.5
+PatientIsocentreY = -145.0
+PatientIsocentreZ = 83.0
+
 EnviromentSizeX = 380.0
 EnviromentSizeY = 380.0
 EnviromentSizeZ = 200.0
@@ -39,7 +41,7 @@ EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 
 [D3DDetector_Detector]
-TopPositionInEnv = [-90.00,-165.00,-90.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
+TopPositionInEnv = [90.00,-165.00,90.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
 
 
 [D3DDetector_Layer]

@@ -44,9 +44,9 @@ PatientGeometry* PatientGeometry::GetInstance() {
 void PatientGeometry::Configure() {
   G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
   DefineUnit<std::string>("Type");
-  DefineUnit<double>("EnviromentPositionX");
-  DefineUnit<double>("EnviromentPositionY");
-  DefineUnit<double>("EnviromentPositionZ");
+  DefineUnit<double>("PatientIsocentreX");
+  DefineUnit<double>("PatientIsocentreY");
+  DefineUnit<double>("PatientIsocentreZ");
   DefineUnit<double>("EnviromentSizeX");
   DefineUnit<double>("EnviromentSizeY");
   DefineUnit<double>("EnviromentSizeZ");
@@ -83,13 +83,13 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     // thisConfig()->SetValue(unit, std::string("Dose3D")); // "DishCubePhantom"  ,WaterPhantom , SciSlicePhantom, Dose3D
     }
   // default box size
-  if (unit.compare("EnviromentPositionX") == 0){
+  if (unit.compare("PatientIsocentreX") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
-  if (unit.compare("EnviromentPositionY") == 0){
+  if (unit.compare("PatientIsocentreY") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
-  if (unit.compare("EnviromentPositionZ") == 0){
+  if (unit.compare("PatientIsocentreZ") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
 
@@ -218,9 +218,9 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), "patientEnvLV", 0, 0, 0);
   // The envelope box will bo located at given point with respect to the parentPV.
   // However it shifted to Sim locatin (ie. to the positive querter of the World coordinate system)
-  auto envPosX = thisConfig()->GetValue<double>("EnviromentPositionX");
-  auto envPosY = thisConfig()->GetValue<double>("EnviromentPositionY");
-  auto envPosZ = thisConfig()->GetValue<double>("EnviromentPositionZ");
+  auto envPosX = thisConfig()->GetValue<double>("PatientIsocentreX");
+  auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
+  auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
 
   // Region for cuts
   auto regVol = new G4Region("phantomEnviromentRegion");
@@ -331,9 +331,9 @@ G4bool PatientGeometry::Update() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::WriteInfo() {
-  auto envPosX = thisConfig()->GetValue<double>("EnviromentPositionX");
-  auto envPosY = thisConfig()->GetValue<double>("EnviromentPositionY");
-  auto envPosZ = thisConfig()->GetValue<double>("EnviromentPositionZ");
+  auto envPosX = thisConfig()->GetValue<double>("PatientIsocentreX");
+  auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
+  auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
   auto centre = G4ThreeVector(envPosX,envPosY,envPosZ);
   G4cout << "Phantom centre: " << centre / cm << " [cm] " << G4endl; 
 }
@@ -399,13 +399,13 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
   // Get the environment size in the x, y, and z directions
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
 
   // Calculate the resolution in the x, y, and z directions
   G4int xResolution = env_size_x / sizeX;
@@ -501,13 +501,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
 
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
 
 
   G4int xResolution = env_size_x / sizeX;

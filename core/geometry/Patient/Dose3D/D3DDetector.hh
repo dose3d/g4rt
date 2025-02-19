@@ -57,6 +57,9 @@ class D3DDetector : public VPatient, public GeoComponet {
     void ExportLayerPads(const std::string& path_to_output_dir) const;
 
     //
+    bool iba_imrt_rotation = false;
+
+    //
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
     //
     class Config {
@@ -72,7 +75,6 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
         G4int m_nZ_cells = 0;
-        
         /// 
         G4ThreeVector m_top_position_in_env;
         

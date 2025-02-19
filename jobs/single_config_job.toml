@@ -18,9 +18,9 @@ FieldSize = 400 # mm
 [PatientGeometry]
 Type = "D3DDetector"
 # Type = "WaterPhantom"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 400.0
 EnviromentSizeY = 400.0
 EnviromentSizeZ = 310.0

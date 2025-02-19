@@ -15,9 +15,9 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 940.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 40.0
+PatientIsocentreX = 940.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 40.0
 EnviromentSizeX = 2400.0
 EnviromentSizeY = 550.0
 EnviromentSizeZ = 28.0

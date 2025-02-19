@@ -17,6 +17,9 @@ IbaImRT* IbaImRT::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+G4ThreeVector IbaImRT::translationToIbaOrigin(-90.0, 165.0, -90.0);
+////////////////////////////////////////////////////////////////////////////////
+///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
     auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
 
@@ -24,6 +27,7 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
     auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
     auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
     auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
+    
 
     auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "IbaImRTLV");
 
@@ -32,5 +36,5 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
     my_rotation->rotateY(90.0*deg);
     my_rotation->rotateX(90.0*deg);
 
-    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
+    SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position+translationToIbaOrigin, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
 }

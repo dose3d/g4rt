@@ -19,8 +19,8 @@ D3DMLayer::D3DMLayer(const G4String& label, G4String cellMediumName ,G4bool shif
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-D3DMLayer::D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer)
-: VPatient(label), m_label(label), m_cell_medium_name(cellMediumName), m_cells_in_layer_positioning(cellsInLayer)
+D3DMLayer::D3DMLayer(const G4String& label,G4String cellMediumName, const std::vector<G4ThreeVector>& cellsInLayer, bool iba_rotation)
+: VPatient(label), m_label(label), m_cell_medium_name(cellMediumName), m_cells_in_layer_positioning(cellsInLayer), iba_imrt_rotation(iba_rotation)
 {
   SetNCells();
 }
@@ -168,7 +168,12 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
     idz = 0;
     for(const auto& cell_positioning : m_cells_in_layer_positioning){
       auto label = m_label+"_Cell_"+std::to_string(idx)+"_"+std::to_string(idy)+"_"+std::to_string(idz);
-      auto cell_position = cell_positioning+m_init_possition;
+      auto cell_position = cell_positioning;
+      if(iba_imrt_rotation){
+        cell_position.setX(-cell_position.x());
+        cell_position.setZ(-cell_position.z());
+      }
+      cell_position = cell_position+m_init_possition;
       // G4cout << "[DEBUG]:: D3DMLayer:: creating cell: " << label << " with position: " << cell_position << G4endl;
       m_d3d_cells.push_back(new D3DCell(label,cell_position,m_cell_medium_name));
       m_d3d_cells.back()->SetIDs(idx++,idy,idz);

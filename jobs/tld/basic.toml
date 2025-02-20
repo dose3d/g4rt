@@ -19,11 +19,11 @@ MlcModel = "Simplified"
 [TLDTray]
 Position = [0.0,0.0,0.0]
 Rotation = [0.0,0.0,0.0]
-TLDVoxelization = [5,5,5]
+TLDVoxelization = [10,10,5]
 TLDMedium = "RMPS470"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 1000
+nParticles = 100000
 BeamRotation = 0.0
 PlanInputFile = [
     "plan/custom/cp10x10.dat"

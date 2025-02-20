@@ -175,7 +175,7 @@ void TLD::DefineSensitiveDetector(){
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre; // wrap this to VPatient::GetGlobalTranslation
     //auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
-    auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,TLD::SIZE);
+    auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,0.9*mm);
     auto envBox = G4Box("TlDBox", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
     auto label = GetName();
     m_patientSD.Put(new TLDSD(label+"_SD",centre,m_id_x,m_id_y,m_id_z));

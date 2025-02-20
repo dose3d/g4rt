@@ -3,6 +3,8 @@
 #include "GeoSvc.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
+#include "G4Sphere.hh"
+#include "G4UnionSolid.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4ProductionCuts.hh"
 #include "TLDSD.hh"
@@ -98,19 +100,40 @@ void TLD::SetNVoxels(char axis, int nv){
 void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   // std::cout << "[INFO]:: TLD construction... " << std::endl;
   auto label = GetName();
-  auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,TLD::SIZE);
+  auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,0.9*mm);
 
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_tld_medium);
   // create a cell box filled with PMMA, with given side dimensions
   // auto tldBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
-  G4double innerRadius = 0.0;  // Solid cylinder
+  // G4double innerRadius = 0.0;  // Solid cylinder
+  G4double innerRadius = 1.0;  // Solid cylinder
   G4double outerRadius = size.getX() / 2.;  // Assuming X dimension represents diameter
-  G4double halfHeight = size.getZ() / 4.;  // Z dimension
+  G4double halfHeight = size.getZ() / 2.;  // Z dimension
   G4double startAngle = 0.0;
   G4double spanningAngle = 360.0 * deg;  // Full cylinder
   auto tldTube = new G4Tubs(label + "Tube", innerRadius, outerRadius, halfHeight, startAngle, spanningAngle);
 
+  // Define the spherical cap
+  G4double sphereRadius = outerRadius;  // The sphere's radius should match the tube's outer radius
+  G4double thetaMin = 0.0 * deg;        // From the top
+  G4double thetaMax = 90.0 * deg;       // Only keep the upper half of the sphere
+
+  auto sphereCap = new G4Sphere(label + "SphereCap", 
+                                0.0, sphereRadius,      // Inner and outer radii
+                                0.0, 360.0 * deg,       // Full azimuthal range
+                                thetaMin, thetaMax);    // Limit to a spherical slice
+  
+  // Position the sphere cap on top of the cylinder
+  G4double capPositionZ = halfHeight;// - sphereRadius; // Align cap smoothly on top of tube
+  G4ThreeVector capPosition(0, 0, capPositionZ);
+
+  // Merge the tube and sphere into a single shape
+  auto combinedShape = new G4UnionSolid(label + "CombinedSolid", tldTube, sphereCap, nullptr, capPosition);
+
+  // Create the single logical volume
+  // auto tldLV = new G4LogicalVolume(combinedShape, Medium.get(), label + "LV");
   auto tldLV = new G4LogicalVolume(tldTube, Medium.get(), label+"LV");
+
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   m_global_centre = m_centre;
@@ -125,7 +148,8 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   regVol->SetProductionCuts(cuts);
   tldLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(tldLV);
-
+  
+  // TODO: To be corrected!!!
   SetVolume(size.getX()*size.getY()*size.getZ());
 }
 

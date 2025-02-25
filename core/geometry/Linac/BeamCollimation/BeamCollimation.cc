@@ -19,7 +19,7 @@ VMlc* BeamCollimation::m_mlc = nullptr;
 //       take into account that in PRIMO 0,0,0 is at the source position!
 G4double BeamCollimation::AfterMLC = -300.25;   
 G4double BeamCollimation::BeforeMLC  = -415.0;
-G4double BeamCollimation::BeforeJaws  = -745.3;
+G4double BeamCollimation::BeforeJaws  = -1000;
 G4double BeamCollimation::ParticleAngleTreshold = 50.0; // [deg]
 ////////////////////////////////////////////////////////////////////////////////
 ///

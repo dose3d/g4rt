@@ -126,8 +126,8 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
       p_vrtx.at(i) = nullptr;
       continue;
     } 
-    BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
     if(model == EMlcModel::Simplified){
+      BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
         if(!m_mlc->IsInField(vrtx)) {
           delete vrtx;
           p_vrtx.at(i) = nullptr;

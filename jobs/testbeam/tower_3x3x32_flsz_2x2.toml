@@ -22,7 +22,7 @@ EnviromentSizeZ = 400.0
 EnviromentMedium = "G4_Galactic"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-200.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-200.0] # In mm
 # Voxelization = [3,3,20] # Number of cels in every direction
 Voxelization = [3,3,3] # Number of cels in every direction
 

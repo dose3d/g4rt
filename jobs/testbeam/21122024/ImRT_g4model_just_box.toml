@@ -17,45 +17,28 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-
-# # Here PhantomWorkld in Isocentre
-# PatientIsocentreX = 0.0
-# PatientIsocentreY = 0.0
-# PatientIsocentreZ = 0.0
-
-# # Here - iba_orinin in our isocentre
-# # Convention: These coordinates are in patient frame!
-# PatientIsocentreX = 55.5 #-90.0+145.5
-# PatientIsocentreY = 20 #165.0-145
-# PatientIsocentreZ = -7 #-90.0+83
-
-
-PatientIsocentreX = 145.5
-PatientIsocentreY = -145.0
-PatientIsocentreZ = 83.0
-
-EnviromentSizeX = 380.0
-EnviromentSizeY = 380.0
-EnviromentSizeZ = 200.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
+EnviromentSizeX = 400.0
+EnviromentSizeY = 400.0
+EnviromentSizeZ = 400.0
 EnviromentMedium = "Usr_G4AIR20C"
-EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
+EnviromentPatientEnvelop = "IbaImRT_Box" # Simplified iba Im'RT model
 
 [D3DDetector_Detector]
-TopPositionInEnv = [90.00,-165.00,90.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_Box.csv"
 
-
-[D3DDetector_Layer]
-Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
-# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
 
 [D3DDetector_Cell]
+TranslationInLocalFrame = [0.00,0.00,0.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
 Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-# nControlPoints = 1      # This will limit number of ctrl points defined below!
+nControlPoints = 1      # This will limit number of ctrl points defined below!
 # BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
-# nParticles = 10000     # This will overwrite Rotation value for all below plan files!
+nParticles = 1000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
     # "plan/custom/cp5x5.dat"
     # "plan/custom/cp10x10.dat"

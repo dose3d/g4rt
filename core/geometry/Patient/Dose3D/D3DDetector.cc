@@ -15,6 +15,7 @@
 #include <array>
 #include "IO.hh"
 #include "VPatientSD.hh"
+#include "IbaImRT.hh"
 
 
 std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_scoring_map_template = std::map<std::string, std::map<std::size_t, VoxelHit>>();
@@ -80,9 +81,13 @@ void D3DDetector::ParseTomlConfig(){
   auto config = toml::parse_file(configFile);
 
   ///
-  m_config.m_top_position_in_env.setX(config[configObjDetector]["TopPositionInEnv"][0].value_or(0.0));
-  m_config.m_top_position_in_env.setY(config[configObjDetector]["TopPositionInEnv"][1].value_or(0.0));
-  m_config.m_top_position_in_env.setZ(config[configObjDetector]["TopPositionInEnv"][2].value_or(0.0));
+  m_config.m_top_position_in_env.setX(config[configObjCell]["TranslationInLocalFrame"][0].value_or(0.0));
+  m_config.m_top_position_in_env.setY(config[configObjCell]["TranslationInLocalFrame"][1].value_or(0.0));
+  m_config.m_top_position_in_env.setZ(config[configObjCell]["TranslationInLocalFrame"][2].value_or(0.0));
+
+  if(Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Full") == 0 || Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Box") == 0) {
+    m_config.m_top_position_in_env += IbaImRT::IbaToLocalTranslation;
+  }
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
@@ -95,11 +100,11 @@ void D3DDetector::ParseTomlConfig(){
   m_config.m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
   ///
   m_config.m_stl_geometry_file_path = config[configObjDetector]["Geometry"].value_or("None");
-  m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
+  m_config.m_in_layer_positioning_module = config[configObjDetector]["Positioning"].value_or("None");
 
-  ///
-  m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
-  m_config.m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
+  // /// To be deleted
+  // m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
+  // m_config.m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
   ///
   m_config.m_cell_nX_voxels = config[configObjCell]["Voxelization"][0].value_or(0);
   m_config.m_cell_nY_voxels = config[configObjCell]["Voxelization"][1].value_or(0);

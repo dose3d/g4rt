@@ -24,7 +24,7 @@ EnviromentSizeZ = 28.0
 EnviromentMedium = "G4_WATER"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [-1090.0,0.0,10.0] # In mm
+TranslationInLocalFrame = [-1090.0,0.0,10.0] # In mm
 Geomertry = "dose3d/geo/Tray/multiple_tray_10x1x1.stl"
 
 [D3DDetector_Layer]

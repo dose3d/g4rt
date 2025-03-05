@@ -21,7 +21,7 @@ EnviromentSizeZ = 100.0
 EnviromentMedium = "G4_Galactic"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,-100.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-100.0] # In mm
 Voxelization = [4,2,5] # Number of cels in every direction
 
 [Dose3D_Layer]

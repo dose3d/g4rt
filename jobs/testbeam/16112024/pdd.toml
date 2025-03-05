@@ -32,10 +32,10 @@ EnviromentPatientEnvelop = "ModularWaterPhantom"
 # SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-# TopPositionInEnv = [0.0,-6.0,-195.0] # P: -6 in Y
-# TopPositionInEnv = [0.0,+6.0,-195.0] # L: +6 in Y
+# TranslationInLocalFrame = [0.0,-6.0,-195.0] # P: -6 in Y
+# TranslationInLocalFrame = [0.0,+6.0,-195.0] # L: +6 in Y
 Geomertry = "dose3d/geo/Tower/Waterphantom_Tower_Shell.stl"
-TopPositionInEnv = [0.0,0.0,-198.0] # Top on the surface of the water
+TranslationInLocalFrame = [0.0,0.0,-198.0] # Top on the surface of the water
 
 [D3DDetector_Layer]
 # Positioning = "dose3d/geo/Tower/pdd_1x2x32.csv"

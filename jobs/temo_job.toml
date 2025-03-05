@@ -22,7 +22,7 @@ TableConstruction = false
 
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-150.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-150.0] # In mm
 Geomertry = "dose3d/geo/OneTower.stl"
 
 [D3DDetector_Layer]

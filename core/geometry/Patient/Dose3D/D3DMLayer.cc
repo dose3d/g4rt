@@ -168,7 +168,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
     idz = 0;
     for(auto& cell_position : m_cells_in_layer_positioning){
       auto label = m_label+"_Cell_"+std::to_string(idx)+"_"+std::to_string(idy)+"_"+std::to_string(idz);
-      if (Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT"){
+      if (Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_Box" || Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_Full") {
         // NOTE: For Iba Im'RT phantom we have to perform inverse of X and Z axes in order to 
         //       transform from (Real) Patient to DetectorCostruction World origin.
         cell_position.setX(-cell_position.x());

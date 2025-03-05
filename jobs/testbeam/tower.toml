@@ -27,7 +27,7 @@ EnviromentSizeZ = 600
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-54.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-54.0] # In mm
 Geometry = "dose3d/geo/Tower/full_tower.stl"
 
 [D3DDetector_Layer]

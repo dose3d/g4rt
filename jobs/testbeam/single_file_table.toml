@@ -22,7 +22,7 @@ EnviromentSizeZ = 310.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,-155.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-155.0] # In mm
 Geomertry = "dose3d/geo/full_tower.stl"
 
 [Dose3D_Layer]

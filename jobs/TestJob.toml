@@ -24,7 +24,7 @@ EnviromentSizeZ = 400.1
 EnviromentMedium = "G4_WATER"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-195.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-195.0] # In mm
 Voxelization = [4,4,4] # Number of cels in every direction
 
 [D3DDetector_Layer]

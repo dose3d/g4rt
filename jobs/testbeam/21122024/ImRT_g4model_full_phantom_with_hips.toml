@@ -1,8 +1,8 @@
 [RunSvc]
 JobName = "static"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
@@ -29,6 +29,9 @@ EnviromentPatientEnvelop = "IbaImRT_Full" # Simplified iba Im'RT model
 [D3DDetector_Detector]
 Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_Full.csv"
 
+
+[D3DDetector_Layer]
+# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
 
 [D3DDetector_Cell]
 TranslationInLocalFrame = [0.00,0.00,0.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 

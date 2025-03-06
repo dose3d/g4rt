@@ -243,6 +243,12 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
   auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
 
+  if (envPatientEnvelop.compare("IbaImRT_Full") == 0){
+    IbaImRT::IbaToLocalTranslation = G4ThreeVector(90.0, -165.0, 90.0);
+  } else if(envPatientEnvelop.compare("IbaImRT_Box") == 0){
+    IbaImRT::IbaToLocalTranslation = G4ThreeVector(90.0, -90.0, 90.0);
+  }
+
   // Region for cuts
   auto regVol = new G4Region("phantomEnviromentRegion");
   auto cuts = new G4ProductionCuts;
@@ -250,7 +256,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
-  SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ)+IbaImRT::IbaToLocalTranslation, "phmWorldPV", patientEnvLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ)-IbaImRT::IbaToLocalTranslation, "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
 
   // create the actual phantom

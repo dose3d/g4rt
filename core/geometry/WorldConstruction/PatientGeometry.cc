@@ -238,7 +238,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
   if (envPatientEnvelop.compare("IbaImRT_Full") == 0 || envPatientEnvelop.compare("IbaImRT_Box") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
-    ibaImRT->IPhysicalVolume::Construct(this,G4ThreeVector(envPosX, envPosY, envPosZ));
+    ibaImRT->IPhysicalVolume::Construct(this,G4ThreeVector(envPosX, envPosY, envPosZ)+IbaImRT::IbaToLocalTranslation);
     m_patient->IPhysicalVolume::Construct(ibaImRT);
     m_patient->WriteInfo();
   }

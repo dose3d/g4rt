@@ -17,9 +17,12 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX = 145.5
-PatientIsocentreY = -145.0
-PatientIsocentreZ = 83.0
+# PatientIsocentreX = -90.00
+# PatientIsocentreY = 165.00
+# PatientIsocentreZ = -90.00
+PatientIsocentreX = 245.5
+PatientIsocentreY = -245.0
+PatientIsocentreZ = 283.0
 EnviromentSizeX = 380.0
 EnviromentSizeY = 380.0
 EnviromentSizeZ = 200.0
@@ -29,9 +32,6 @@ EnviromentPatientEnvelop = "IbaImRT_Full" # Simplified iba Im'RT model
 [D3DDetector_Detector]
 Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_Full.csv"
 
-
-[D3DDetector_Layer]
-# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
 
 [D3DDetector_Cell]
 TranslationInLocalFrame = [0.00,0.00,0.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 

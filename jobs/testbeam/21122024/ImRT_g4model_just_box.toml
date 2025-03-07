@@ -1,11 +1,11 @@
 [RunSvc]
-JobName = "static"
+JobName = "static_testbeam10e6x4"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspInputFileName = "/sekhemet/scratch/d3df/IAEAPhSp/TNSIM157_10x10s2-f0"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
-PhspEvtVrtxMultiplicityTreshold = 20
-PrintProgressFrequency = 0.05
+PhspEvtVrtxMultiplicityTreshold = 45
+PrintProgressFrequency = 0.001
 GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = true
@@ -36,14 +36,14 @@ Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nControlPoints = 1      # This will limit number of ctrl points defined below!
+nControlPoints = 4      # This will limit number of ctrl points defined below!
 # BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
-nParticles = 1000     # This will overwrite Rotation value for all below plan files!
+# nParticles = 1000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
     # "plan/custom/cp5x5.dat"
     # "plan/custom/cp10x10.dat"
     "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam0_cp0.dat",
-    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
-    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
-    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
+    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
+    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
+    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
 ]

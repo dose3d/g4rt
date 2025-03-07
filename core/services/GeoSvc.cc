@@ -85,7 +85,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
     // m_config->SetValue(unit, G4String("Varian-HD120")); 
-    thisConfig()->SetTValue<std::string>(unit, std::string("None")); 
+    m_config->SetValue(unit, G4String("Simplified")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 

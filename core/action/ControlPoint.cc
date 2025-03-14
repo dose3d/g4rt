@@ -441,10 +441,6 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
-    auto rotate = [&](const G4ThreeVector& position) -> G4ThreeVector {
-        return m_rotation ? *m_rotation * position : position;
-    };
-
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis_x(-200*mm, 200*mm);
@@ -456,7 +452,7 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
         auto in_field = MLC()->IsInField(G4ThreeVector(x,y,current_z));
         // std::cout << x << " " << y << " " << current_z << " inField "<< in_field <<  std::endl;
         if(in_field){
-            m_plan_mask_points.push_back(rotate(G4ThreeVector(x,y,current_z)));
+            m_plan_mask_points.push_back(G4ThreeVector(x,y,current_z));
         }
         if(m_plan_mask_points.size()>=100000) break;
     }

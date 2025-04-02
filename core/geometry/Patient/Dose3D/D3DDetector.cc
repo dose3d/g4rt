@@ -81,12 +81,12 @@ void D3DDetector::ParseTomlConfig(){
   auto config = toml::parse_file(configFile);
 
   ///
-  m_config.m_top_position_in_env.setX(config[configObjCell]["TranslationInLocalFrame"][0].value_or(0.0));
-  m_config.m_top_position_in_env.setY(config[configObjCell]["TranslationInLocalFrame"][1].value_or(0.0));
-  m_config.m_top_position_in_env.setZ(config[configObjCell]["TranslationInLocalFrame"][2].value_or(0.0));
+  m_config.m_translation_in_local_frame.setX(config[configObjCell]["TranslationInLocalFrame"][0].value_or(0.0));
+  m_config.m_translation_in_local_frame.setY(config[configObjCell]["TranslationInLocalFrame"][1].value_or(0.0));
+  m_config.m_translation_in_local_frame.setZ(config[configObjCell]["TranslationInLocalFrame"][2].value_or(0.0));
 
   if(Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Full") == 0 || Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Box") == 0) {
-    m_config.m_top_position_in_env += IbaImRT::IbaToLocalTranslation;
+    m_config.m_translation_in_local_frame += IbaImRT::IbaToLocalTranslation;
   }
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
@@ -125,7 +125,7 @@ void D3DDetector::ParseTomlConfig(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool D3DDetector::LoadDefaultParameterization(){
-  m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
+  m_config.m_translation_in_local_frame = G4ThreeVector(0.0,0.0,0.0);
   m_config.m_nX_cells = 4;
   m_config.m_nY_cells = 4;
   m_config.m_nZ_cells = 4;
@@ -192,7 +192,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto dose3dCellLV = new G4LogicalVolume(solid, Medium.get(), "LVStl");
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-    auto pv = new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0);
+    auto pv = new G4PVPlacement(nullptr, m_config.m_translation_in_local_frame, "PVStl", dose3dCellLV, parentWorld, false, 0);
     // auto pv = GetPhysicalVolume();
 
 
@@ -203,7 +203,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
-      m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
+      m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
       m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
@@ -221,7 +221,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
-      m_d3d_layers.back()->SetPosition(m_config.m_top_position_in_env);
+      m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
       m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
@@ -244,11 +244,11 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
 
     auto rotation = parentWorld->GetObjectRotation();
 
-    G4double init_y = m_config.m_top_position_in_env.getY() - (m_config.m_nY_cells-1) * layer_width/2. ; 
+    G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * layer_width/2. ; 
     for(int i_layer = 0; i_layer < m_config.m_nY_cells; ++i_layer ){
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      G4double init_x = m_config.m_top_position_in_env.getX() - (m_config.m_nX_cells-1) * layer_width/2.;
-      G4double init_z = m_config.m_top_position_in_env.getZ() + layer_width/2.;
+      G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * layer_width/2.;
+      G4double init_z = m_config.m_translation_in_local_frame.getZ() + layer_width/2.;
       G4cout << "[DEBUG]:: >>> >>> D3DDetector:: Z translation: " << init_z << G4endl;
       //_______________________________________
       // Take into account shifts related to layerss parity  

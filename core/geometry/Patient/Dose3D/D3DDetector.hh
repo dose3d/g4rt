@@ -73,7 +73,7 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_nY_cells = 0;
         G4int m_nZ_cells = 0;
         /// 
-        G4ThreeVector m_top_position_in_env;
+        G4ThreeVector m_translation_in_local_frame;
         
         ///
         G4int m_cell_nX_voxels = 0;

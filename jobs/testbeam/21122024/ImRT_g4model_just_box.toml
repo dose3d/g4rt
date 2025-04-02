@@ -1,8 +1,8 @@
 [RunSvc]
 JobName = "static_testbeam10e6x4"
 BeamType = "IAEA"
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-PhspInputFileName = "/sekhemet/scratch/d3df/IAEAPhSp/TNSIM157_10x10s2-f0"
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/sekhemet/scratch/d3df/IAEAPhSp/TNSIM157_10x10s2-f0"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 85
 PrintProgressFrequency = 0.01
@@ -17,7 +17,7 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX = 79.73
+PatientIsocentreX = 79.73   # Im'RT origin to CT isocentre translation
 PatientIsocentreY = -146.6
 PatientIsocentreZ = 139.1
 EnviromentSizeX = 190.0

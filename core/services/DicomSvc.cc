@@ -253,8 +253,8 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
     // Get the values as strings separated by a comma
     if (std::getline(iss, value_y1, ',') && std::getline(iss, value_y2)) {
       // Convert string to double and add to the respective vectors
-      mlc_y1.push_back(std::stod(value_y1));
-      mlc_y2.push_back(std::stod(value_y2));
+      mlc_y2.push_back(-1*std::stod(value_y1)); // For propouse proper reading from custom dat and properly oriented this (MLC lew right side orientation.) we are using -1 here. 
+      mlc_y1.push_back(-1*std::stod(value_y2)); // For propouse proper reading from custom dat and properly oriented this (MLC lew right side orientation.) we are using -1 here. 
     }
   }
   file.close();

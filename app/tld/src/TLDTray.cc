@@ -70,7 +70,7 @@ void TLDTray::LoadConfiguration(){
 
     m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 
-    m_config.m_tld_medium = "RMPS470";
+    m_config.m_tld_medium = "LiF:Mg,Ti";
 
     m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 

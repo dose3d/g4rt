@@ -103,7 +103,7 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   auto size = G4ThreeVector(TLD::SIZE,TLD::SIZE,0.9*mm);
 
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_tld_medium);
-  // create a cell box filled with PMMA, with given side dimensions
+  // create a cell box filled with LiF:Mg,Ti, with given side dimensions
   // auto tldBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
   // G4double innerRadius = 0.0;  // Solid cylinder
   G4double innerRadius = 1.0;  // Solid cylinder

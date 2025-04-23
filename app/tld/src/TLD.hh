@@ -16,7 +16,7 @@
 class TLD : public VPatient {
   public:
     ///
-    TLD(const G4String& label = "TLD", const G4ThreeVector& centre = G4ThreeVector(), G4String tldMediumName = "PMMA");
+    TLD(const G4String& label = "TLD", const G4ThreeVector& centre = G4ThreeVector(), G4String tldMediumName = "LiF:Mg,Ti");
 
     ///
     ~TLD();

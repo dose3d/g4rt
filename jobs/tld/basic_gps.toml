@@ -16,7 +16,7 @@ ExportGeometryToGDML = true
 Position = [0.0,0.0,0.0]
 Rotation = [0.0,0.0,0.0]
 TLDVoxelization = [5,5,5]
-TLDMedium = "RMPS470"
+TLDMedium = "LiF:Mg,Ti"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1

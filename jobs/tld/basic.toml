@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "tld_basic"
-BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+BeamType = "gps"
+GpsMacFileName = "gps/gps_x_ray_tube_70_kev.mac" # BR AGH pc location
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 PrimariesAnalysis = false
@@ -21,7 +21,7 @@ TLDVoxelization = [10,10,5]
 TLDMedium = "LiF:Mg,Ti"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 100000
+nParticles = 10000
 BeamRotation = 0.0
 PlanInputFile = [
     "plan/custom/cp10x10.dat"

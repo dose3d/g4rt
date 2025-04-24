@@ -18,13 +18,13 @@ MlcModel = "Simplified"
 # Position = [-5.0,-5.0,0.0] TODO: przesunięcie tu nie przesuwa SD - Hit outside scoring volume. Już to ogarnialiśmy przy dose3d detektorze i IBA.  
 Position = [0.0,0.0,0.0] 
 Rotation = [0.0,0.0,0.0]
-TLDVoxelization = [10,10,5]
+TLDVoxelization = [20,20,10]
 TLDMedium = "LiF:Mg,Ti"
-TLD_Geometry_File_Path = "/home/jackie/work/dose3d/g4rt_backup/data/tldGeometry/three-hole.ast"
+TLD_Geometry_File_Path = "tldGeometry/three-hole.ast"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 10000
-BeamRotation = 0.0
+nParticles = 1000
+BeamRotation = 90.0
 PlanInputFile = [
     "plan/custom/cp10x10.dat"
 ]

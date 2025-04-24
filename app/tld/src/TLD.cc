@@ -127,21 +127,6 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   // Load STL geometry if provided
   //===================================================================
   if(m_stl_geometry_file_path != "None") {
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
-    std::cout << "[INFO]:: TLD::Construct: Loading STL geometry from " << m_stl_geometry_file_path << std::endl;
     std::string path = std::string(PROJECT_DATA_PATH) + "/" + m_stl_geometry_file_path;
     
     // Preprocess STL to remove potential UTF-8 BOM or invalid header bytes

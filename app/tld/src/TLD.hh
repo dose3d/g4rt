@@ -11,12 +11,17 @@
 #include "G4PVPlacement.hh"
 #include "Configurable.hh"
 #include "VPatient.hh"
+#include "CADMesh.hh"
+#undef Error
+#undef Next
+// FIXME: ROOT się gryzie z CADMeshem i oba mają tak samo nazwane makra zdefiniowane i problem z kolejnością includów czy coś takiego - nie do końca ogarniam.
+// Wyższy poziom C++ tu już wchodzi. 
 
 ///\class TLD
 class TLD : public VPatient {
   public:
     ///
-    TLD(const G4String& label = "TLD", const G4ThreeVector& centre = G4ThreeVector(), G4String tldMediumName = "LiF:Mg,Ti");
+    TLD(const G4String& label = "TLD", const G4ThreeVector& centre = G4ThreeVector(), G4String tldMediumName = "LiF:Mg,Ti", G4String stlGeometryFilePath = "None");
 
     ///
     ~TLD();
@@ -91,6 +96,14 @@ class TLD : public VPatient {
 
     ///
     G4String m_tld_medium;
+
+    /// Path to the file with the geometry of the TLD
+    /// if provided the geometry is being created from the STL file
+    /// otherwise the geometry is being created from the G4Tube
+    G4String m_stl_geometry_file_path;
+
+    /// STL mesh pointer
+    std::shared_ptr<CADMesh::TessellatedMesh> m_stlMesh;
 
     /// Local position, i.e. the position in the mother volume frame
     G4ThreeVector m_centre;

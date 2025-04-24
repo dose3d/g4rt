@@ -29,7 +29,7 @@ def add_voxel(ax, x_center, y_center, z_center, voxel_side_len, dose, min, max):
 
 if __name__ == "__main__":
     
-    path = '/home/geant4/workspace/github/g4rt/output/tld_basic_4/sim/cp10x10/cp10x10_tld_cell.csv'
+    path = '/home/jackie/work/dose3d/g4rt_backup/output/tld_basic_3/sim/cp10x10/cp10x10_tld_voxel.csv'
     dtypes_polars = {
     'X [mm]': pl.Float64,
     'Y [mm]': pl.Float64,

@@ -18,11 +18,15 @@
 # 1) CZĄSTKA
 /gps/particle gamma
 
-# 2) POZYCJA ŹRÓDŁA: płaska powierzchnia (x-y), promień 5 mm, 100 mm przed targetem
+# 2) POZYCJA ŹRÓDŁA:    płaska        powierzchnia (x-y), promień 5 mm, 90 mm przed targetem
 /gps/pos/type Plane
 /gps/pos/shape Circle
 /gps/pos/radius 5 mm
-/gps/pos/centre  0 0 -100 mm
+/gps/pos/centre  0 0 -40 mm
+# Na głębokości - >   - 50 mm   ->    powierzchnia byłaby prawie punktowa.
+# Na głębokości - >   - 40 mm   ->    powierzchnia kołowa średnicy 10 mm      (Koordynaty od -5 mm do 5 mm)
+# Na głębokości - >      0 mm   ->    powierzchnia kołowa średnicy 57.72 mm   (Koordynaty od -28.86 mm do 28.86 mm)
+# Na głębokości - >     50 mm   ->    powierzchnia kołowa średnicy 115.46 mm  (Koordynaty od -57.73 mm do 57.73 mm)
 
 # 3) KIERUNEK: emisja izotropowa, ograniczona do półkuli +Z - stożkowa
 /gps/ang/type iso

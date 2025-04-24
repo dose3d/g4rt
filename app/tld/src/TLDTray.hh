@@ -29,6 +29,8 @@ class TLDTray : public VPatient {
                 G4int m_tld_nX_voxels = 10;
                 G4int m_tld_nY_voxels = 10;
                 G4int m_tld_nZ_voxels = 10;
+
+                G4String m_stl_geometry_file_path = "None";
                 
                 bool m_initialized = false;
             };

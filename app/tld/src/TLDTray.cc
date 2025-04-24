@@ -37,7 +37,7 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
             std::string tld_name = "TLD_" + std::to_string(id_x) + "_" + std::to_string(id_y);
             auto current_centre = G4ThreeVector(initial_x + id_x*tld_dist,
                                                 initial_y + id_y*tld_dist, z);
-            m_tld_detectors.push_back(new TLD(tld_name,current_centre, m_config.m_tld_medium));
+            m_tld_detectors.push_back(new TLD(tld_name,current_centre, m_config.m_tld_medium, m_config.m_stl_geometry_file_path));
             m_tld_detectors.back()->SetIDs(id_x, id_y, 0);
             m_tld_detectors.back()->SetNVoxels('x', m_config.m_tld_nX_voxels);
             m_tld_detectors.back()->SetNVoxels('y', m_config.m_tld_nY_voxels);
@@ -121,6 +121,10 @@ void TLDTray::ParseTomlConfig(){
     std::string medium = config[configPrefix]["TLDMedium"].value_or("");
     if (!medium.empty())
         m_config.m_tld_medium = medium;
+
+    std::string stl_geometry_file_path = config[configPrefix]["TLD_Geometry_File_Path"].value_or("");
+    if (!stl_geometry_file_path.empty())
+        m_config.m_stl_geometry_file_path = stl_geometry_file_path;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -183,7 +183,7 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
 m_global_centre = m_centre;
 
   // Compute global centre and place volume
-  m_centre = svc::getPositionInGlobalFrame(m_centre,this,false);
+  m_centre = svc::transformPosition(m_global_centre,this,svc::Transform::GlobalToLocal);
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label + "PV", tldLV, parentWorld, false, 0));
 
   auto regVol = new G4Region(label + "_G4RegionCuts");

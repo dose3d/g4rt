@@ -158,7 +158,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
               hashedVoxelString+=std::to_string(ix);
               hashedVoxelString+=std::to_string(iy);
               hashedVoxelString+=std::to_string(iz);
-              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+              auto voxelHash = svc::getHashedStrFromIndexes({idX,idY,idZ,ix,iy,iz});
               hashed_map_scoring[voxelHash] = VoxelHit();
               auto voxelCentre = tld_sv->GetVoxelCentre(ix,iy,iz);
             //   G4cout << " voxel "<< ix <<","<<iy<<","<<iz<<" centre: " << voxelCentre << G4endl;
@@ -171,7 +171,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
           }
         }
         } else if (type==Scoring::Type::Cell){
-            auto tldHash = std::hash<std::string>{}(hashedCellString);
+            auto tldHash = svc::getHashedStrFromIndexes({idX,idY,idZ});
             hashed_map_scoring[tldHash] = VoxelHit();
             hashed_map_scoring[tldHash].SetCentre(centre);
             hashed_map_scoring[tldHash].SetId(idX,idY,idZ);

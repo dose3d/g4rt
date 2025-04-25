@@ -30,7 +30,7 @@ EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,0.0] # In mm
+TopPositionInEnv = [0.0,1.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
 [D3DDetector_Layer]
@@ -44,10 +44,9 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 1000 # Per Control Point
+nParticles = 100000 # Per Control Point
 BeamRotation = 0
 PlanInputFile = [
         "plan/custom/fsf_inpact_cp0.dat",
-        # "plan/custom/fsf_inpact_cp1.dat",
-        # "plan/custom/fsf_inpact_cp2.dat",
+        "plan/custom/fsf_inpact_cp1.dat"
 ]

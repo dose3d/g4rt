@@ -58,9 +58,9 @@ void WaterPhantom::ParseTomlConfig(){
   /// 
   m_phantomMedium = config[configObjDetector]["Medium"].value_or("G4_WATER");
 
-  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
-  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
-  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
+  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
+  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
+  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
   
   ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);
@@ -148,9 +148,8 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   regVol->SetProductionCuts(cuts);
   waterPhantomLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(waterPhantomLV);
+  D3DCell::SIZE = std::cbrt( m_sizeX * m_sizeY * m_sizeZ ); // It may differ but for propouse of scoring it is still will be cubed to get the volume. 
 
-  // Set volume for scoring purposes
-  SetVolume(m_sizeX * m_sizeY * m_sizeZ ); // Volume in mm^3
 }
 
 

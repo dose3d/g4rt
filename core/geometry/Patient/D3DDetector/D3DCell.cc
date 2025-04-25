@@ -115,12 +115,6 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   m_centre = svc::transformPosition(m_global_centre,this,svc::Transform::GlobalToLocal);
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, parentWorld, false, 0));
-  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
-  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
-  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
-  auto izocentre = G4ThreeVector(env_pos_x, env_pos_y, env_pos_z);
-  m_global_centre = m_global_centre - IbaImRT::IbaToLocalTranslation + izocentre; 
-  G4cout << "[DEBUG]:: IBA: " << IbaImRT::IbaToLocalTranslation << " Izocentre: " << izocentre  << G4endl;
   G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << "(local), " << m_global_centre << "(global)" <<G4endl;
 
   // std::cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;

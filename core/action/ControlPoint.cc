@@ -160,7 +160,6 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             G4double min_asf = min_fsf;
             for(auto& hit : scoring.second){
                 auto fsf = current_cp->GetFieldScalingFactor(hit.second.GetCentre());
-                fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max_fsf) max_fsf = fsf;
                 if (fsf < min_fsf) min_fsf = fsf;

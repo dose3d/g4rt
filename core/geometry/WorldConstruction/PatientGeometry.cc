@@ -289,11 +289,10 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
  auto tableHeight =  7.0*mm;
- auto tableBox = new G4Box("TableBox", 225.0*mm, 1100.0*mm, tableHeight);
+ auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
- auto table = new G4PVPlacement(nullptr, G4ThreeVector(0.0,900.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "TableBoxPV", dcoverLV, parentPV, false, 0);
-
- if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
+ auto table = new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0);
+if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){
     std::string data_path = PROJECT_DATA_PATH;
@@ -549,111 +548,186 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
       const VoxelHit* hit;
   };
 
-  // std::cout << &voxelData <<std::endl; 
-  auto c_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
-  auto v_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
-  std::ofstream c_outFile_merged, v_outFile_merged;
-  c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
-  v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
+  // Mapping for voxel
+  std::vector<MappingEntry> voxelMappings;
+  {
+      std::unordered_set<std::string> voxelKeys;
+      for (auto& scoring_map : scoring_maps) {
+          for (auto& scoring : scoring_map.second) {
+              if (scoring.first == Scoring::Type::Voxel) {
+                  for (auto& voxel : scoring.second) {
+                      auto& voxel_data = voxel.second;
+                      // Tworzymy unikalny klucz oparty na identyfikatorach
+                      std::string key = "X" + std::to_string(voxel_data.GetGlobalID(0)) + "V" + std::to_string(voxel_data.GetID(0)) +
+                                        "Y" + std::to_string(voxel_data.GetGlobalID(1)) + "V" + std::to_string(voxel_data.GetID(1)) +
+                                        "Z" + std::to_string(voxel_data.GetGlobalID(2)) + "V" + std::to_string(voxel_data.GetID(2));
+                      if (voxelKeys.find(key) == voxelKeys.end()) {
+                          voxelKeys.insert(key);
+                          MappingEntry entry;
+                          entry.centre = voxel_data.GetCentre();
+                          entry.ids[0] = {voxel_data.GetGlobalID(0), voxel_data.GetID(0)};
+                          entry.ids[1] = {voxel_data.GetGlobalID(1), voxel_data.GetID(1)};
+                          entry.ids[2] = {voxel_data.GetGlobalID(2), voxel_data.GetID(2)};
+                          entry.hit = &voxel_data;
+                          voxelMappings.push_back(entry);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  // Mapping for cell
+  std::vector<MappingEntry> cellMappings;
+  {
+      std::unordered_set<std::string> cellKeys;
+      for (auto& scoring_map : scoring_maps) {
+          for (auto& scoring : scoring_map.second) {
+              if (scoring.first == Scoring::Type::Cell) {
+                  for (auto& cell : scoring.second) {
+                      auto& cell_data = cell.second;
+                      std::string key = "X" + std::to_string(cell_data.GetGlobalID(0)) +
+                                        "Y" + std::to_string(cell_data.GetGlobalID(1)) +
+                                        "Z" + std::to_string(cell_data.GetGlobalID(2));
+                      if (cellKeys.find(key) == cellKeys.end()) {
+                          cellKeys.insert(key);
+                          MappingEntry entry;
+                          entry.centre = cell_data.GetCentre();
+                          entry.ids[0] = {cell_data.GetGlobalID(0), cell_data.GetGlobalID(0)};
+                          entry.ids[1] = {cell_data.GetGlobalID(1), cell_data.GetGlobalID(1)};
+                          entry.ids[2] = {cell_data.GetGlobalID(2), cell_data.GetGlobalID(2)};
+                          entry.hit = &cell_data;
+                          cellMappings.push_back(entry);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  // Lambda – wyszukuje wpis (mapping) dla danej pozycji,
+  // zwracając wskaźnik do VoxelHit lub nullptr, jeśli nie znaleziono pasującego obiektu.
+  // tolerance odpowiada zadanej tolerancji (np. 0.5 dla voxel, 5 dla cell). (prostrza, mniej złożona lambda niż poprzednio...)
+  auto getMappingHit = [&](const std::vector<MappingEntry>& mappings, const G4ThreeVector& pos, double tolerance) -> const VoxelHit* {
+      const VoxelHit* bestHit = nullptr;
+      double bestDist2 = std::numeric_limits<double>::max();
+      for (const auto& entry : mappings) {
+          double dx = entry.centre.x() - pos.x();
+          double dy = entry.centre.y() - pos.y();
+          double dz = entry.centre.z() - pos.z();
+          // Sprawdzamy, czy różnice dla każdej osi mieszczą się w tolerancji
+          if (std::abs(dx) <= tolerance && std::abs(dy) <= tolerance && std::abs(dz) <= tolerance) {
+              double dist2 = dx*dx + dy*dy + dz*dz;
+              if (dist2 < bestDist2) {
+                  bestDist2 = dist2;
+                  bestHit = entry.hit;
+              }
+          }
+      }
+      return bestHit;
+  };
+
+
+  auto v_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
+  std::ofstream v_outFile_merged(v_file_merged.c_str(), std::ios::out);
   std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
-  c_outFile_merged << header_merged << std::endl;
   v_outFile_merged << header_merged << std::endl;
   std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
   IO::CreateDirIfNotExits(csv_slices_path);
   std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   double dose = 0.;
-  double fsf = 0.; // field scaling factor
-  double asf = 0.; // angle scaling factor
+  double fsf = 0.; 
+  double asf = 0.; 
   int cellIdX = 0;
   int cellIdY = 0;
   int cellIdZ = 0;
-  for( int x = 0; x < xResolution; x++ ){
-    dose = 0.;
-    fsf = 0.;
-    asf = 0.;
-    cellIdX = -1;
-    cellIdY = -1;
-    cellIdZ = -1;
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << x+1 ;
-    std::string s2(ss.str());
-    auto file =  csv_slices_path+"/img"+s2+".csv";
-    std::ofstream v_outFile;
-    v_outFile.open(file.c_str(), std::ios::out);
-    v_outFile << header << std::endl;
-    for( int y = 0; y < yResolution; y++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((ct_cube_init_x+sizeX*x));
-        currentPos.setY((ct_cube_init_y+sizeY*y));
-        currentPos.setZ((ct_cube_init_z+sizeZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
-        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5, Scoring::Type::Voxel);
-        if(voxelHit){
-          dose = voxelHit->GetDose();
-          fsf = voxelHit->GetFieldScalingFactor();
-          asf = voxelHit->GetAngleScalingFactor();
-          cellIdX = voxelHit->GetGlobalID(0);
-          cellIdY = voxelHit->GetGlobalID(1);
-          cellIdZ = voxelHit->GetGlobalID(2);
-        } else {
-          dose = 0.;
-          fsf = 0.;
-          asf = 0.;
-          cellIdX = -1;
-          cellIdY = -1;
-          cellIdZ = -1;
-        }
-        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf  << std::endl;
-
-        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf << std::endl;
+  for (int x = 0; x < xResolution; x++) {
+      std::ostringstream ss;
+      ss << std::setw(4) << std::setfill('0') << x+1;
+      std::string s2(ss.str());
+      auto file = csv_slices_path + "/img" + s2 + ".csv";
+      std::ofstream v_outFile(file.c_str(), std::ios::out);
+      v_outFile << header << std::endl;
+      for (int y = 0; y < yResolution; y++) {
+          for (int z = 0; z < zResolution; z++) {
+              currentPos.setX(ct_cube_init_x + sizeX * x);
+              currentPos.setY(ct_cube_init_y + sizeY * y);
+              currentPos.setZ(ct_cube_init_z + sizeZ * z);
+              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+              // Szukamy voxel hit – z tolerancją 0.5 (Bo rozmiar woksela)
+              const VoxelHit* voxelHit = getMappingHit(voxelMappings, currentPos, 0.5);
+              if (voxelHit) {
+                  dose = voxelHit->GetDose();
+                  fsf = voxelHit->GetFieldScalingFactor();
+                  asf = voxelHit->GetAngleScalingFactor();
+                  cellIdX = voxelHit->GetGlobalID(0);
+                  cellIdY = voxelHit->GetGlobalID(1);
+                  cellIdZ = voxelHit->GetGlobalID(2);
+              } else {
+                  dose = 0.;
+                  fsf = 0.;
+                  asf = 0.;
+                  cellIdX = -1;
+                  cellIdY = -1;
+                  cellIdZ = -1;
+              }
+              v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
+                        << "," << dose << "," << fsf << "," << asf << std::endl;
+              v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
+                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
+          }
       }
       v_outFile.close();
   }
   v_outFile_merged.close();
 
-    csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
-    IO::CreateDirIfNotExits(csv_slices_path);
-    for( int x = 0; x < xResolution; x++ ){
-    dose = 0.;
-    fsf = 0.;
-    asf = 0.;
-    cellIdX = -1;
-    cellIdY = -1;
-    cellIdZ = -1;
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << x+1 ;
-    std::string s2(ss.str());
-    auto file =  csv_slices_path+"/img"+s2+".csv";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
-    for( int y = 0; y < yResolution; y++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((ct_cube_init_x+sizeX*x));
-        currentPos.setY((ct_cube_init_y+sizeY*y));
-        currentPos.setZ((ct_cube_init_z+sizeZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
-        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedCells,yMappedCells,zMappedCells, 5, Scoring::Type::Cell);
-        if(voxelHit){
-          dose = voxelHit->GetDose();
-          fsf = voxelHit->GetFieldScalingFactor();
-          asf = voxelHit->GetAngleScalingFactor();
-          cellIdX = voxelHit->GetGlobalID(0);
-          cellIdY = voxelHit->GetGlobalID(1);
-          cellIdZ = voxelHit->GetGlobalID(2);
-        } else {
-          dose = 0.;
-          fsf = 0.;
-          asf = 0.;
-          cellIdX = -1;
-          cellIdY = -1;
-          cellIdZ = -1;
-        }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf  << std::endl;
 
-        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf << std::endl;
+  auto c_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
+  std::ofstream c_outFile_merged(c_file_merged.c_str(), std::ios::out);
+  c_outFile_merged << header_merged << std::endl;
+  csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
+  IO::CreateDirIfNotExits(csv_slices_path);
+  for (int x = 0; x < xResolution; x++) {
+      std::ostringstream ss;
+      ss << std::setw(4) << std::setfill('0') << x+1;
+      std::string s2(ss.str());
+      auto file = csv_slices_path + "/img" + s2 + ".csv";
+      std::ofstream c_outFile(file.c_str(), std::ios::out);
+      c_outFile << header << std::endl;
+      for (int y = 0; y < yResolution; y++) {
+          for (int z = 0; z < zResolution; z++) {
+              currentPos.setX(ct_cube_init_x + sizeX * x);
+              currentPos.setY(ct_cube_init_y + sizeY * y);
+              currentPos.setZ(ct_cube_init_z + sizeZ * z);
+              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+              // Szukamy cell hit – z tolerancją 5
+              const VoxelHit* cellHit = getMappingHit(cellMappings, currentPos, 5);
+              if (cellHit) {
+                  dose = cellHit->GetDose();
+                  fsf = cellHit->GetFieldScalingFactor();
+                  asf = cellHit->GetAngleScalingFactor();
+                  cellIdX = cellHit->GetGlobalID(0);
+                  cellIdY = cellHit->GetGlobalID(1);
+                  cellIdZ = cellHit->GetGlobalID(2);
+              } else {
+                  dose = 0.;
+                  fsf = 0.;
+                  asf = 0.;
+                  cellIdX = -1;
+                  cellIdY = -1;
+                  cellIdZ = -1;
+              }
+              c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
+                        << "," << dose << "," << fsf << "," << asf << std::endl;
+              c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
+                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
+          }
       }
       c_outFile.close();
   }

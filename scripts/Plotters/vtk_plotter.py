@@ -73,27 +73,17 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     }
 
     scalar_data = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
-    # observable = 'Dose [Gy]'
-    # observable = "AngleScalingFactor"
-    observable = "FieldScalingFactor"
-    # cell_df = cell_df[cell_df['Z [mm]'] < 5]
-    # cell_df = cell_df[cell_df['Z [mm]'] > -5]
+    observable = 'Dose [Gy]'
 
-    # dose_min = cell_df[observable].min()
-    # dose_max = cell_df[observable].max()
-    
-    # Normalize doses
-    # if dose_min == dose_max:
-    #     cell_df['NormalizedDose'] = 0
-    # else:
-    #     cell_df['NormalizedDose'] = (cell_df[observable] - dose_min) / (dose_max - dose_min)
     
     print("Filling vtkImageData with voxel values...")
-    for index, row in cell_df.iterrows():
-        x_idx = coord_to_index['x'][row['X [mm]']]
-        y_idx = coord_to_index['y'][row['Y [mm]']]
-        z_idx = coord_to_index['z'][row['Z [mm]']]
-        scalar_data[z_idx, y_idx, x_idx] = row[observable]
+    # Convert coordinate mappings to NumPy arrays for fast lookup
+    x_indices = cell_df['X [mm]'].map(coord_to_index['x']).to_numpy()
+    y_indices = cell_df['Y [mm]'].map(coord_to_index['y']).to_numpy()
+    z_indices = cell_df['Z [mm]'].map(coord_to_index['z']).to_numpy()
+
+    # Assign values using NumPy advanced indexing
+    scalar_data[z_indices, y_indices, x_indices] = cell_df[observable].to_numpy()
 
     vtk_data_array = numpy_support.numpy_to_vtk(scalar_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
     imageData.GetPointData().SetScalars(vtk_data_array)
@@ -102,8 +92,8 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     return imageData
 
 def main():
-    # csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_d3ddetector_voxel.csv'
-    csv_path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_21/sim/prostate_imrt_beam0_cp0/prostate_imrt_beam0_cp0_ct_dose_voxel.csv'
+    # csv_path = '/home/geant4/workspace/github/g4rt/output/test_srunet3d_4x4x2_64x64x64_7/sim/cp10x10/cp10x10_ct_dose_cell.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/imrt_test/sim/cp10x10/cp10x10_ct_dose_cell.csv'
     if not os.path.exists(csv_path):
         print(f"CSV file not found at {csv_path}")
         return
@@ -170,7 +160,7 @@ def main():
     print("Adding scalar bar...")
     scalar_bar = vtk.vtkScalarBarActor()
     scalar_bar.SetLookupTable(colorFunc)
-    # scalar_bar.SetTitle("FSF")
+    scalar_bar.SetTitle("Dose [Gy]")
     scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
     scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
     renderer.AddActor2D(scalar_bar)

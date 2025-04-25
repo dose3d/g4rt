@@ -242,7 +242,8 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     }
 
     auto voxelDose = hit->GetDose(); // note: it's in gray already;
-    double cellVolume = Service<GeoSvc>()->Patient()->GetCellVolume();
+    auto size = D3DCell::SIZE; 
+    double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
 

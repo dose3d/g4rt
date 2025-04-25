@@ -333,10 +333,10 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   minZ = svc::round_with_prec((m_sd_centre.z() + translation.z() - sdHColPtr->GetSizeZ() / 2.),8);
   maxZ = svc::round_with_prec((m_sd_centre.z() + translation.z() + sdHColPtr->GetSizeZ() / 2.),8);
 
-  G4cout << "[DEBUG]::VPatientSD:: Defined Collection:" << GetScoringHcName(scoringSdIdx)<< G4endl;
-  G4cout << "[DEBUG]::VPatientSD:: Voxelized SD range x " << sdHColPtr->m_rangeMinX << " - " << sdHColPtr->m_rangeMaxX<< G4endl;
-  G4cout << "[DEBUG]::VPatientSD:: Voxelized SD range y "<< sdHColPtr->m_rangeMinY << " - " << sdHColPtr->m_rangeMaxY<< G4endl;
-  G4cout << "[DEBUG]::VPatientSD:: Voxelized SD range z " << sdHColPtr->m_rangeMinZ << " - " << sdHColPtr->m_rangeMaxZ<< G4endl;
+  LOGSVC_DEBUG("VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
+  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
+  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
+  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
 
   // Fill the information about voxels positioning
   auto nvX = sdHColPtr->m_nVoxelsX;

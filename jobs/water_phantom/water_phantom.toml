@@ -13,7 +13,7 @@ PrintProgressFrequency = 0.001
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = false
+NTupleAnalysis = true
 RunAnalysis = true
 
 [GeoSvc]
@@ -31,8 +31,8 @@ EnviromentSizeZ = 500.0
 EnviromentMedium = "G4_WATER"
 
 [WaterPhantom_Detector]
-Size = [100.0,100.0,400.0]
-Voxelization = [50,50,200] # Number of cells in every direction
+Size = [200.0,200.0,200.0]
+Voxelization = [2,2,2] # Number of cells in every direction
 Medium = "G4_WATER" #G4_WATER, PMMA
 
 [WaterPhantom_Scoring]
@@ -46,6 +46,6 @@ nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
 nParticles = 2000000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
-        "plan/custom/cp5x5.dat"
+        "plan/custom/cp10x10.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
 ]

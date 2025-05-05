@@ -180,7 +180,7 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
 // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
 }
-m_global_centre = m_centre;
+  m_global_centre = m_centre;
 
   // Compute global centre and place volume
   m_centre = svc::transformPosition(m_global_centre,this,svc::Transform::GlobalToLocal);
@@ -244,7 +244,7 @@ void TLD::DefineSensitiveDetector() {
     G4double offsetX = 0.5 * (xmin + xmax);
     G4double offsetY = 0.5 * (ymin + ymax);
     G4double offsetZ = 0.5 * (zmin + zmax);
-    G4ThreeVector sdCentre = m_global_centre + G4ThreeVector(offsetX, offsetY, offsetZ);
+    G4ThreeVector sdCentre = m_centre + G4ThreeVector(offsetX, offsetY, offsetZ);
 
     // Create and register the sensitive detector at shape centre
     auto label = GetName();

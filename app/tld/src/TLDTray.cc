@@ -28,9 +28,10 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
     auto PVName = m_tray_name + "EnvPV";
     SetPhysicalVolume(new G4PVPlacement(&m_rot, m_global_centre, PVName, patientEnvLV, parentPV, false, 0));
     double tld_dist = 2 * TLD::SIZE + 1 * mm;
-    auto initial_x = m_config.m_top_position_in_env.x() - (m_config.m_nX_tld/2) * tld_dist;
-    auto initial_y = m_config.m_top_position_in_env.y() - (m_config.m_nX_tld/2) * tld_dist;
-    auto z = m_config.m_top_position_in_env.z();
+    auto initial_x = m_global_centre.x() -(m_config.m_nX_tld - 1) * tld_dist / 2.0;
+    auto initial_y = m_global_centre.y() -(m_config.m_nY_tld - 1) * tld_dist / 2.0;
+
+    auto z = m_global_centre.z();
 
     for (int id_x = 0; id_x < m_config.m_nX_tld; ++id_x){
         for (int id_y = 0; id_y < m_config.m_nY_tld; ++id_y){
@@ -68,11 +69,7 @@ void TLDTray::LoadConfiguration(){
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
-    m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
-
     m_config.m_tld_medium = "LiF:Mg,Ti";
-
-    m_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
 
     // Any config value is being replaced by the one existing in TOML config 
     ParseTomlConfig();

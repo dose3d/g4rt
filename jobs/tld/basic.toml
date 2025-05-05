@@ -15,7 +15,6 @@ ExportGeometryToGDML = true
 MlcModel = "Simplified"
 
 [TLDTray]
-# Position = [-5.0,-5.0,0.0] TODO: przesunięcie tu nie przesuwa SD - Hit outside scoring volume. Już to ogarnialiśmy przy dose3d detektorze i IBA.  
 Position = [0.0,0.0,0.0] 
 Rotation = [0.0,0.0,0.0]
 TLDVoxelization = [20,20,10]

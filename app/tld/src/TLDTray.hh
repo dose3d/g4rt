@@ -20,7 +20,7 @@ class TLDTray : public VPatient {
             public:
                 std::string m_tld_medium = "None";
 
-                G4int m_nX_tld = 4;
+                G4int m_nX_tld = 3;
                 G4int m_nY_tld = 4;
                 G4int m_nZ_tld = 1;
                 

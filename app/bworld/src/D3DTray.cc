@@ -47,7 +47,7 @@ void D3DTray::LoadConfiguration(){
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
-    m_det_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
+    m_det_config.m_translation_in_local_frame = G4ThreeVector(0.0,0.0,0.0);
 
     m_det_config.m_cell_nX_voxels = 4;
     m_det_config.m_cell_nY_voxels = 4;
@@ -60,7 +60,7 @@ void D3DTray::LoadConfiguration(){
     m_det_config.m_in_layer_positioning_module = "dose3d/geo/Tray/4x5x1_tray.csv";
     m_det_config.m_stl_geometry_file_path = "dose3d/geo/Tray/tray.stl";
 
-    m_det_config.m_top_position_in_env = G4ThreeVector(-85.,0.0,-7.0); // "centre" of the trey is not in the geometrical centre
+    m_det_config.m_translation_in_local_frame = G4ThreeVector(-85.,0.0,-7.0); // "centre" of the trey is not in the geometrical centre
 
     // Any config value is being replaced by the one existing in TOML config 
     ParseTomlConfig();

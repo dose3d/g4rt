@@ -20,6 +20,9 @@
 
 std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_scoring_map_template = std::map<std::string, std::map<std::size_t, VoxelHit>>();
 
+G4double D3DDetector::COVER_WIDTH = 1.00 * mm;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 D3DDetector::D3DDetector(const std::string& label): VPatient(label), m_label(label) {
@@ -276,9 +279,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
         init_y+= layer_width;
       if(m_config.m_mrow_shift && i_layer%2)
         init_x += layer_width/2.;
-      m_d3d_layers.push_back(new D3DMLayer(label,
-                  m_config.m_cell_medium,
-                  m_config.m_mlayer_shift));
+      m_d3d_layers.push_back(new D3DMLayer(label,m_config.m_cell_medium, m_config.m_mlayer_shift));
       m_d3d_layers.back()->SetId(i_layer);
       m_d3d_layers.back()->SetNCells('x',m_config.m_nX_cells);
       m_d3d_layers.back()->SetNCells('z',m_config.m_nZ_cells);
@@ -723,6 +724,7 @@ std::string D3DDetector::SetGeometrySource(){
   std::cout << "SetGeometrySource layer csv?: " << m_config.m_in_layer_positioning_module <<std::endl;
 
   if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
+    ComputeCellsPositioning();
     return geo_type = "Standard";
   }
 
@@ -791,4 +793,24 @@ void D3DDetector::ReadCellsPositioning(){
   }
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void D3DDetector::ComputeCellsPositioning(){
+  
+  G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * D3DDetector::COVER_WIDTH/2.;
+
+  G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * D3DDetector::COVER_WIDTH/2. ; 
+
+  G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
+
+  for(int iz = 0; iz < m_config.m_cell_nZ_voxels; ++iz ){
+    for(int ix = 0; ix < m_config.m_cell_nY_voxels; ++ix ){
+      for(int ix = 0; ix < m_config.m_cell_nX_voxels; ++ix ){
+
+      }
+    }
+  }
+}
+
 

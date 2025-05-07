@@ -194,11 +194,11 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
     auto pv = new G4PVPlacement(nullptr, m_config.m_translation_in_local_frame, "PVStl", dose3dCellLV, parentWorld, false, 0);
-    // auto pv = GetPhysicalVolume();
+  }
 
+  if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0 || geo_type.compare("PositioningFromCsv")==0){
     // Construct individual cells:
-    // TODO: Indexing should be imported as well from external DB
-    int ix = 0;
+    int ix = 0; // TODO: Indexing should be imported as well from external DB
     int iy = 0;
     int iz = 0; // temporary only this will be incrementing
     for(const auto& cell_position : m_d3d_cells_positioning ){
@@ -232,23 +232,23 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     // }
   }
 
-  if(geo_type.compare("PositioningFromCsv")==0){
-    int i_layer = 0;
-    for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-      G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: "
-      << cells_in_layer_positioning.size() << G4endl;
-      auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
-      m_d3d_layers.back()->SetId(i_layer++);
-      m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
-      m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
-      m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
-      processLayerDimensionality(cells_in_layer_positioning);
-    }
-  }
+  // if(geo_type.compare("PositioningFromCsv")==0){
+  //   int i_layer = 0;
+  //   for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
+  //     G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: "
+  //     << cells_in_layer_positioning.size() << G4endl;
+  //     auto label = m_label+"_Layer_"+std::to_string(i_layer);
+  //     m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
+  //     m_d3d_layers.back()->SetId(i_layer++);
+  //     m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
+  //     m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
+  //     m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
+  //     m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
+  //     m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
+  //     m_d3d_layers.back()->IPhysicalVolume::Construct(this);
+  //     processLayerDimensionality(cells_in_layer_positioning);
+  //   }
+  // }
   // if(geo_type.compare("PositioningFromCsv")==0 ||
   //    geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
   //   m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();

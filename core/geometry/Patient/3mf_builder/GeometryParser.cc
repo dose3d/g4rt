@@ -17,10 +17,14 @@ GeometryParser::~GeometryParser() {
 void GeometryParser::load(const std::string& filename,
                        const std::string& sheet)
 {
+
+  py::object sheet_arg = sheet.empty()
+    ? py::object(py::none())
+    : py::object(py::str(sheet));
   // wywołanie get_geometries
   py::object py_list = m_parser_.attr("get_geometries")(
     filename,
-    sheet.empty() ? py::none() : py::str(sheet)
+    sheet_arg
   );
   auto vec = py_list.cast<std::vector<py::dict>>();
 

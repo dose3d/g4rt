@@ -4,7 +4,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Box.hh"
 #include "G4ProductionCuts.hh"
-#include "ModularPhantomSD.hh"
+#include "G4TessellatedSolid.hh"
+#include "G4TriangularFacet.hh"
 #include "NTupleEventAnalisys.hh"
 #include "G4UserLimits.hh"
 #include "toml.hh"
@@ -19,6 +20,14 @@ ModularPhantom::ModularPhantom():VPatient("ModularPhantom"){}
 ///
 ModularPhantom::~ModularPhantom() {
   Destroy();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+ModularPhantom* ModularPhantom::GetInstance() {
+  static ModularPhantom instance;
+  return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,20 +56,18 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   auto* nist = G4NistManager::Instance();
   auto* mat  = nist->FindOrBuildMaterial("G4_Al");
   GeometryParser parser;
-  std::string filename = PROJECT_DATA_PATH + "dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
+  std::string filename = std::string(PROJECT_DATA_PATH) + "dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
   parser.load(filename,"scintillator_mapping_db");
-
+  
   const auto& list = parser.data();
+  
 
-  auto* sdman = G4SDManager::GetSDMpointer();
   for (auto const& obj : list) {
     if (!obj.sc_id.empty()) {
-      auto* sd = new ScintillatorSD(obj.sc_id);
-      sdman->AddNewDetector(sd);
+      std::cout << "Pass cause its Cell" << std::endl;
+      continue;
+      // TODO :: Create cell here? 
     }
-  }
-
-  for (auto const& obj : list) {
     auto* solid = new G4TessellatedSolid(obj.component + "_Solid");
     for (auto const& t : obj.nodes) {
       if (t[0] < 0 || t[1] < 0 || t[2] < 0 ||
@@ -81,10 +88,6 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
     auto* componentLV = new G4LogicalVolume(
       solid, mat, obj.component + "_Logic");
 
-    if (!obj.sc_id.empty()) {
-      auto* sd = sdman->FindSensitiveDetector(obj.sc_id);
-      componentLV->SetSensitiveDetector(sd);
-    }
 
     new G4PVPlacement(nullptr, obj.com, obj.component + "_PV", componentLV, parentWorld, false, 0);
   }
@@ -106,16 +109,14 @@ void ModularPhantom::ConstructSensitiveDetector(){
   std::cout << __FUNCTION__ << " called\n";
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///
-void ModularPhantom::ConstructFullVolumeScoring(const G4String& name){
-  std::cout << __FUNCTION__ << " called\n";
-}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ModularPhantom::DefineSensitiveDetector(){
   std::cout << __FUNCTION__ << " called\n";
+  // I Dont think we need that - SD wil be created by Dose3D detector class.
+
 }
 
 
@@ -124,52 +125,4 @@ void ModularPhantom::DefineSensitiveDetector(){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-std::map<std::size_t, VoxelHit> ModularPhantom::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const{
-
-  std::map<std::size_t, VoxelHit> hashed_map_scoring;
-
-  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_phantomMedium);
-
-  std::string hashedPhantomString = "000";
-
-  if( type==Scoring::Type::Voxel ){
-    auto sv = GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name,true);
-    if(sv==nullptr) return hashed_map_scoring; // no voxelisation for this volume, return empty map
-    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
-      
-    for(int ix=0; ix < sv->m_nVoxelsX; ix++ ){
-      for(int iy=0; iy < sv->m_nVoxelsY; iy++ ){
-        for(int iz=0; iz < sv->m_nVoxelsZ; iz++ ){
-          auto voxelHash = svc::getHashedStrFromIndexes({0,0,0,ix,iy,iz});
-          hashed_map_scoring[voxelHash] = VoxelHit();
-          auto voxelCentre = sv->GetVoxelCentre(ix,iy,iz);
-          // std::cout << voxelCentre.getZ() << std::endl;
-          hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
-          hashed_map_scoring[voxelHash].SetGlobalCentre(centre);
-          hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
-          hashed_map_scoring[voxelHash].SetGlobalId(0,0,0);
-          hashed_map_scoring[voxelHash].SetVolume( sv->GetVoxelVolume() );
-          hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity() * sv->GetVoxelVolume());
-        } // z
-      }   // y
-    }     // x
-  } 
-  else if (type==Scoring::Type::Cell){
-    // auto phantomHash = std::hash<std::string>{}(hashedPhantomString);
-    auto phantomHash = svc::getHashedStrFromIndexes({0,0,0});
-    hashed_map_scoring[phantomHash] = VoxelHit();
-    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
-    hashed_map_scoring[phantomHash].SetCentre(centre);
-    hashed_map_scoring[phantomHash].SetGlobalCentre(centre);
-    hashed_map_scoring[phantomHash].SetId(0,0,0);
-    hashed_map_scoring[phantomHash].SetGlobalId(0,0,0); // Id == GlobalId
-    auto volume = m_sizeX*m_sizeY*m_sizeZ;
-    hashed_map_scoring[phantomHash].SetVolume( volume );
-    hashed_map_scoring[phantomHash].SetMass(Medium->GetDensity()*volume);
-  }
-
-  return hashed_map_scoring;
-}
-
-
+/// 

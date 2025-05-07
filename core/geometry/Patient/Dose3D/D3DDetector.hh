@@ -67,7 +67,8 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4String m_stl_geometry_file_path = "None";
 
         //
-        G4String m_in_layer_positioning_module = "None";
+        G4String m_stl_positioning_file_path = "None";
+        G4String m_in_layer_positioning_module = "None";  // TO BE DELETED
 
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
@@ -119,12 +120,15 @@ class D3DDetector : public VPatient, public GeoComponet {
 
     ///
     std::vector<D3DMLayer*> m_d3d_layers;
+    std::vector<D3DCell*> m_d3d_cells;
+
     
     /// Container for cells positioning read-in from file
-    std::vector<std::vector<G4ThreeVector>> m_d3d_cells_in_layers_positioning;
+    std::vector<std::vector<G4ThreeVector>> m_d3d_cells_in_layers_positioning; // TO BE DELETED
+    std::vector<G4ThreeVector> m_d3d_cells_positioning;
 
     ///
-    void ReadCellsInLayersPositioning();
+    void ReadCellsPositioning();
 
     ///
     static std::map<std::string, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map_template; 

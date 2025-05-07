@@ -46,7 +46,7 @@ class D3DMLayer : public VPatient {
     void DefineSensitiveDetector() override;
 
     ///
-    static std::set<G4String> HitsCollections;
+    // static std::set<G4String> HitsCollections;
 
     ///
     const std::vector<D3DCell*>& GetCells() { return m_d3d_cells; }

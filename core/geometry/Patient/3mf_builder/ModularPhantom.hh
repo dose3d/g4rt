@@ -5,9 +5,12 @@
 #include "VPatient.hh"
 
 ///\class ModularPhantom
-///\brief The Phantom filled with water
 class ModularPhantom : public VPatient {
   public:
+
+  /// 
+  static ModularPhantom *GetInstance();
+
   /// 
   ModularPhantom();
 
@@ -52,8 +55,6 @@ class ModularPhantom : public VPatient {
   ///
   void ConstructSensitiveDetector() override;
 
-  ///
-  void ConstructFullVolumeScoring(const G4String& name);
 
   ///
   std::string m_phantomMedium = "None";

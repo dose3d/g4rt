@@ -14,6 +14,8 @@
 #include "DicomSvc.hh"
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
+#include "ModularPhantom.hh"
+
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -320,7 +322,8 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
 
 }
 
-
+auto modularPhantom = ModularPhantom::GetInstance();
+modularPhantom->Construct(parentPV);
 
 }
 

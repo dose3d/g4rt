@@ -98,6 +98,9 @@ class D3DDetector : public VPatient, public GeoComponet {
     G4bool IsInside(double x, double y, double z) override;
 
     ///
+    static G4double COVER_WIDTH;
+
+    ///
   private:
 
     ///
@@ -129,6 +132,7 @@ class D3DDetector : public VPatient, public GeoComponet {
 
     ///
     void ReadCellsPositioning();
+    void ComputeCellsPositioning();
 
     ///
     static std::map<std::string, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map_template; 

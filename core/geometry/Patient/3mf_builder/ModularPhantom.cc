@@ -84,10 +84,10 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
 
     solid->DumpInfo(); 
 
-    size_t expectedFacets = obj.nodes.size();
-    size_t addedFacets   = solid->GetNumberOfFacets();
-    G4cout << "Expected facets: " << expectedFacets
-          << ", actually added: " << addedFacets << G4endl;
+    // size_t expectedFacets = obj.nodes.size();
+    // size_t addedFacets   = solid->GetNumberOfFacets();
+    // G4cout << "Expected facets: " << expectedFacets
+    //       << ", actually added: " << addedFacets << G4endl;
 
     solid->SetSolidClosed(true);
     auto* componentLV = new G4LogicalVolume(

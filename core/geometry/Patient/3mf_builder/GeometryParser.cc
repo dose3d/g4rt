@@ -38,7 +38,7 @@ void GeometryParser::load(const std::string& filename,
     gd.body      = std::string(py::str(d["body"]));
     // COM
     auto com_py = d["com"].cast<std::vector<double>>();
-    gd.com = { com_py[0]*mm, com_py[1]*mm, com_py[2]*mm };
+    gd.com = { (0/4.)*mm, (0/4.)*mm, (0/4.) *mm};
     // SC id
     gd.sc_id = std::string(py::str(d["sc_id"]));
     // nodes

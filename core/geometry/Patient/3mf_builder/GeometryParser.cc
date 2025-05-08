@@ -15,7 +15,8 @@ GeometryParser::~GeometryParser() {
 }
 
 void GeometryParser::load(const std::string& filename,
-                       const std::string& sheet)
+                          const std::string& csv_filename,
+                          const std::string& sheet)
 {
 
   py::object sheet_arg = sheet.empty()
@@ -24,6 +25,7 @@ void GeometryParser::load(const std::string& filename,
   // wywołanie get_geometries
   py::object py_list = m_parser_.attr("get_geometries")(
     filename,
+    csv_filename,
     sheet_arg
   );
   auto vec = py_list.cast<std::vector<py::dict>>();
@@ -32,13 +34,13 @@ void GeometryParser::load(const std::string& filename,
   geoms_.reserve(vec.size());
   for (auto &d : vec) {
     GeometryData gd;
-    gd.component = d["component"].cast<std::string>();
-    gd.body      = d["body"].cast<std::string>();
+    gd.component = std::string(py::str(d["component"]));
+    gd.body      = std::string(py::str(d["body"]));
     // COM
     auto com_py = d["com"].cast<std::vector<double>>();
     gd.com = { com_py[0]*mm, com_py[1]*mm, com_py[2]*mm };
     // SC id
-    gd.sc_id = d["sc_id"].cast<std::string>();
+    gd.sc_id = std::string(py::str(d["sc_id"]));
     // nodes
     gd.nodes = d["nodes"].cast<std::vector<std::array<int,3>>>();
     // vertices

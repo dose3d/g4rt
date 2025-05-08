@@ -26,7 +26,8 @@ public:
 
   /// Ładuje wszystkie geometrie z Excela
   void load(const std::string& filename,
-            const std::string& sheet = "");
+    const std::string& csv_filename,
+    const std::string& sheet);
 
   /// Zwraca listę obiektów
   const std::vector<GeometryData>& data() const { return geoms_; }

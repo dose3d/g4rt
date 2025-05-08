@@ -294,7 +294,8 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
  auto tableBox = new G4Box("TableBox", 225.0*mm, 1100.0*mm, tableHeight);
  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
  auto table = new G4PVPlacement(nullptr, G4ThreeVector(0.0,900.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "TableBoxPV", dcoverLV, parentPV, false, 0);
-if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
+
+ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){
     std::string data_path = PROJECT_DATA_PATH;
@@ -313,10 +314,10 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
   
 }
 
+
+
 auto modularPhantom = ModularPhantom::GetInstance();
-modularPhantom->Construct(parentPV);
-
-
+modularPhantom->IPhysicalVolume::Construct(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

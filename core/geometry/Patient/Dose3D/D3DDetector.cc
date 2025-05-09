@@ -7,9 +7,9 @@
 #include "G4ProductionCuts.hh"
 #include "Services.hh"
 #include "toml.hh"
-#include "TH2Poly.h"
-#include "TFile.h"
-#include "TTree.h"
+// #include "TH2Poly.h"
+// #include "TFile.h"
+// #include "TTree.h"
 #include "CADMesh.hh"
 #include <vector>
 #include <array>
@@ -106,9 +106,6 @@ void D3DDetector::ParseTomlConfig(){
   m_config.m_stl_positioning_file_path = config[configObjDetector]["Positioning"].value_or("None");
   m_config.m_in_layer_positioning_module = config[configObjDetector]["Positioning"].value_or("None");
 
-  // /// To be deleted
-  // m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
-  // m_config.m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
   ///
   m_config.m_cell_nX_voxels = config[configObjCell]["Voxelization"][0].value_or(0);
   m_config.m_cell_nY_voxels = config[configObjCell]["Voxelization"][1].value_or(0);
@@ -136,8 +133,6 @@ G4bool D3DDetector::LoadDefaultParameterization(){
   m_config.m_cell_nX_voxels = 4;
   m_config.m_cell_nY_voxels = 4;
   m_config.m_cell_nZ_voxels = 4;
-  m_config.m_mrow_shift = true;
-  m_config.m_mlayer_shift = true;
   m_config.m_cell_medium = "PMMA";
   return true;
 }
@@ -199,136 +194,23 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto pv = new G4PVPlacement(nullptr, m_config.m_translation_in_local_frame, "PVStl", dose3dCellLV, parentWorld, false, 0);
   }
 
-  // if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0 || geo_type.compare("PositioningFromCsv")==0){
-    // Construct individual cells:
-    int ix = 0; // TODO: Indexing should be imported as well from external DB
-    int iy = 0;
-    int iz = 0; // temporary only this will be incrementing
-    for(const auto& cell_position : m_d3d_cells_positioning ){
-      auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
-      std::cout << "label = " << label << "  position: " << cell_position << std::endl;
-      m_d3d_cells.push_back(new D3DCell(label,cell_position,m_config.m_cell_medium));
-      m_d3d_cells.back()->SetIDs(ix,iy,iz);
-      m_d3d_cells.back()->SetNVoxels('x',m_config.m_cell_nX_voxels);
-      m_d3d_cells.back()->SetNVoxels('y',m_config.m_cell_nY_voxels);
-      m_d3d_cells.back()->SetNVoxels('z',m_config.m_cell_nZ_voxels);
-      m_d3d_cells.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_cells.back()->IPhysicalVolume::Construct(this);
-      iz++;
-    }
-
-
-    //
-    // int i_layer = 0;
-    // for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-    //   G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: " << cells_in_layer_positioning.size() << G4endl;
-    //   auto label = m_label+"_Layer_"+std::to_string(i_layer);
-    //   m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
-    //   m_d3d_layers.back()->SetId(i_layer++);
-    //   m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
-    //   m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
-    //   m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
-    //   m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
-    //   m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-    //   m_d3d_layers.back()->IPhysicalVolume::Construct(this);
-    //   processLayerDimensionality(cells_in_layer_positioning);
-    // }
-  // }
-
-  // if(geo_type.compare("PositioningFromCsv")==0){
-  //   int i_layer = 0;
-  //   for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-  //     G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: "
-  //     << cells_in_layer_positioning.size() << G4endl;
-  //     auto label = m_label+"_Layer_"+std::to_string(i_layer);
-  //     m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
-  //     m_d3d_layers.back()->SetId(i_layer++);
-  //     m_d3d_layers.back()->SetPosition(m_config.m_translation_in_local_frame);
-  //     m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
-  //     m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
-  //     m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
-  //     m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-  //     m_d3d_layers.back()->IPhysicalVolume::Construct(this);
-  //     processLayerDimensionality(cells_in_layer_positioning);
-  //   }
-  // }
-  // if(geo_type.compare("PositioningFromCsv")==0 ||
-  //    geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
-  //   m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();
-  //   m_config.m_nY_cells = nY_cells.size();
-  //   m_config.m_nZ_cells = nZ_cells.size();
-  // }
-  ///////////////////////////////////////////
-  /// Building standard procedural generated geometry
-  /*
-  if(geo_type.compare("Standard")==0){
-      
-    G4double layer_width = size + (2*cover);
-
-    auto rotation = parentWorld->GetObjectRotation();
-
-    G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * layer_width/2. ; 
-    for(int i_layer = 0; i_layer < m_config.m_nY_cells; ++i_layer ){
-      auto label = m_label+"_Layer_"+std::to_string(i_layer);
-      G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * layer_width/2.;
-      G4double init_z = m_config.m_translation_in_local_frame.getZ() + layer_width/2.;
-      G4cout << "[DEBUG]:: >>> >>> D3DDetector:: Z translation: " << init_z << G4endl;
-      //_______________________________________
-      // Take into account shifts related to layerss parity  
-      // within the detector assembly 
-      if (i_layer>0)
-        init_y+= layer_width;
-      if(m_config.m_mrow_shift && i_layer%2)
-        init_x += layer_width/2.;
-      m_d3d_layers.push_back(new D3DMLayer(label,m_config.m_cell_medium, m_config.m_mlayer_shift));
-      m_d3d_layers.back()->SetId(i_layer);
-      m_d3d_layers.back()->SetNCells('x',m_config.m_nX_cells);
-      m_d3d_layers.back()->SetNCells('z',m_config.m_nZ_cells);
-      ///
-      m_d3d_layers.back()->SetCellNVoxels('x',m_config.m_cell_nX_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
-      m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
-      ///
-      m_d3d_layers.back()->SetPosition('x',init_x);
-      m_d3d_layers.back()->SetPosition('y',init_y);
-      m_d3d_layers.back()->SetPosition('z',init_z);
-      ///
-      m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      ///
-      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
-    } */
-
-    // G4RotationMatrix * RotMat = new G4RotationMatrix();
-
-    // auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "steel2");
-    // auto my_screw = new G4Tubs("screwone",0,2.05*mm,12.0*mm,0,360*degree);
-    // auto pBoxLog1 = new G4LogicalVolume(my_screw, medium.get(), "screwoneLV1");
-    // SetPhysicalVolume(new G4PVPlacement(RotMat, G4ThreeVector(20.725,20.725,0), "ScrewPhys1", pBoxLog1, parentWorld, false, 0));
-
-    // auto pBoxLog2 = new G4LogicalVolume(my_screw, medium.get(), "screwoneLV2");
-    // SetPhysicalVolume(new G4PVPlacement(RotMat, G4ThreeVector(-20.725,20.725,0), "ScrewPhys2", pBoxLog2, parentWorld, false, 0));
-
-    // auto pBoxLog3 = new G4LogicalVolume(my_screw, medium.get(), "screwoneLV3");
-    // SetPhysicalVolume(new G4PVPlacement(RotMat, G4ThreeVector(20.725,-20.725,0), "ScrewPhys3", pBoxLog3, parentWorld, false, 0));
-
-    // auto pBoxLog4 = new G4LogicalVolume(my_screw, medium.get(), "screwoneLV4");
-    // SetPhysicalVolume(new G4PVPlacement(RotMat, G4ThreeVector(-20.725,-20.725,0), "ScrewPhys4", pBoxLog4, parentWorld, false, 0));
-
-    // auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Cu");
-    // auto coverBox = new G4Box("CoverBox", 45.0*mm, 45.0*mm, 7.0*mm);
-    // auto dcoverLV = new G4LogicalVolume(coverBox, Medium.get(), "CoverBoxLV");
-    // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.0,0.0,-213.0), "CoverBoxPV", dcoverLV, parentWorld, false, 0));
-
-    // auto Medium2 = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_Zn");
-    // auto coverBox2 = new G4Box("Cover2Box", 45.0*mm, 45.0*mm, 13.0*mm);
-    // auto dcover2LV = new G4LogicalVolume(coverBox2, Medium2.get(), "CoverBox2LV");
-    // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.0,0.0,-193.0), "CoverBox2PV", dcover2LV, parentWorld, false, 0));
-
-    // auto dcover3LV = new G4LogicalVolume(coverBox, Medium.get(), "CoverBox3LV");
-    // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.0,0.0,-173.0), "CoverBox3PV", dcover3LV, parentWorld, false, 0));
-
+  // Construct individual cells:
+  int ix = 0; // TODO: Indexing should be imported as well from external DB
+  int iy = 0;
+  int iz = 0; // temporary only this will be incrementing
+  for(const auto& cell_position : m_d3d_cells_positioning ){
+    auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
+    std::cout << "label = " << label << "  position: " << cell_position << std::endl;
+    m_d3d_cells.push_back(new D3DCell(label,cell_position,m_config.m_cell_medium));
+    m_d3d_cells.back()->SetIDs(ix,iy,iz);
+    m_d3d_cells.back()->SetNVoxels('x',m_config.m_cell_nX_voxels);
+    m_d3d_cells.back()->SetNVoxels('y',m_config.m_cell_nY_voxels);
+    m_d3d_cells.back()->SetNVoxels('z',m_config.m_cell_nZ_voxels);
+    m_d3d_cells.back()->SetTracksAnalysis(m_tracks_analysis);
+    m_d3d_cells.back()->IPhysicalVolume::Construct(this);
+    iz++;
   }
-  // }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

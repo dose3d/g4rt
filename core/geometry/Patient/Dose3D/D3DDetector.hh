@@ -79,10 +79,6 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_cell_nX_voxels = 0;
         G4int m_cell_nY_voxels = 0;
         G4int m_cell_nZ_voxels = 0;
-        
-        ///
-        bool m_mrow_shift = false;
-        bool m_mlayer_shift = false;
 
         bool m_initialized = false;
     };

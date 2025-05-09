@@ -7,9 +7,6 @@
 #include "G4ProductionCuts.hh"
 #include "Services.hh"
 #include "toml.hh"
-// #include "TH2Poly.h"
-// #include "TFile.h"
-// #include "TTree.h"
 #include "CADMesh.hh"
 #include <vector>
 #include <array>
@@ -68,11 +65,9 @@ void D3DDetector::ParseTomlConfig(){
   auto configPrefix = GetTomlConfigPrefix();
   LOGSVC_INFO("Importing configuration from:\n{}",configFile);
   std::string configObjDetector("Detector");
-  std::string configObjLayer("Layer");
   std::string configObjCell("Cell");
   if(!configPrefix.empty()){ // here it's assummed that the config data is given with prefixed name
     configObjDetector.insert(0,configPrefix+"_");
-    configObjLayer.insert(0,configPrefix+"_");
     configObjCell.insert(0,configPrefix+"_");
   }
   else {
@@ -97,14 +92,13 @@ void D3DDetector::ParseTomlConfig(){
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
 
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
-  // - separated production: cells, layers and the detector)
+  // - separated production: cells and the detector)
   m_config.m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);
   m_config.m_nY_cells = config[configObjDetector]["Voxelization"][1].value_or(0);
   m_config.m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
   ///
   m_config.m_stl_geometry_file_path = config[configObjDetector]["Geometry"].value_or("None");
   m_config.m_stl_positioning_file_path = config[configObjDetector]["Positioning"].value_or("None");
-  m_config.m_in_layer_positioning_module = config[configObjDetector]["Positioning"].value_or("None");
 
   ///
   m_config.m_cell_nX_voxels = config[configObjCell]["Voxelization"][0].value_or(0);
@@ -165,7 +159,6 @@ void D3DDetector::SetConfig(const D3DDetector::Config& config) {
 void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
   auto size = D3DCell::SIZE;
-  auto cover = D3DMLayer::COVER_WIDTH;
 
   auto geo_type = D3DDetector::SetGeometrySource();
   G4cout<< "D3D GEOMETRY CONSTRUCTION: "<< geo_type <<G4endl;
@@ -174,13 +167,6 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   // StlDetectorWithPositioningFromCsv or PositioningFromCsv
   std::set<double> nY_cells;
   std::set<double> nZ_cells;
-
-  auto processLayerDimensionality = [&nY_cells, &nZ_cells](const std::vector<G4ThreeVector>& vecs) {
-      for(const auto& vec:vecs){
-        nY_cells.insert(vec.getY());
-        nZ_cells.insert(vec.getZ());
-      }
-  };
 
   if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
     std::string path = PROJECT_DATA_PATH;
@@ -222,8 +208,6 @@ G4bool D3DDetector::Update() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::DefineSensitiveDetector(){
-  // for (auto& mLayer : m_d3d_layers)
-  //   mLayer->DefineSensitiveDetector();
   for (auto& cell : m_d3d_cells)
     cell->DefineSensitiveDetector();
 }
@@ -296,8 +280,6 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
     }
     //Iterate over all cells in the detector to find any cell that is voxelised for given run collection
     VPatientSD::ScoringVolume* cell_sv = nullptr;
-    // for(const auto& mLayer: m_d3d_layers){
-      // for(const auto& cell: mLayer->GetCells()){
       for(const auto& cell: m_d3d_cells){
         cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,false); // TEMPORARY!!!! to be set to true
         if(cell_sv) break;
@@ -388,18 +370,15 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
   outGateFile.open(fileName.c_str(), std::ios::out);
   outGateFile << "######    time [s]    rotationAngle[deg]    rotationAxisX    rotationAxisY    rotationAxisZ    CellPosX[mm]    CellPosY[mm]    CellPosZ[mm]"<< std::endl; 
   outGateFile << "Time     s\nRotation deg\nTranslation mm" << std::endl; 
-  for(const auto& mLayer: m_d3d_layers){
-    auto cells = mLayer->GetCells();
-    for(const auto& cell: cells){
-      auto label = cell->GetName();
-      auto centre = cell->GetCentre();
-      auto rotationAngle = cell->GetPhysicalVolume()->GetRotation();
-      auto rotation = cell->GetPhysicalVolume()->GetObjectRotation();
-      auto posX = centre.getX()/CLHEP::mm;
-      auto posY = centre.getY()/CLHEP::mm;
-      auto posZ = centre.getZ()/CLHEP::mm;
-      outGateFile << 0.0 <<gateSep<< 0.0  <<gateSep<< 0 <<gateSep<< 1 <<gateSep<< 0 <<gateSep<< posX <<gateSep<< posY <<gateSep<< posZ << std::endl;
-    }
+  for(const auto& cell: m_d3d_cells){
+    auto label = cell->GetName();
+    auto centre = cell->GetCentre();
+    auto rotationAngle = cell->GetPhysicalVolume()->GetRotation();
+    auto rotation = cell->GetPhysicalVolume()->GetObjectRotation();
+    auto posX = centre.getX()/CLHEP::mm;
+    auto posY = centre.getY()/CLHEP::mm;
+    auto posZ = centre.getZ()/CLHEP::mm;
+    outGateFile << 0.0 <<gateSep<< 0.0  <<gateSep<< 0 <<gateSep<< 1 <<gateSep<< 0 <<gateSep<< posX <<gateSep<< posY <<gateSep<< posZ << std::endl;
   }
   outGateFile.close();
 }
@@ -414,51 +393,47 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
   auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_cell_medium);
-  // for(const auto& mLayer: m_d3d_layers){
-    // TODO: hashed_map_scoring.insert(mLayer->GetScoringHashedMap(run_collection,type));
-    // for(const auto& cell: mLayer->GetCells()){
-    for(const auto& cell: m_d3d_cells){
-      auto centre = cell->GetGlobalCentre();
-      auto cIdX = cell->GetIdX();
-      auto cIdY = cell->GetIdY();
-      auto cIdZ = cell->GetIdZ();
+  for(const auto& cell: m_d3d_cells){
+    auto centre = cell->GetGlobalCentre();
+    auto cIdX = cell->GetIdX();
+    auto cIdY = cell->GetIdY();
+    auto cIdZ = cell->GetIdZ();
 
-      if( type==Scoring::Type::Voxel ){ 
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // !!! By now IsAnyCellVoxelised(mLayer,run_collection) && causes 
-        // std::out_of_range, wołamy o mape której nie ma...
-        auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true);
-        if(cell_sv==nullptr) // no voxelisation for this cell, continue
-          continue;
-        auto nvx = cell_sv->m_nVoxelsX;
-        auto nvy = cell_sv->m_nVoxelsY;
-        auto nvz = cell_sv->m_nVoxelsZ;
+    if( type==Scoring::Type::Voxel ){ 
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      // !!! By now IsAnyCellVoxelised(run_collection) && causes 
+      // std::out_of_range, wołamy o mape której nie ma...
+      auto cell_sv = cell->GetSD()->GetRunCollectionReferenceScoringVolume(run_collection,true);
+      if(cell_sv==nullptr) // no voxelisation for this cell, continue
+        continue;
+      auto nvx = cell_sv->m_nVoxelsX;
+      auto nvy = cell_sv->m_nVoxelsY;
+      auto nvz = cell_sv->m_nVoxelsZ;
 
-        for(int ix=0; ix<nvx; ix++ ){
-          for(int iy=0; iy<nvy; iy++ ){
-            for(int iz=0; iz<nvz; iz++ ){
-              auto voxelHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ,ix,iy,iz});
-              hashed_map_scoring[voxelHash] = VoxelHit();
-              hashed_map_scoring[voxelHash].SetCentre(cell_sv->GetVoxelCentre(ix,iy,iz));
-              hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
-              hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
-              hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
-              hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
-            }
+      for(int ix=0; ix<nvx; ix++ ){
+        for(int iy=0; iy<nvy; iy++ ){
+          for(int iz=0; iz<nvz; iz++ ){
+            auto voxelHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ,ix,iy,iz});
+            hashed_map_scoring[voxelHash] = VoxelHit();
+            hashed_map_scoring[voxelHash].SetCentre(cell_sv->GetVoxelCentre(ix,iy,iz));
+            hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
+            hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
+            hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
+            hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
           }
         }
-      } else if (type==Scoring::Type::Cell){
-        auto cellHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ});
-        hashed_map_scoring[cellHash] = VoxelHit();
-        hashed_map_scoring[cellHash].SetCentre(centre);
-        hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
-        hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
-        hashed_map_scoring[cellHash].SetVolume( size*size*size );
-        hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
-        // hashed_map_scoring[cellHash].Print();
       }
+    } else if (type==Scoring::Type::Cell){
+      auto cellHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ});
+      hashed_map_scoring[cellHash] = VoxelHit();
+      hashed_map_scoring[cellHash].SetCentre(centre);
+      hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
+      hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
+      hashed_map_scoring[cellHash].SetVolume( size*size*size );
+      hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
+      // hashed_map_scoring[cellHash].Print();
     }
-  // }
+  }
   return hashed_map_scoring;
 }
 
@@ -471,21 +446,12 @@ G4bool D3DDetector::IsInside(double x, double y, double z) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool D3DDetector::IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const {
-  if(layer){
-    for(const auto& cell: layer->GetCells()){
-      if( cell->IsRunCollectionScoringVolumeVoxelised(run_collection) )
-        return true; // Any cell in layer is voxelised
-    }
+bool D3DDetector::IsAnyCellVoxelised(const G4String& run_collection) const {
+  for(const auto& cell: m_d3d_cells){
+    if( cell->IsRunCollectionScoringVolumeVoxelised(run_collection) )
+      return true; // Any cell is voxelised
   }
   return false;
-}
-////////////////////////////////////////////////////////////////////////////////
-///
-bool D3DDetector::IsAnyCellVoxelised(int idx, const G4String& run_collection) const {
-  if (m_d3d_layers.size()>=idx)
-    return false;
-  return IsAnyCellVoxelised(m_d3d_layers.at(idx),run_collection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -494,24 +460,22 @@ std::string D3DDetector::SetGeometrySource(){
 
   auto geo_type = "";
 
-  std::cout << "SetGeometrySource layer csv?: " << m_config.m_in_layer_positioning_module <<std::endl;
-
-  if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
+  if((m_config.m_stl_geometry_file_path.compare("None")==0)){
     ComputeRegularCellPositioning();
     return geo_type = "Standard";
   }
 
-  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_stl_positioning_file_path.compare("None")==0)){
     LOGSVC_ERROR("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
     return geo_type;
   }
 
-  else if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")!=0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_stl_positioning_file_path.compare("None")!=0)){
     ReadCellsPositioning();
     return geo_type = "PositioningFromCsv";
   }
 
-  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_in_layer_positioning_module.compare("None")!=0)){
+  else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_stl_positioning_file_path.compare("None")!=0)){
     ReadCellsPositioning();
     return geo_type = "StlDetectorWithPositioningFromCsv";
   }
@@ -523,7 +487,6 @@ std::string D3DDetector::SetGeometrySource(){
 ///
 void D3DDetector::ReadCellsPositioning(){
   
-  std::vector<G4ThreeVector> cells_in_layer;
   std::string line;
   if(m_config.m_stl_positioning_file_path.at(0)!='/'){
     std::string path = PROJECT_DATA_PATH;
@@ -545,26 +508,15 @@ void D3DDetector::ReadCellsPositioning(){
             G4String description = "Wrong G4ThreeVector parameters number read-in from FILE!";
             G4Exception("D3DDetector", "G4ThreeVector", FatalErrorInArgument, description.data());
           }
-          cells_in_layer.emplace_back(xyz.at(0),xyz.at(1),xyz.at(2));
           m_d3d_cells_positioning.emplace_back(xyz.at(0),xyz.at(1),xyz.at(2));
-        }
-        else if(!is_first_layer) {
-          LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
-          m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
-          cells_in_layer.clear();
         }
         is_first_layer = false;
       }
-    } 
-    // Add last read-in layer
-    LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
-    m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
-    cells_in_layer.clear();
+    }
   } else {
-    G4String description = "The " + m_config.m_in_layer_positioning_module + " not found";
+    G4String description = "File doesn't exists!";
     G4Exception("D3DDetector", "FILE", FatalErrorInArgument, description.data());
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

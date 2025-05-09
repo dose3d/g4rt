@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "D3DDetector.hh"
-#include "D3DMLayer.hh"
 #include "D3DCell.hh"
 #include "G4Box.hh"
 #include "Services.hh"

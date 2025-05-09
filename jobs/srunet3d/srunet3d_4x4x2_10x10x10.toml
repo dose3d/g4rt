@@ -32,10 +32,6 @@ EnviromentMedium = "Usr_G4AIR20C"
 TranslationInLocalFrame = [0.0,0.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
-
 [D3DDetector_Cell]
 Medium = "RMPS470"
 Voxelization = [5,10,5]

@@ -131,7 +131,7 @@ class D3DDetector : public VPatient, public GeoComponet {
 
     ///
     void ReadCellsPositioning();
-    void ComputeCellsPositioning();
+    void ComputeRegularCellPositioning();
 
     ///
     static std::map<std::string, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map_template; 

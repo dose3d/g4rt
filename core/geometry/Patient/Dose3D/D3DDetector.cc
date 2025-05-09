@@ -199,7 +199,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto pv = new G4PVPlacement(nullptr, m_config.m_translation_in_local_frame, "PVStl", dose3dCellLV, parentWorld, false, 0);
   }
 
-  if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0 || geo_type.compare("PositioningFromCsv")==0){
+  // if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0 || geo_type.compare("PositioningFromCsv")==0){
     // Construct individual cells:
     int ix = 0; // TODO: Indexing should be imported as well from external DB
     int iy = 0;
@@ -233,7 +233,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     //   m_d3d_layers.back()->IPhysicalVolume::Construct(this);
     //   processLayerDimensionality(cells_in_layer_positioning);
     // }
-  }
+  // }
 
   // if(geo_type.compare("PositioningFromCsv")==0){
   //   int i_layer = 0;
@@ -260,6 +260,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   // }
   ///////////////////////////////////////////
   /// Building standard procedural generated geometry
+  /*
   if(geo_type.compare("Standard")==0){
       
     G4double layer_width = size + (2*cover);
@@ -295,7 +296,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       ///
       m_d3d_layers.back()->IPhysicalVolume::Construct(this);
-    }
+    } */
 
     // G4RotationMatrix * RotMat = new G4RotationMatrix();
 
@@ -327,7 +328,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.0,0.0,-173.0), "CoverBox3PV", dcover3LV, parentWorld, false, 0));
 
   }
-  }
+  // }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -724,7 +725,7 @@ std::string D3DDetector::SetGeometrySource(){
   std::cout << "SetGeometrySource layer csv?: " << m_config.m_in_layer_positioning_module <<std::endl;
 
   if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
-    ComputeCellsPositioning();
+    ComputeRegularCellPositioning();
     return geo_type = "Standard";
   }
 
@@ -796,18 +797,21 @@ void D3DDetector::ReadCellsPositioning(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void D3DDetector::ComputeCellsPositioning(){
+void D3DDetector::ComputeRegularCellPositioning(){
   
   G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * D3DDetector::COVER_WIDTH/2.;
-
   G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * D3DDetector::COVER_WIDTH/2. ; 
-
   G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
 
-  for(int iz = 0; iz < m_config.m_cell_nZ_voxels; ++iz ){
-    for(int ix = 0; ix < m_config.m_cell_nY_voxels; ++ix ){
-      for(int ix = 0; ix < m_config.m_cell_nX_voxels; ++ix ){
+  G4double width = D3DCell::SIZE + D3DDetector::COVER_WIDTH;
 
+  for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
+    auto current_z = init_z + iz * width;
+    for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
+    auto current_y = init_y + iy * width;
+      for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
+        auto current_x = init_x + ix * width;
+        m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
       }
     }
   }

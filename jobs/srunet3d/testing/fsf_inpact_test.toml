@@ -2,11 +2,11 @@
 JobName = "fsf_training"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
-PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
 PhspEvtVrtxMultiplicityTreshold = 20
@@ -48,16 +48,15 @@ CellVoxelisedScorer = true
 nParticles = 1000 # Per Control Point
 BeamRotation = 0
 PlanInputFile = [
-        # "plan/custom/srunet_test/fsf_inpact_cp0.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp1.dat"
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_0_0.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_0_1.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_0_3.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_1_3.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_2_0.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x2_2_3.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_3_0.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_3_3.dat",
-        "plan/custom/srunet_test/fsf_inpact_cp0_1x1_2_1.dat",
-        "plan/custom/srunet_test/fsf_inpact_cp0_1x1_1_2.dat",
+        # "plan/custom/custom/cp0_1x2_0_0.dat",
+        # "plan/custom/custom/cp0_1x2_0_1.dat",
+        # "plan/custom/custom/cp0_1x2_0_3.dat",
+        # "plan/custom/custom/cp0_1x2_1_3.dat",
+        # "plan/custom/custom/cp0_1x2_2_0.dat",
+        # "plan/custom/custom/cp0_1x2_2_3.dat",
+        # "plan/custom/custom/cp0_1x1_3_0.dat",
+        # "plan/custom/custom/cp0_1x1_3_3.dat",
+        "plan/custom/custom/cp0_1x1_3_3.dat"
+        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_2_1.dat",
+        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_1_2.dat",
 ]

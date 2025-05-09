@@ -469,9 +469,15 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
     // std::vector<G4ThreeVector> mlc_positioning_y1 = {{-2,1,-600},{-1,1,-600},{1,-1,-600},{-1,1,-600}};
     // std::vector<G4ThreeVector> mlc_positioning_y2 = {{-3,1,-600},{-1,1,-600},{1,-1,-600},{-1,2,-600}};
     auto mlc_centre = G4ThreeVector(0,0,mlc_positioning_y2.front().getZ());
-    auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
+    auto getInfluenceFactor = [&](
+        const std::vector<G4ThreeVector>& mlc_positioning_1,
+        const std::vector<G4ThreeVector>& mlc_positioning_2) -> G4double {
         G4double influence_factor = 0; 
-        for(const auto& leaf_position : mlc_positioning){
+        for(size_t idx=0; idx < mlc_positioning_1.size(); idx++ ){
+            auto leaf_position = mlc_positioning_1.at(idx);
+            auto leaf_position_pair = mlc_positioning_2.at(idx);
+            if((std::abs(leaf_position.getY()) - std::abs(leaf_position_pair.getY())) < 0.00001 )
+                continue;
             auto relative_mlc_position = mlc_centre - position;
             auto relative_leaf_position = leaf_position - position;
             // auto lambda_i = relative_mlc_position.mag() / relative_leaf_position.mag();
@@ -485,9 +491,9 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
         return influence_factor;
     };
     
-    auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1);
+    auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1,mlc_positioning_y2);
     // std::cout << std::endl;
-    auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2);
+    auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2,mlc_positioning_y1);
 
     // return std::pow((influence_factor_y1*influence_factor_y2),1/120.0);
     return influence_factor_y1+influence_factor_y2;

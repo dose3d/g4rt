@@ -14,6 +14,8 @@
 #include "DicomSvc.hh"
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
+#include "ModularPhantom.hh"
+
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -296,13 +298,13 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
 // Creation of bed?
 
-//  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
-//  auto tableHeight =  7.0*mm;
-//  auto tableBox = new G4Box("TableBox", 225.0*mm, 1100.0*mm, tableHeight);
-//  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
-//  auto table = new G4PVPlacement(nullptr, G4ThreeVector(0.0,900.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "TableBoxPV", dcoverLV, parentPV, false, 0);
+ auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
+ auto tableHeight =  7.0*mm;
+ auto tableBox = new G4Box("TableBox", 225.0*mm, 1100.0*mm, tableHeight);
+ auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
+ auto table = new G4PVPlacement(nullptr, G4ThreeVector(0.0,900.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "TableBoxPV", dcoverLV, parentPV, false, 0);
 
-if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
+ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){
     std::string data_path = PROJECT_DATA_PATH;
@@ -312,17 +314,19 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
   auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryGeometryPositionX");
   auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryGeometryPositionY");
   auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryGeometryPositionZ");
-
+  
   auto mesh = CADMesh::TessellatedMesh::FromSTL(supplementaryGeometryPath);
   G4VSolid* solid = mesh->GetSolid();
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", supplementaryGeometryMaterial);
   auto supplementaryGeometryLV = new G4LogicalVolume(solid, Medium.get(), "LVStl_Supplementary");
   m_suplementary_volume = new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0);
-
+  
 }
 
 
 
+auto modularPhantom = ModularPhantom::GetInstance();
+modularPhantom->IPhysicalVolume::Construct(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

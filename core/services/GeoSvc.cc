@@ -395,9 +395,6 @@ void GeoSvc::PerformRequestedExport() {
     ExportToGateGenericRepeater();
   if(thisConfig()->GetValue<bool>("ExportGeometryToGDML"))
     WriteWorldToGdml();
-  auto patient = Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry","Type");
-  if(patient.find("D3DDetector")!=std::string::npos)
-    ExportDose3DLayerPads();
 }
 
 
@@ -433,18 +430,6 @@ void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
   for(const auto& gc : m_scoring_components){
       LOGSVC_INFO("Implement me ...");
       // gc->ExportPositioningToTFile(output_dir); to be repaired to new scoring maps scheme
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void GeoSvc::ExportDose3DLayerPads() const{
-  // TODO!!!: Remove me in future!
-  std::cout << "[INFO] GeoSvc:: ExportDose3DLayerPads..." <<std::endl;
-  std::string output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir");
-  for(const auto& gc : m_scoring_components){
-    if(auto d3d = dynamic_cast<const D3DDetector*>(gc))
-      d3d->ExportLayerPads(output_dir);
   }
 }
 

@@ -147,7 +147,7 @@ G4VPhysicalVolume* WorldConstruction::Construct() { return GetPhysicalVolume(); 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool WorldConstruction::Create() {
-  // MyGeometryTolerance::ResetSurfaceTolerance(0.0005*mm);
+  MyGeometryTolerance::SetSurfaceToleranceExplicit(5*mm);
   // create the world box
   auto worldSize = configSvc()->GetValue<G4ThreeVector>("WorldConstruction", "WorldSize");
   //auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");

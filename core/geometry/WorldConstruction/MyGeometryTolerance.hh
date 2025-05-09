@@ -4,9 +4,11 @@
 
 class MyGeometryTolerance : public G4GeometryTolerance {
   public:
+
     static void ResetSurfaceTolerance(G4double worldExtent) {
-      G4GeometryTolerance* baseTol = G4GeometryTolerance::GetInstance();
-      MyGeometryTolerance* tol = static_cast<MyGeometryTolerance*>(baseTol);
+
+      G4GeometryTolerance* tol = G4GeometryTolerance::GetInstance();
+
       tol->SetSurfaceTolerance(worldExtent);
     }
   };

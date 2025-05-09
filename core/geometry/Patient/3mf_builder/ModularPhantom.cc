@@ -82,7 +82,7 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
         ABSOLUTE));
     }
 
-    solid->DumpInfo(); 
+    // solid->DumpInfo(); 
 
     // size_t expectedFacets = obj.nodes.size();
     // size_t addedFacets   = solid->GetNumberOfFacets();

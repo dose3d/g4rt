@@ -51,11 +51,8 @@ void D3DTray::LoadConfiguration(){
     m_det_config.m_cell_nY_voxels = 4;
     m_det_config.m_cell_nZ_voxels = 4;
 
-    m_det_config.m_mrow_shift = false;
-    m_det_config.m_mlayer_shift = false;
-
     m_det_config.m_cell_medium = "RMPS470";
-    m_det_config.m_in_layer_positioning_module = "dose3d/geo/Tray/4x5x1_tray.csv";
+    m_det_config.m_stl_positioning_file_path = "dose3d/geo/Tray/4x5x1_tray.csv";
     m_det_config.m_stl_geometry_file_path = "dose3d/geo/Tray/tray.stl";
 
 

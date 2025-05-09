@@ -10,7 +10,6 @@
 
 #include "G4PVPlacement.hh"
 #include "D3DCell.hh"
-#include "D3DMLayer.hh"
 #include "Types.hh"
 #include <string>
 
@@ -46,15 +45,13 @@ class D3DDetector : public VPatient, public GeoComponet {
     std::string SetGeometrySource();
     
     ///
-    bool IsAnyCellVoxelised(int idx, const G4String& run_collection) const;
-    bool IsAnyCellVoxelised(D3DMLayer* layer, const G4String& run_collection) const;
+    bool IsAnyCellVoxelised(const G4String& run_collection) const;
 
     ///
     void ExportCellPositioningToCsv(const std::string& path_to_output_dir) const override;
     void ExportVoxelPositioningToCsv(const std::string& path_to_output_dir) const override;
     void ExportPositioningToTFile(const std::string& path_to_output_dir) const override;
     void ExportToGateCsv(const std::string& path_to_output_dir) const override;
-    void ExportLayerPads(const std::string& path_to_output_dir) const;
 
     //
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
@@ -67,7 +64,7 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4String m_stl_geometry_file_path = "None";
 
         //
-        G4String m_in_layer_positioning_module = "None";
+        G4String m_stl_positioning_file_path = "None";
 
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
@@ -79,10 +76,6 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_cell_nX_voxels = 0;
         G4int m_cell_nY_voxels = 0;
         G4int m_cell_nZ_voxels = 0;
-        
-        ///
-        bool m_mrow_shift = false;
-        bool m_mlayer_shift = false;
 
         bool m_initialized = false;
     };
@@ -95,6 +88,9 @@ class D3DDetector : public VPatient, public GeoComponet {
 
     ///
     G4bool IsInside(double x, double y, double z) override;
+
+    ///
+    static G4double COVER_WIDTH;
 
     ///
   private:
@@ -118,13 +114,14 @@ class D3DDetector : public VPatient, public GeoComponet {
     D3DDetector::Config m_config;
 
     ///
-    std::vector<D3DMLayer*> m_d3d_layers;
+    std::vector<D3DCell*> m_d3d_cells;
     
     /// Container for cells positioning read-in from file
-    std::vector<std::vector<G4ThreeVector>> m_d3d_cells_in_layers_positioning;
+    std::vector<G4ThreeVector> m_d3d_cells_positioning;
 
     ///
-    void ReadCellsInLayersPositioning();
+    void ReadCellsPositioning();
+    void ComputeRegularCellPositioning();
 
     ///
     static std::map<std::string, std::map<std::size_t, VoxelHit>> m_hashed_scoring_map_template; 

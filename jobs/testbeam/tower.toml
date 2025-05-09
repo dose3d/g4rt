@@ -28,7 +28,7 @@ EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
 TranslationInLocalFrame = [0.0,0.0,-54.0] # In mm
-# Geometry = "dose3d/geo/Tower/full_tower.stl"
+Geometry = "dose3d/geo/Tower/full_tower.stl"
 Positioning = "dose3d/geo/Tower/full_tower.csv"
 
 [D3DDetector_Layer]

@@ -51,7 +51,7 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium);
   GeometryParser parser;
   std::string db_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
-  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/D3DF_bodies.csv";
+  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/SimpleBodies.csv";
   std::string sheet = "scintillator_mapping_db";
 
   parser.load(db_filename, csv_filename, sheet);
@@ -66,32 +66,32 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
       continue;
 
     }
-    auto* solid = new G4TessellatedSolid(obj.component + "_Solid");
-    for (auto const& t : obj.nodes) {
-      if (t[0] < 0 || t[1] < 0 || t[2] < 0 ||
-          t[0] >= (int)obj.vertices.size() ||
-          t[1] >= (int)obj.vertices.size() ||
-          t[2] >= (int)obj.vertices.size()) {
-        G4cerr<<"Bad triangle idx for "<<obj.component<<G4endl;
-        continue;
+    auto* tessSolid = new G4TessellatedSolid(obj.component + "_Solid");
+
+    for (size_t i = 0; i < obj.nodes.size(); ++i) {
+      const auto& t = obj.nodes[i];
+      G4ThreeVector p1 = obj.vertices[t[0]];
+      G4ThreeVector p2 = obj.vertices[t[1]];
+      G4ThreeVector p3 = obj.vertices[t[2]];
+    
+      G4ThreeVector geomN = (p2 - p1).cross(p3 - p1).unit();
+    
+
+      G4ThreeVector desiredN = obj.normals[i];
+      if (geomN.dot(desiredN) < 0) {
+        auto facet = new G4TriangularFacet(p1, p3, p2, ABSOLUTE);
+        tessSolid->AddFacet(facet->GetFlippedFacet());
+        delete facet;
       }
-      solid->AddFacet(new G4TriangularFacet(
-        obj.vertices[t[0]],
-        obj.vertices[t[1]],
-        obj.vertices[t[2]],
-        ABSOLUTE));
+      else {
+        tessSolid->AddFacet(new G4TriangularFacet(p1, p2, p3, ABSOLUTE));
+      }
     }
-
-    // solid->DumpInfo(); 
-
-    // size_t expectedFacets = obj.nodes.size();
-    // size_t addedFacets   = solid->GetNumberOfFacets();
-    // G4cout << "Expected facets: " << expectedFacets
-    //       << ", actually added: " << addedFacets << G4endl;
-
-    solid->SetSolidClosed(true);
+    // tessSolid->DumpInfo(); 
+    
+    tessSolid->SetSolidClosed(true);
     auto* componentLV = new G4LogicalVolume(
-      solid, mat, obj.component + "_Logic");
+      tessSolid, mat, obj.component + "_Logic");
 
 
     new G4PVPlacement(nullptr, obj.com, obj.component + "_PV", componentLV, parentWorld, false, 0);

@@ -30,20 +30,20 @@ EnviromentSizeY = 190.0
 EnviromentSizeZ = 190.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "IbaImRT_3mf" 
-DataBase = "dose3d/geo/IBA_ImRT/SimpleBodies_512.csv"
 
-[IBA_ImRT] 
+[IBA_ImRT]
+DataBase = "dose3d/geo/IBA_ImRT/SimpleBodies_512.csv"
 Bodies = [
   "Bar","screw","Plate"
 ]
 
 
 
-[RunSvc_Plan] 
-
-nControlPoints = 1    
-BeamRotation = 0      
-nParticles = 50000     
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+# nParticles = [1e4] # Per Control Point
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 50000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

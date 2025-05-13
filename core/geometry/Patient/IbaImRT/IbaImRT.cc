@@ -37,6 +37,9 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
       my_rotation->rotateY(90.0*deg);
       my_rotation->rotateX(90.0*deg);
     }
+  else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf") {
+
+  }
     else {
       LOGSVC_ERROR("Unknown properties of IbaImRT phantom: {}", ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop"));
     }

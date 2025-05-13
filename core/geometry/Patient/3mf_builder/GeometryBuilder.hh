@@ -4,12 +4,12 @@
 #include "G4PVPlacement.hh"
 #include "IPhysicalVolume.hh"
 
-///\class ModularPhantom
-class ModularPhantom : public IPhysicalVolume {
+///\class GeometryBuilder
+class GeometryBuilder : public IPhysicalVolume {
   public:
 
   /// 
-  static ModularPhantom *GetInstance();
+  static GeometryBuilder *GetInstance();
   
   /// 
   void Construct(G4VPhysicalVolume *parentPV) override;
@@ -30,10 +30,10 @@ class ModularPhantom : public IPhysicalVolume {
   private:
   
   /// 
-  ModularPhantom();
+  GeometryBuilder();
   
   /// 
-  ~ModularPhantom();
+  ~GeometryBuilder();
 
 
   ///

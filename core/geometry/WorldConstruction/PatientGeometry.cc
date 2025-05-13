@@ -14,7 +14,7 @@
 #include "DicomSvc.hh"
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
-#include "ModularPhantom.hh"
+#include "GeometryBuilder.hh"
 
 
 namespace {
@@ -325,8 +325,8 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
 
 
-auto modularPhantom = ModularPhantom::GetInstance();
-modularPhantom->IPhysicalVolume::Construct(this);
+auto geometryBuilder = GeometryBuilder::GetInstance();
+geometryBuilder->IPhysicalVolume::Construct(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

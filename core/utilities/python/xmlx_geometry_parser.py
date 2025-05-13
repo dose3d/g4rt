@@ -79,8 +79,10 @@ def get_geometries(excel_file: str,
     # Rename for consistency: ComponentName -> Component_Name
     if 'ComponentName' in meta_df.columns:
         meta_df.rename(columns={'ComponentName': 'Component_Name'}, inplace=True)
+        meta_df.rename(columns={'BodyName': 'Body_Name'}, inplace=True)
     if 'ComponentName' in mesh_df.columns:
         mesh_df.rename(columns={'ComponentName': 'Component_Name'}, inplace=True)
+        mesh_df.rename(columns={'BodyName': 'Body_Name'}, inplace=True)
 
     # Required metadata columns
     required_meta = ['Component_Name', 'Body_Name', 'Co_M_X', 'Co_M_Y', 'Co_M_Z', 'SC_id']
@@ -95,6 +97,9 @@ def get_geometries(excel_file: str,
         raise KeyError(f"Missing mesh columns in CSV: {missing_mesh}")
 
     # Merge on Component_Name
+    mesh_df['Component_Name'] = mesh_df['Component_Name'].str.strip() + "::" + mesh_df['Body_Name'].str.strip()
+    meta_df['Component_Name'] = meta_df['Component_Name'].str.strip() + "::" + meta_df['Body_Name'].str.strip()
+
     df = pd.merge(
         meta_df[required_meta],
         mesh_df[required_mesh],

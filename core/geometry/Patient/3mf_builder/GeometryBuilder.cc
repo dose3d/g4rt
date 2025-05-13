@@ -1,4 +1,4 @@
-#include "ModularPhantom.hh"
+#include "GeometryBuilder.hh"
 #include "G4NistManager.hh"
 #include "GeometryParser.hh"
 #include "G4SystemOfUnits.hh"
@@ -14,44 +14,46 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-ModularPhantom::ModularPhantom():IPhysicalVolume("ModularPhantom"){}
+GeometryBuilder::GeometryBuilder():IPhysicalVolume("GeometryBuilder"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-ModularPhantom::~ModularPhantom() {
+GeometryBuilder::~GeometryBuilder() {
   Destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-ModularPhantom* ModularPhantom::GetInstance() {
-  static ModularPhantom instance;
+GeometryBuilder* GeometryBuilder::GetInstance() {
+  static GeometryBuilder instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ModularPhantom::WriteInfo() {
+void GeometryBuilder::WriteInfo() {
   std::cout << __FUNCTION__ << " called\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ModularPhantom::Destroy() {
+void GeometryBuilder::Destroy() {
   std::cout << __FUNCTION__ << " called\n";
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
+void GeometryBuilder::Construct(G4VPhysicalVolume *parentWorld) {
   std::cout << __FUNCTION__ << " called\n";  
   auto* nist = G4NistManager::Instance();
   auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium);
   GeometryParser parser;
   std::string db_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
-  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/SimpleBodies.csv";
+  // std::string db_filename = "/home/jackie/work/d3df_data-analysis/3d_mesh_DB/d3df_scintillator_mapping_db.xlsx";
+  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/D3DF_bodiesHigh.csv";
+  // std::string csv_filename ="/home/jackie/work/d3df_data-analysis/3d_mesh_DB/D3DF_bodies.csv";
   std::string sheet = "scintillator_mapping_db";
 
   parser.load(db_filename, csv_filename, sheet);
@@ -78,14 +80,15 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
     
 
       G4ThreeVector desiredN = obj.normals[i];
-      if (geomN.dot(desiredN) < 0) {
-        auto facet = new G4TriangularFacet(p1, p3, p2, ABSOLUTE);
-        tessSolid->AddFacet(facet->GetFlippedFacet());
-        delete facet;
-      }
-      else {
+      // if (geomN.dot(desiredN) < 0) {
+      //   auto facet = new G4TriangularFacet(p1, p3, p2, ABSOLUTE);
+      //   // tessSolid->AddFacet(facet->GetFlippedFacet());
+      //   tessSolid->AddFacet(facet);
+      //   delete facet;
+      // }
+      // else {
         tessSolid->AddFacet(new G4TriangularFacet(p1, p2, p3, ABSOLUTE));
-      }
+      // }
     }
     // tessSolid->DumpInfo(); 
     
@@ -102,7 +105,7 @@ void ModularPhantom::Construct(G4VPhysicalVolume *parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4bool ModularPhantom::Update() {
+G4bool GeometryBuilder::Update() {
   std::cout << __FUNCTION__ << " called\n";
   return true;
 }

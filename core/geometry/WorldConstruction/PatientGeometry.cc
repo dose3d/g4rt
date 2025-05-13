@@ -14,7 +14,7 @@
 #include "DicomSvc.hh"
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
-#include "ModularPhantom.hh"
+#include "GeometryBuilder.hh"
 
 
 namespace {
@@ -316,8 +316,8 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
 
 
 
-auto modularPhantom = ModularPhantom::GetInstance();
-modularPhantom->IPhysicalVolume::Construct(this);
+auto geometryBuilder = GeometryBuilder::GetInstance();
+geometryBuilder->IPhysicalVolume::Construct(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

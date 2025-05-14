@@ -13,12 +13,12 @@
 #include "IO.hh"
 #include "VPatientSD.hh"
 #include "IbaImRT.hh"
-#include "GeometryDBReader.hh"
 
 
 std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_scoring_map_template = std::map<std::string, std::map<std::size_t, VoxelHit>>();
 
 G4double D3DDetector::COVER_WIDTH = 1.00 * mm;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -158,6 +158,7 @@ void D3DDetector::SetConfig(const D3DDetector::Config& config) {
 ///
 void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
+  auto size = D3DCell::SIZE;
 
   auto geo_type = D3DDetector::SetGeometrySource();
   G4cout<< "D3D GEOMETRY CONSTRUCTION: "<< geo_type <<G4endl;
@@ -179,42 +180,21 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto pv = new G4PVPlacement(nullptr, m_config.m_translation_in_local_frame, "PVStl", dose3dCellLV, parentWorld, false, 0);
   }
 
-  auto construc_cell = [&](int ix, int iy, int iz, const std::string label, const G4ThreeVector& position){
-    std::cout << "label = " << label << "  position: " << position << std::endl;
-    m_d3d_cells.push_back(new D3DCell(label,position,m_config.m_cell_medium));
+  // Construct individual cells:
+  int ix = 0; // TODO: Indexing should be imported as well from external DB
+  int iy = 0;
+  int iz = 0; // temporary only this will be incrementing
+  for(const auto& cell_position : m_d3d_cells_positioning ){
+    auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz); // TODO: UZUPEŁNIJ OPCJONALNIE LABEL Z DB
+    std::cout << "label = " << label << "  position: " << cell_position << std::endl;
+    m_d3d_cells.push_back(new D3DCell(label,cell_position,m_config.m_cell_medium));
     m_d3d_cells.back()->SetIDs(ix,iy,iz);
     m_d3d_cells.back()->SetNVoxels('x',m_config.m_cell_nX_voxels);
     m_d3d_cells.back()->SetNVoxels('y',m_config.m_cell_nY_voxels);
     m_d3d_cells.back()->SetNVoxels('z',m_config.m_cell_nZ_voxels);
     m_d3d_cells.back()->SetTracksAnalysis(m_tracks_analysis);
     m_d3d_cells.back()->IPhysicalVolume::Construct(this);
-  };
-
-  // Construct individual cells:
-  if(geo_type.compare("GeometryDB")==0){
-    int _ix = 0;
-    G4cout<< "D3D DB CELLS CONSTRUCTION... " <<G4endl;
-    const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
-    for(const auto& _cell_data : db_cells_positioning ){
-      auto _label = m_label + "_Cell_" + _cell_data.sc_id; 
-      LOGSVC_INFO("Defined Cell: {}",_label);
-      construc_cell(_ix,0,0,_label,_cell_data.com);
-      ++_ix;
-    }
-  }
-  else {
-    G4cout<< "D3D CELLS CONSTRUCTION... " <<G4endl;
-    int _ix = 0;
-    int _iy = 0;
-    int _iz = 0;
-    int counter = 0;
-    if(m_d3d_cells_positioning.empty())
-      G4cout << "WARNING: D3D cells positioning is empty!" << G4endl;
-    for(const auto& cell_position : m_d3d_cells_positioning ){
-      auto _label = m_label+"_Cell_"+std::to_string(_ix)+"_"+std::to_string(_iy)+"_"+std::to_string(_iz);
-      construc_cell(_ix,_iy,_iz,_label,cell_position);
-      _iz++;
-    }
+    iz++;
   }
 }
 
@@ -413,6 +393,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
     
   // G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
+  auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_cell_medium);
   for(const auto& cell: m_d3d_cells){
     auto centre = cell->GetGlobalCentre();
@@ -452,7 +433,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashed_map_scoring[cellHash].SetCentre(centre);
       hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
       hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
-      hashed_map_scoring[cellHash].SetVolume( GetCellVolume() );
+      hashed_map_scoring[cellHash].SetVolume( size*size*size );
       hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
       hashed_map_scoring[cellHash].SetLabel(cell->GetName());
       // hashed_map_scoring[cellHash].Print();
@@ -483,11 +464,6 @@ bool D3DDetector::IsAnyCellVoxelised(const G4String& run_collection) const {
 std::string D3DDetector::SetGeometrySource(){
 
   auto geo_type = "";
-
-  const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
-  if(!db_cells_positioning.empty()){
-    return geo_type = "GeometryDB";
-  }
 
   if((m_config.m_stl_geometry_file_path.compare("None")==0)){
     ComputeRegularCellPositioning();
@@ -552,25 +528,19 @@ void D3DDetector::ReadCellsPositioning(){
 ///
 void D3DDetector::ComputeRegularCellPositioning(){
   
-  const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
-  if(!db_cells_positioning.empty()){
-    LOGSVC_INFO("Importing Cells positioning from GeometryDBReader...");
-    for (const auto& cell_info : db_cells_positioning)
-      m_d3d_cells_positioning.push_back(cell_info.com);
-  }
-  else{
-    LOGSVC_INFO("Creating regular Cells positioning...");
-    G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * D3DDetector::COVER_WIDTH/2.;
-    G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * D3DDetector::COVER_WIDTH/2. ; 
-    G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
-    for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
-      auto current_z = init_z + iz * (D3DCell::SIZE.getX() + D3DDetector::COVER_WIDTH);
-      for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
-        auto current_y = init_y + iy * (D3DCell::SIZE.getY() + D3DDetector::COVER_WIDTH);;
-        for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
-          auto current_x = init_x + ix * (D3DCell::SIZE.getZ() + D3DDetector::COVER_WIDTH);;
-          m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
-        }
+  G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * D3DDetector::COVER_WIDTH/2.;
+  G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * D3DDetector::COVER_WIDTH/2. ; 
+  G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
+
+  G4double width = D3DCell::SIZE + D3DDetector::COVER_WIDTH;
+
+  for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
+    auto current_z = init_z + iz * width;
+    for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
+    auto current_y = init_y + iy * width;
+      for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
+        auto current_x = init_x + ix * width;
+        m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
       }
     }
   }

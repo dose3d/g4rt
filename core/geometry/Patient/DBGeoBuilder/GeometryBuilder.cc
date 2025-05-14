@@ -1,5 +1,5 @@
 #include "G4NistManager.hh"
-#include "GeometryDBReader.hh"
+#include "GeometryParser.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Box.hh"
 #include "G4ProductionCuts.hh"
@@ -8,54 +8,13 @@
 #include "NTupleEventAnalisys.hh"
 #include "G4UserLimits.hh"
 #include "GeometryBuilder.hh"
+#include "toml.hh"
 #include "Services.hh"
 #include "D3DCell.hh"
-#include "D3DDetector.hh"
-#include <algorithm>
-#include <cctype>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-///   
-void GeometryBuilder::ParseTomlConfig(){
-  SetTomlConfigFile();
-  auto configFile = GetTomlConfigFile();
-  auto configPrefix = GetTomlConfigPrefix();
-
-  // LOGSVC_INFO("Importing configuration from:\n{}",configFile); // Not Logable RN
-  // if (!svc::checkIfFileExist(configFile)) {
-  //   LOGSVC_CRITICAL("File {} not fount.", configFile);
-  //   G4Exception("GeometryBuilder", "ParseTomlConfig", FatalErrorInArgument, "");
-  // }
-
-  std::cout << "Importing configuration from:\n" << configFile << "\n";
-  auto config = toml::parse_file(configFile);
-  std::cout << config << "\n";
-
-
-  m_centrePositionX = config[configPrefix]["Position"][0].value_or(0.0);
-  m_centrePositionY = config[configPrefix]["Position"][1].value_or(0.0);
-  m_centrePositionZ = config[configPrefix]["Position"][2].value_or(0.0);
-
-  m_phantomRotationX = config[configPrefix]["Rotation"][0].value_or(0.0);
-  m_phantomRotationY = config[configPrefix]["Rotation"][1].value_or(0.0);
-  m_phantomRotationZ = config[configPrefix]["Rotation"][2].value_or(0.0);
-
-  auto* arr = config[configPrefix]["ExcludeObjList"].as_array();
-  if (arr) {
-      for (const auto& val : *arr) {
-          if (const auto* s = val.as_string()) {
-            m_exclusde_object_list.push_back(s->get());
-          }
-      }
-  }
-}
+GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -67,51 +26,29 @@ GeometryBuilder* GeometryBuilder::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 GeometryBuilder::~GeometryBuilder() {
-  
-}
 
-////////////////////////////////////////////////////////////////////////////////
-///
-G4bool GeometryBuilder::LoadParameterization(){
-  // Configurable::ValidateConfig();
-  if(IsTomlConfigExists()){
-    ParseTomlConfig();
-  }
-  else{
-    LoadDefaultParameterization();
-  }
-  return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4bool GeometryBuilder::LoadDefaultParameterization(){
-  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
-  LoadParameterization();
-  const auto& list =  GeometryDBReader::Instance().GetData();
-
-  for (const auto& obj : list) {
-    std::string component_lower = svc::tolower(obj.component);
-
-    // Check if any exclusion string is a case-insensitive substring of the component name
-    bool is_excluded = std::any_of(
-        m_exclusde_object_list.begin(),
-        m_exclusde_object_list.end(),
-        [&](const std::string& excl) {
-            return component_lower.find(svc::tolower(excl)) != std::string::npos;
-        });
-
-    if (is_excluded) {
-        std::cout << "Skipping excluded object: " << obj.component << "\n";
-        continue;
-    }
-
+  auto* nist = G4NistManager::Instance();
+  auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium);
+  GeometryParser parser;
+  std::string db_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
+  // std::string db_filename = "/home/jackie/work/d3df_data-analysis/3d_mesh_DB/d3df_scintillator_mapping_db.xlsx";
+  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/D3DF_bodiesHigh.csv";
+  // std::string csv_filename ="/home/jackie/work/d3df_data-analysis/3d_mesh_DB/D3DF_bodies.csv";
+  std::string sheet = "scintillator_mapping_db";
+  
+  parser.load(db_filename, csv_filename, sheet);
+  
+  const auto& list = parser.data();
+  
+  
+  for (auto const& obj : list) {
     if (obj.sc_id != "nan" && obj.sc_id != "" && !obj.sc_id.empty()) {
+      m_cells.push_back({ obj.sc_id, obj.com });
       continue;
     }
     auto* tessSolid = new G4TessellatedSolid(obj.component + "_Solid");
@@ -130,25 +67,20 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
 
       }
       
-    auto mat = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", std::string(obj.mat));
-
     tessSolid->SetSolidClosed(true);
-    auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
-    G4ThreeVector tranlation;
-      if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf"){
-        tranlation = G4ThreeVector(-95.0,90.0,90.0);
-      }
-      else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
-        tranlation = G4ThreeVector(-271.0,275.0,225.0);
-      }
-      m_rot = G4RotationMatrix();
-      m_rot.rotateX(m_phantomRotationX * deg);
-      m_rot.rotateX(180.0 * deg);
-      m_rot.rotateY(m_phantomRotationY * deg);
-      m_rot.rotateZ(m_phantomRotationZ * deg);
-      new G4PVPlacement(&m_rot, tranlation, obj.component + "_PV", componentLV, parentWorld, false, 0);
+    auto* componentLV = new G4LogicalVolume(
+      tessSolid, mat, obj.component + "_Logic");
+      
+      
+      new G4PVPlacement(nullptr, obj.com, obj.component + "_PV", componentLV, parentWorld, false, 0);
     }
 
   }
-    
+
+  void GeometryBuilder::ParseTomlConfig(){
+    std::cout << __FUNCTION__ << " called\n";
+  }
   
+  
+  ////////////////////////////////////////////////////////////////////////////////
+  /// 

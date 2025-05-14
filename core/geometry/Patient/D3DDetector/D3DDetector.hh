@@ -69,6 +69,10 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
         G4int m_nZ_cells = 0;
+
+        G4ThreeVector m_cell_position = {0., 0., 0.};
+        
+
         /// 
         G4ThreeVector m_translation_in_local_frame;
         

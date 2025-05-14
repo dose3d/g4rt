@@ -46,9 +46,9 @@ set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom
         ${PROJECT_SOURCE_DIR}/geometry/Patient/SciLab
         ${PROJECT_SOURCE_DIR}/geometry/Patient/DishCube
-        ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D
+        ${PROJECT_SOURCE_DIR}/geometry/Patient/D3DDetector
         ${PROJECT_SOURCE_DIR}/geometry/Patient/IbaImRT
-        ${PROJECT_SOURCE_DIR}/geometry/Patient/3mf_builder
+        ${PROJECT_SOURCE_DIR}/geometry/Patient/DBGeoBuilder
         ${PROJECT_SOURCE_DIR}/geometry/Linac
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation/MLC
@@ -90,7 +90,7 @@ gtest_discover_tests(${TESTNAME})
 
 ### Test the Dose3D Detector construction
 set(TESTNAME D3DDetectorTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D/test/D3DDetectorTest.cc)
+add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/D3DDetector/test/D3DDetectorTest.cc)
 target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
 gtest_discover_tests(${TESTNAME})
 

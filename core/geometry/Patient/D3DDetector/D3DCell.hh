@@ -91,6 +91,8 @@ class D3DCell : public VPatient {
     G4int m_cell_voxelization_y = 1;
     G4int m_cell_voxelization_z = 1;
 
+    G4String m_cell_label;
+
     ///
     G4String m_cell_medium;
 

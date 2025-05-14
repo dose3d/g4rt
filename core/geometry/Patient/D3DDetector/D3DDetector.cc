@@ -185,7 +185,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   int iy = 0;
   int iz = 0; // temporary only this will be incrementing
   for(const auto& cell_position : m_d3d_cells_positioning ){
-    auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz);
+    auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz); // TODO: UZUPEŁNIJ OPCJONALNIE LABEL Z DB
     std::cout << "label = " << label << "  position: " << cell_position << std::endl;
     m_d3d_cells.push_back(new D3DCell(label,cell_position,m_config.m_cell_medium));
     m_d3d_cells.back()->SetIDs(ix,iy,iz);
@@ -294,7 +294,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
     std::string file = path_to_out_dir + "/detector_"+run_collection +"_"+size+"_voxel_positioning.csv";
     std::ofstream outFile;
     outFile.open(file.c_str(), std::ios::out);
-    outFile <<"CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep;
+    outFile <<"CellLabel"<<sep<<"CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep;
     outFile <<"VoxelIdX"<<sep<<"VoxelIdY"<<sep<<"VoxelIdZ"<<sep;
     outFile <<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<<sep;
     outFile <<"VoxelPosX[mm]"<<sep<<"VoxelPosY[mm]"<<sep<<"VoxelPosZ[mm]"<< std::endl; // data header
@@ -303,7 +303,8 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
       auto& hit = scoring_volume.second;
       auto hit_centre_global = hit.GetGlobalCentre();
       auto hit_centre = hit.GetCentre();
-      outFile   << hit.GetGlobalID(0) // Cell ID X
+      outFile << hit.GetLabel() // Cell Label   
+        << sep << hit.GetGlobalID(0) // Cell ID X
         << sep  << hit.GetGlobalID(1) // Cell ID Y
         << sep  << hit.GetGlobalID(2) // Cell ID Z
         << sep  << hit.GetID(0) // Voxel ID X
@@ -341,12 +342,13 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
   file = path_to_out_dir + file;
   std::ofstream outFile;
   outFile.open(file.c_str(), std::ios::out);
-  outFile << "CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep<<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<< std::endl; // data header
+  outFile <<"CellLabel"<<sep<< "CellIdX"<<sep<<"CellIdY"<<sep<<"CellIdZ"<<sep<<"CellPosX[mm]"<<sep<<"CellPosY[mm]"<<sep<<"CellPosZ[mm]"<< std::endl; // data header
   auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Cell);
   for(auto& scoring_volume : hashed_scoring_map){ // this is the loop over all cells in geometry layout
     auto& hit = scoring_volume.second;
     auto hit_centre = hit.GetCentre();
-    outFile   << hit.GetID(0) // Cell ID X
+    outFile << hit.GetLabel() // Cell Label   
+      << sep << hit.GetID(0) // Cell ID X
       << sep  << hit.GetID(1) // Cell ID Y
       << sep  << hit.GetID(2) // Cell ID Z
       << sep  << hit_centre.getX() // Cell Position X
@@ -420,6 +422,8 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
             hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
             hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
             hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity()*hashed_map_scoring[voxelHash].GetVolume());
+            hashed_map_scoring[voxelHash].SetLabel(cell->GetName());
+            
           }
         }
       }
@@ -431,6 +435,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
       hashed_map_scoring[cellHash].SetVolume( size*size*size );
       hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
+      hashed_map_scoring[cellHash].SetLabel(cell->GetName());
       // hashed_map_scoring[cellHash].Print();
     }
   }

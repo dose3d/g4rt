@@ -6,12 +6,12 @@
 /gps/pos/type Plane
 /gps/pos/shape Circle
 /gps/pos/radius 5 mm
-/gps/pos/centre  -5 -5 -50 mm
+/gps/pos/centre  0 0 -50 mm
 # Na głębokości - >   - 60 mm   ->    powierzchnia byłaby prawie punktowa.
-# Na głębokości - >   - 50 mm   ->    powierzchnia kołowa średnicy 10 mm      (Koordynaty od -10 mm do 0 mm)
-# Na głębokości - >   - 10 mm   ->    powierzchnia kołowa średnicy 57.72 mm   (Koordynaty od -33.86 mm do 23.86 mm)
-# Na głębokości - >      0 mm   ->    powierzchnia kołowa średnicy 69.28 mm   (Koordynaty od -39.64 mm do 29.64 mm)
-# Na głębokości - >     40 mm   ->    powierzchnia kołowa średnicy 115.46 mm  (Koordynaty od -62.73 mm do 52.73 mm)
+# Na głębokości - >   - 50 mm   ->    powierzchnia kołowa średnicy 10 mm      (Koordynaty od -5 mm do 5 mm)
+# Na głębokości - >   - 10 mm   ->    powierzchnia kołowa średnicy 57.72 mm   (Koordynaty od -28.86 mm do 28.86 mm)
+# Na głębokości - >      0 mm   ->    powierzchnia kołowa średnicy 69.28 mm   (Koordynaty od -34.64 mm do 34.64 mm)
+# Na głębokości - >     40 mm   ->    powierzchnia kołowa średnicy 115.46 mm  (Koordynaty od -57.73 mm do 57.73 mm)
 
 # 3) KIERUNEK: emisja izotropowa, ograniczona do półkuli +Z - stożkowa
 /gps/ang/type iso

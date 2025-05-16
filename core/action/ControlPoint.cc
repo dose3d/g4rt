@@ -137,7 +137,7 @@ void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
         FillMlcFieldScalingFactor();
-        // FillMlcParameterization();
+        FillParameterization();
     }
     else {
         LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
@@ -185,6 +185,56 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
         }
     }
     LOGSVC_INFO("ControlPointRun:: Field Scaling Factor processing - done!");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void ControlPointRun::FillParameterization(){
+    auto current_cp = Service<RunSvc>()->CurrentControlPoint();
+    auto mlc_positioning_y1 = current_cp->MLC()->GetMlcPositioning("Y1");
+    auto mlc_positioning_y2 = current_cp->MLC()->GetMlcPositioning("Y2");
+
+    // Keep only open leafs
+    LOGSVC_INFO("ControlPointRun:: MLC #leafs {}",mlc_positioning_y1.size());
+    std::vector<size_t> indices_to_remove;
+    for(size_t idx = 0; idx < mlc_positioning_y1.size(); idx++){
+        auto leaf_position = mlc_positioning_y1.at(idx);
+        auto leaf_position_pair = mlc_positioning_y2.at(idx);
+        if((std::abs(leaf_position.getY() - leaf_position_pair.getY())) < 0.00001 ){
+            indices_to_remove.push_back(idx);
+        }
+    }
+    // Remove in reverse to avoid shifting
+    for (auto it = indices_to_remove.rbegin(); it != indices_to_remove.rend(); ++it) {
+        mlc_positioning_y1.erase(mlc_positioning_y1.begin() + *it);
+        mlc_positioning_y2.erase(mlc_positioning_y2.begin() + *it);
+    }
+
+    LOGSVC_INFO("ControlPointRun:: Filtered MLC #leafs {}",mlc_positioning_y1.size());
+
+    double total_area = 0.0;
+    double moment_x = 0.0;
+    double moment_y = 0.0;
+
+    double leaf_width = 2.5; // mm
+
+    for(size_t idx=0; idx < mlc_positioning_y1.size(); idx++ ){
+        // Leafs are moving along Y axis
+        double y_length = std::abs(mlc_positioning_y1.at(idx).getY() - mlc_positioning_y2.at(idx).getY());
+        double y_mid = (mlc_positioning_y2.at(idx).getY() + mlc_positioning_y1.at(idx).getY())/2.;
+        total_area += y_length * leaf_width;;
+        moment_x += mlc_positioning_y1.at(idx).getX();
+        moment_y += y_mid;
+
+    }
+    m_beam_mask_area = svc::round_with_prec(total_area,3);
+    LOGSVC_INFO("ControlPointRun:: Field Area: {}",m_beam_mask_area);
+
+    double cx = svc::round_with_prec(moment_x / mlc_positioning_y1.size(),3);
+    double cy = svc::round_with_prec(moment_y / mlc_positioning_y1.size(),3);
+    m_beam_mask_gravity_centre = std::make_pair(cx,cy);
+    LOGSVC_INFO("ControlPointRun:: Field Centre Of Gravity: {},{}",cx,cy);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -476,7 +526,7 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
         for(size_t idx=0; idx < mlc_positioning_1.size(); idx++ ){
             auto leaf_position = mlc_positioning_1.at(idx);
             auto leaf_position_pair = mlc_positioning_2.at(idx);
-            if((std::abs(leaf_position.getY()) - std::abs(leaf_position_pair.getY())) < 0.00001 )
+            if((std::abs(leaf_position.getY() - leaf_position_pair.getY())) < 0.00001 )
                 continue;
             auto relative_mlc_position = mlc_centre - position;
             auto relative_leaf_position = leaf_position - position;

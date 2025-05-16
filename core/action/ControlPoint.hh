@@ -50,6 +50,9 @@ class ControlPointRun : public G4Run {
     void FillMlcFieldScalingFactor();
 
     ///
+    void FillParameterization();
+
+    ///
     double m_beam_mask_area = 1;
     std::pair<double, double> m_beam_mask_gravity_centre = {1,1};
     

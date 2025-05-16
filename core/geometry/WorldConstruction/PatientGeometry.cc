@@ -15,6 +15,7 @@
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
 #include "GeometryBuilder.hh"
+#include "ModularWaterPhantom.hh"
 
 
 namespace {
@@ -270,13 +271,11 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   }else if(envPatientEnvelop.compare("IbaImRT_3mf") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
     ibaImRT->IPhysicalVolume::Construct(this);
-    SetPhysicalVolume(pv);
     m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }
   else if(envPatientEnvelop.compare("ModularWaterPhantom_simplified") == 0 || envPatientEnvelop.compare("ModularWaterPhantom_3mf") == 0){
     auto modularWaterPhantom = ModularWaterPhantom::GetInstance();
-    modularWaterPhantom->SetRotation(m_rotation);
     modularWaterPhantom->IPhysicalVolume::Construct(this);
     modularWaterPhantom->WriteInfo(); 
     m_patient->IPhysicalVolume::Construct(this);
@@ -317,8 +316,7 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
 
 
 
-// auto geometryBuilder = GeometryBuilder::GetInstance();
-// geometryBuilder->Build(this);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

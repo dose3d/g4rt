@@ -69,19 +69,22 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4String m_stl_geometry_file_path = "None";
         G4String m_stl_positioning_file_path = "None";
 
-        //
-        G4String m_stl_positioning_file_path = "None";
+        struct CellInfo {
+          std::string sc_id;
+          G4ThreeVector com;
+        };
+        std::vector<CellInfo> m_db_cells_positioning;  
 
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;
         G4int m_nZ_cells = 0;
 
         G4ThreeVector m_cell_position = {0., 0., 0.};
-        
+
 
         /// 
         G4ThreeVector m_translation_in_local_frame;
-        
+
         ///
         G4int m_cell_nX_voxels = 0;
         G4int m_cell_nY_voxels = 0;

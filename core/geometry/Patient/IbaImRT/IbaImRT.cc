@@ -23,6 +23,8 @@ G4ThreeVector IbaImRT::IbaToLocalTranslation(0.0, 0.0, 0.0);
 ///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
   
+  if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") != "IbaImRT_Full") {
+
   G4VSolid* FullPhantom;
   auto my_rotation = new G4RotationMatrix;
   
@@ -38,9 +40,6 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
       my_rotation->rotateY(90.0*deg);
       my_rotation->rotateX(90.0*deg);
     }
-  else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf") {
-
-  }
     else {
       LOGSVC_ERROR("Unknown properties of IbaImRT phantom: {}", ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop"));
     }
@@ -51,4 +50,10 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
 
     // Note: the position is interpreated as an isocentre nad it's injected in real Iba Frame, thus we have to translate to local frame
     SetPhysicalVolume(new G4PVPlacement(my_rotation, m_position, "IbaImRTPV", FullPhantomLV, parentPV, false, 0));
+  }
+
+  else {
+    auto geometryBuilder = GeometryBuilder::GetInstance();
+    geometryBuilder->Build(parentPV);
+  }
 }

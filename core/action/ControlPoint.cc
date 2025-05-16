@@ -137,6 +137,7 @@ void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
         LOGSVC_INFO("ControlPointRun::EndOfRun...");
         FillMlcFieldScalingFactor();
+        // FillMlcParameterization();
     }
     else {
         LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
@@ -163,7 +164,6 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max_fsf) max_fsf = fsf;
                 if (fsf < min_fsf) min_fsf = fsf;
-
                 auto asf = current_cp->GetAngleScalingFactor(current_cp->GetDegreeRotation(),hit.second.GetCentre());
                 hit.second.SetAngleScalingFactor(asf);
                 if (asf > max_asf) max_asf = asf;

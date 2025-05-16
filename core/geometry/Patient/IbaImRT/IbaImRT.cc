@@ -55,5 +55,9 @@ void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
   else {
     auto geometryBuilder = GeometryBuilder::GetInstance();
     geometryBuilder->Build(parentPV);
+
+    // TODO: Filtrowanie elementów, które chcemy usunąć z IbaImRT
+    // TODO: Musi zostać stworzony jakiś modół który pozwoli pobrać ścieżkę do DB i do CSV z z PhantomWorld
+
   }
 }

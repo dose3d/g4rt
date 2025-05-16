@@ -132,7 +132,15 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
   }
 
- if (unit.compare("ConfigFile") == 0){
+  if (unit.compare("DBGeometryPath")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
+  if (unit.compare("SupplementaryGeometry")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
+  if (unit.compare("ConfigFile") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
   if (unit.compare("ConfigPrefix") == 0){

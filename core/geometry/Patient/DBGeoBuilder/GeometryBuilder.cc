@@ -11,6 +11,7 @@
 #include "toml.hh"
 #include "Services.hh"
 #include "D3DCell.hh"
+#include "D3DDetector.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -34,21 +35,20 @@ GeometryBuilder::~GeometryBuilder() {
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   auto* nist = G4NistManager::Instance();
   auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium);
+  auto path = std::string(PROJECT_DATA_PATH) + "/" + Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "PatientDBPath");
   GeometryParser parser;
-  std::string db_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/d3df_scintillator_mapping_db_updated.xlsx";
-  // std::string db_filename = "/home/jackie/work/d3df_data-analysis/3d_mesh_DB/d3df_scintillator_mapping_db.xlsx";
-  std::string csv_filename = std::string(PROJECT_DATA_PATH) + "/dose3d/geo/IBA_ImRT/D3DF_bodiesHigh.csv";
-  // std::string csv_filename ="/home/jackie/work/d3df_data-analysis/3d_mesh_DB/D3DF_bodies.csv";
+  std::string db_filename = path + "/d3df_scintillator_mapping_db.xlsx";
+  std::string csv_filename = path + "/D3DF_bodies.csv";
   std::string sheet = "scintillator_mapping_db";
   
   parser.load(db_filename, csv_filename, sheet);
-  
+  const auto& list = GeometryDBReader::GetData();
   const auto& list = parser.data();
   
   
   for (auto const& obj : list) {
     if (obj.sc_id != "nan" && obj.sc_id != "" && !obj.sc_id.empty()) {
-      m_cells.push_back({ obj.sc_id, obj.com });
+      D3DDetector::m_db_cells_positioning.push_back({ obj.sc_id, obj.com }); // This should be in GeometryDBReader -> And also parser should be ranamed as GeometryDBReader
       continue;
     }
     auto* tessSolid = new G4TessellatedSolid(obj.component + "_Solid");
@@ -72,7 +72,7 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
       tessSolid, mat, obj.component + "_Logic");
       
       
-      new G4PVPlacement(nullptr, obj.com, obj.component + "_PV", componentLV, parentWorld, false, 0);
+      new G4PVPlacement(nullptr, G4ThreeVector(), obj.component + "_PV", componentLV, parentWorld, false, 0);
     }
 
   }

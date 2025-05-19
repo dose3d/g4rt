@@ -1,8 +1,10 @@
 #include "ModularWaterPhantom.hh"
-#include "G4UnionSolid.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "Services.hh"
+#include "G4SubtractionSolid.hh"
+#include "G4UnionSolid.hh"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -22,8 +24,15 @@ ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
 ///
 void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
 
+    // create the actual phantom
+    auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
+    auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
+    auto envPosX = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
+    auto envPosY = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
+    auto envPosZ = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
+
     std::cout << "ModularWaterPhantom::Construct called" << __FUNCTION__ << " called\n";
-    /*
+
     auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
     auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
     auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
@@ -39,28 +48,28 @@ void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
     auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
     auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
     auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                          "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
+                                          "smallAquaBoxPV1", smallAquaBoxLV, parentPV, false, 0);
     auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                          "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, pv, false, 0);
+                                          "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, parentPV, false, 0);
     auto pv2 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                          "smallAquaBoxPV2", smallAquaBoxLV, pv, false, 0);
+                                          "smallAquaBoxPV2", smallAquaBoxLV, parentPV, false, 0);
     auto pv2_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                          "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, pv, false, 0);
+                                          "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, parentPV, false, 0);
     auto pv3 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV3",   bigAquaBoxLV,   pv, false, 0);
+                                          "bigAquaBoxPV3",   bigAquaBoxLV,   parentPV, false, 0);
     auto pv3_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, pv, false, 0);
+                                          "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, parentPV, false, 0);
     auto pv4 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV4",   bigAquaBoxLV,   pv, false, 0);
+                                          "bigAquaBoxPV4",   bigAquaBoxLV,   parentPV, false, 0);
     auto pv4_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, pv, false, 0);
+                                          "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, parentPV, false, 0);
     auto pv5 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV5",   bigAquaBoxLV,   pv, false, 0);
+                                          "bigAquaBoxPV5",   bigAquaBoxLV,   parentPV, false, 0);
     auto pv5_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, pv, false, 0);
+                                          "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, parentPV, false, 0);
     auto pv6 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
+                                          "bigAquaBoxPV6",   bigAquaBoxLV,   parentPV, false, 0);
     auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
-    */
+                                          "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, parentPV, false, 0);
+
 }

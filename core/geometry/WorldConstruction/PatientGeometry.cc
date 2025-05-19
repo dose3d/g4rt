@@ -65,6 +65,7 @@ void PatientGeometry::Configure() {
   DefineUnit<double>("VoxelSizeXCT");
   DefineUnit<double>("VoxelSizeYCT");
   DefineUnit<double>("VoxelSizeZCT");
+  DefineUnit<std::string>("PatientDBPath");
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   // G4cout << "[DEBUG]:: PatientGeometry:: Configure: DefaultConfig"<< G4endl;
@@ -155,6 +156,9 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
   if (unit.compare("VoxelSizeZCT") == 0){
     thisConfig()->SetTValue<double>(unit, double(1.00));
     }
+  if (unit.compare("PatientDBPath") == 0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+    }
 
 }
 
@@ -192,6 +196,11 @@ bool PatientGeometry::design(void) {
     }
     configFile = m_patient->GetTomlConfigFile();
     G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""<< patientType <<"\" from: "<< configFile << "\n" << G4endl;
+  }
+
+  if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
+    auto path = thisConfig()->GetValue<std::string>("PatientDBPath");
+    // TODO:: GeometryDBReader::LoadDB(path);
   }
   return true;
 }
@@ -249,10 +258,6 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ)-IbaImRT::IbaToLocalTranslation, "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
 
-  // create the actual phantom
-  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
-  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
-
   if (envPatientEnvelop.compare("IbaImRT_Full") == 0 || envPatientEnvelop.compare("IbaImRT_Box") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
     ibaImRT->IPhysicalVolume::Construct(this);
@@ -267,6 +272,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   }
   else if(envPatientEnvelop.compare("ModularWaterPhantom_simplified") == 0 || envPatientEnvelop.compare("ModularWaterPhantom_3mf") == 0){
     auto modularWaterPhantom = ModularWaterPhantom::GetInstance();
+    modularWaterPhantom->SetRotation(m_rotation);
     modularWaterPhantom->IPhysicalVolume::Construct(this);
     modularWaterPhantom->WriteInfo(); 
     m_patient->IPhysicalVolume::Construct(this);

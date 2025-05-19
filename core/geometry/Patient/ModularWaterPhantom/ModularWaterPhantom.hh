@@ -37,8 +37,14 @@ class ModularWaterPhantom: public IPhysicalVolume {
         ///
         void WriteInfo() override {};
 
-        /// Static member variable for translation to Iba Origin
-        static G4ThreeVector IbaToLocalTranslation;
+        ///
+        void SetRotation(G4RotationMatrix* rotation) { m_rotation = rotation; }
+
+        ///
+        G4RotationMatrix* GetRotation() const { return m_rotation; }
+
+        ///
+        G4RotationMatrix* m_rotation;
 
 };
 

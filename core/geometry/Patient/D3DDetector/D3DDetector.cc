@@ -19,7 +19,6 @@ std::map<std::string, std::map<std::size_t, VoxelHit>> D3DDetector::m_hashed_sco
 
 G4double D3DDetector::COVER_WIDTH = 1.00 * mm;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 D3DDetector::D3DDetector(const std::string& label): VPatient(label), m_label(label) {
@@ -184,8 +183,17 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   int ix = 0; // TODO: Indexing should be imported as well from external DB
   int iy = 0;
   int iz = 0; // temporary only this will be incrementing
+  int counter = 0;
   for(const auto& cell_position : m_d3d_cells_positioning ){
-    auto label = m_label+"_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz); // TODO: UZUPEŁNIJ OPCJONALNIE LABEL Z DB
+    auto label = m_label;
+    //TODO: auto& db_cells_positioning = GeometryDBReader::GetCellsPositioning();
+    if (m_db_cells_positioning.empty()){ 
+      label += "_Cell_"+std::to_string(ix)+"_"+std::to_string(iy)+"_"+std::to_string(iz); // TODO: UZUPEŁNIJ OPCJONALNIE LABEL Z DB
+    }
+    else{
+      label += "_Cell_"+m_db_cells_positioning[counter].sc_id; 
+      counter += 1;
+    }
     std::cout << "label = " << label << "  position: " << cell_position << std::endl;
     m_d3d_cells.push_back(new D3DCell(label,cell_position,m_config.m_cell_medium));
     m_d3d_cells.back()->SetIDs(ix,iy,iz);
@@ -533,17 +541,25 @@ void D3DDetector::ComputeRegularCellPositioning(){
   G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
 
   G4double width = D3DCell::SIZE + D3DDetector::COVER_WIDTH;
-
-  for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
-    auto current_z = init_z + iz * width;
-    for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
-    auto current_y = init_y + iy * width;
-      for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
-        auto current_x = init_x + ix * width;
-        m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
+  //TODO: auto& db_cells_positioning = GeometryDBReader::GetCellsPositioning();
+  if(m_db_cells_positioning.empty()){
+    for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
+      auto current_z = init_z + iz * width;
+      for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
+        auto current_y = init_y + iy * width;
+        for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
+          auto current_x = init_x + ix * width;
+          m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
+        }
       }
     }
   }
+  else{
+    for (auto& pos : m_db_cells_positioning){
+      m_d3d_cells_positioning.emplace_back(pos.com.getX(),pos.com.getY(),pos.com.getZ());
+    }
+  }
+
 }
 
 

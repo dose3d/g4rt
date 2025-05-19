@@ -18,6 +18,9 @@
 class D3DDetector : public VPatient, public GeoComponet {
   public:
 
+    /// 
+    struct CellInfo { std::string sc_id; G4ThreeVector com; };
+    inline static std::vector<CellInfo> m_db_cells_positioning;
 
     ///
     D3DDetector(const std::string& label = "D3DDetector");
@@ -59,7 +62,7 @@ class D3DDetector : public VPatient, public GeoComponet {
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
     //
-    G4double GetCellVolume() const override { return D3DCell::SIZE.getX() * D3DCell::SIZE.getY() * D3DCell::SIZE.getZ(); };
+
 
     class Config {
       public:
@@ -69,11 +72,6 @@ class D3DDetector : public VPatient, public GeoComponet {
         G4String m_stl_geometry_file_path = "None";
         G4String m_stl_positioning_file_path = "None";
 
-        struct CellInfo {
-          std::string sc_id;
-          G4ThreeVector com;
-        };
-        std::vector<CellInfo> m_db_cells_positioning;  
 
         G4int m_nX_cells = 0;
         G4int m_nY_cells = 0;

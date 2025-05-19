@@ -21,12 +21,6 @@ class GeometryBuilder : public TomlConfigModule {
     void LoadConfiguration();
     
     
-    struct CellInfo {
-      std::string sc_id;
-      G4ThreeVector com;
-    };
-    std::vector<CellInfo> m_cells;  
-    
     // Phantom parameters
     std::string m_phantomMedium = "RW3"; 
     G4double m_centrePositionX = 0.0;
@@ -39,9 +33,6 @@ class GeometryBuilder : public TomlConfigModule {
 
     // Geometry lifecycle
     void Build(G4VPhysicalVolume* parentPV);
-    
-    // Acces to cell information
-    const std::vector<CellInfo>& GetCells() const { return m_cells; }
     
     
     class Config { // Maybe not neccesary to exist? 

@@ -199,8 +199,8 @@ bool PatientGeometry::design(void) {
   }
 
   if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
-    auto path = std::string(PROJECT_LOCATION_PATH) + "/submodules/" + thisConfig()->GetValue<std::string>("PatientDBPath");
-    GeometryDBReader::Instance().LoadDataBase(path);
+    auto path = thisConfig()->GetValue<std::string>("PatientDBPath");
+    // TODO:: GeometryDBReader::LoadDB(path);
   }
   return true;
 }
@@ -258,10 +258,6 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ)-IbaImRT::IbaToLocalTranslation, "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
 
-  // create the actual phantom
-  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
-  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
-
   if (envPatientEnvelop.compare("IbaImRT_Full") == 0 || envPatientEnvelop.compare("IbaImRT_Box") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
     ibaImRT->IPhysicalVolume::Construct(this);
@@ -276,6 +272,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   }
   else if(envPatientEnvelop.compare("ModularWaterPhantom_simplified") == 0 || envPatientEnvelop.compare("ModularWaterPhantom_3mf") == 0){
     auto modularWaterPhantom = ModularWaterPhantom::GetInstance();
+    modularWaterPhantom->SetRotation(m_rotation);
     modularWaterPhantom->IPhysicalVolume::Construct(this);
     modularWaterPhantom->WriteInfo(); 
     m_patient->IPhysicalVolume::Construct(this);

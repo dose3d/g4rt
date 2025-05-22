@@ -12,6 +12,10 @@ GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
 
+void GeometryDBReader::Finalize() {
+    std::cout << "[DEBUG]:: GeometryDBReader manual finalizer\n";
+    m_parser = py::object();
+}
 
 GeometryDBReader& GeometryDBReader::Instance() {
     static GeometryDBReader instance;

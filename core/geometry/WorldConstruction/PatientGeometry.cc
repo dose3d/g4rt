@@ -34,6 +34,7 @@ PatientGeometry::PatientGeometry()
 ///
 PatientGeometry::~PatientGeometry() {
   configSvc()->Unregister(thisConfig()->GetName());
+  GeometryDBReader::Instance().Finalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

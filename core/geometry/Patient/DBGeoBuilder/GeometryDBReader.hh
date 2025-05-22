@@ -33,12 +33,14 @@ private:
     
     // Private constructor for singleton
     GeometryDBReader();
+    ~GeometryDBReader() = default;
 
 public:
-    ~GeometryDBReader() = default;
 
     // Singleton accessor
     static GeometryDBReader& Instance();
+
+    void Finalize();
 
     // Deleted copy/move
     GeometryDBReader(const GeometryDBReader&) = delete;

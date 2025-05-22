@@ -336,6 +336,7 @@ void RunSvc::Finalize() {
   LogSvc::ShutDown();
 
   
+  GeometryDBReader::Instance().Finalize();
   py::finalize_interpreter();
 
 }

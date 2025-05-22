@@ -9,7 +9,6 @@
 #include <pybind11/stl.h>
 #include <G4ThreeVector.hh>
 
-
 namespace py = pybind11;
 
 
@@ -19,7 +18,6 @@ struct GeometryData {
     std::string                     body;           // Body identifier
     G4ThreeVector                   com;            // Center of mass
     std::string                     sc_id;          // Scintilator identifier
-    std::string                     mat;          // Material name
     std::vector<std::array<int,3>>  nodes;          // Node IDs
     std::vector<G4ThreeVector>      vertices;       // Vertex positions
     std::vector<G4ThreeVector>      normals;        // Vertex normals
@@ -30,25 +28,17 @@ class GeometryDBReader {
 private:
     py::object m_parser;                                        // Python parser object
     std::vector<GeometryData> geoms_;                           // Parsed geometry entries
-
-    struct CellInfo { 
-        std::string sc_id; 
-        G4ThreeVector com;
-        CellInfo(const std::string& id, const G4ThreeVector& vec): sc_id(id), com(vec) {}
-    };
-
-
-    static std::vector<CellInfo> m_db_cells_positioning;        // Cells positioning data
+    struct CellInfo { std::string sc_id; G4ThreeVector com; };
+    inline static std::vector<CellInfo> m_db_cells_positioning; // Cells positioning data
     
     // Private constructor for singleton
     GeometryDBReader();
+
+public:
     ~GeometryDBReader() = default;
 
-    public:
     // Singleton accessor
     static GeometryDBReader& Instance();
-
-    void Finalize();
 
     // Deleted copy/move
     GeometryDBReader(const GeometryDBReader&) = delete;
@@ -65,6 +55,11 @@ private:
 
     // Access cells positioning data 
     const std::vector<CellInfo>& GetCellsPositioning() const { return m_db_cells_positioning; } 
+
+    // Add single cell (for use inside load)
+    void AddCell(const std::string& sc_id, const G4ThreeVector& com) {
+        m_db_cells_positioning.push_back({sc_id, com});
+    }
 };
 
 #endif // GEOMETRY_PARSER_HH

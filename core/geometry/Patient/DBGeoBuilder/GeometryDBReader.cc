@@ -1,5 +1,4 @@
 #include "GeometryDBReader.hh"
-#include "Services.hh"
 
 #include <stdexcept>
 
@@ -9,16 +8,11 @@
 
 namespace py = pybind11;
 
-std::vector<GeometryDBReader::CellInfo> GeometryDBReader::m_db_cells_positioning;
-
 GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
 
-void GeometryDBReader::Finalize() {
-    std::cout << "[DEBUG]:: GeometryDBReader manual finalizer\n";
-    
-}
+GeometryDBReader::~GeometryDBReader() = default;
 
 GeometryDBReader& GeometryDBReader::Instance() {
     static GeometryDBReader instance;
@@ -28,9 +22,7 @@ GeometryDBReader& GeometryDBReader::Instance() {
 // Load and parse geometry data from Excel/CSV
 void GeometryDBReader::LoadDataBase(const std::string& path)
 {
-    std::cout << "Loading geoemtry data from: "<< path << std::endl;
-
-    db_filename = path + "/D3DF_bodies.xlsx";
+    db_filename = path + "/d3df_scintillator_mapping_db.xlsx";
     csv_filename = path + "/D3DF_bodies.csv";
     sheet = "scintillator_mapping_db";
     
@@ -55,40 +47,12 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         // Center of mass 
         auto com_py = d["com"].cast<std::vector<double>>();
-        G4ThreeVector tranlation;
-        if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf"){
-            tranlation = G4ThreeVector(-95.0,90.0,90.0);
-        }
-        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
-            tranlation = G4ThreeVector(-271.0,275.0,225.0);
-        }
-        // gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
-
-        auto temp_vec = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm);
-        temp_vec.rotate(180.0*deg, G4ThreeVector(1.0,0.0,0.0));
-        gd.com = temp_vec+ tranlation;
-
-        // Material name
-        gd.mat = py::cast<std::string>(d["material"]);
+        gd.com = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm );
 
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
-        if (!(gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == "")){
-            /* NOTE: CAD Export Precision
-            When exporting vertices from CAD software (e.g., Fusion 360), floating-point precision limitations 
-            may cause positional "blurring" (typically ±1e-5 to ±1e-7 units). This occurs because:  
-            1. CAD kernels use double-precision math internally  
-            2. Export formats (STEP/IGES) serialize with limited precision  
-            3. Geometric operations accumulate floating-point errors  
-            Mitigation:
-            Apply coordinated rounding to vertex coordinates using a geometric epsilon (e.g., 1e-6) to:  
-            - Eliminate false-positive differences in downstream processing  
-            - Ensure topological consistency  
-            - Avoid phantom gaps in meshes/B-rep models
-            However, we apply this correction only to cells positioning.
-            */
-            auto centre_of_mass = svc::round_with_prec(gd.com, 6);
-            m_db_cells_positioning.emplace_back(gd.sc_id, centre_of_mass);
+        if (gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == ""){
+            AddCell(gd.sc_id, gd.com);
         }
 
         // Nodes
@@ -112,8 +76,5 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         geoms_.push_back(std::move(gd));
     }
-    m_parser = py::object(); 
-
-    std::cout<< "Got #" << m_db_cells_positioning.size() << " cell entries." << std::endl;
 }
 

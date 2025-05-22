@@ -1,5 +1,5 @@
 #include "G4NistManager.hh"
-#include "GeometryParser.hh"
+#include "GeometryDBReader.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Box.hh"
 #include "G4ProductionCuts.hh"
@@ -34,21 +34,14 @@ GeometryBuilder::~GeometryBuilder() {
 ///
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   auto* nist = G4NistManager::Instance();
-  auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium);
-  auto path = std::string(PROJECT_DATA_PATH) + "/" + Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "PatientDBPath");
-  GeometryParser parser;
-  std::string db_filename = path + "/d3df_scintillator_mapping_db.xlsx";
-  std::string csv_filename = path + "/D3DF_bodies.csv";
-  std::string sheet = "scintillator_mapping_db";
+  auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium); // Default temp material
   
-  parser.load(db_filename, csv_filename, sheet);
-  const auto& list = GeometryDBReader::GetData();
-  const auto& list = parser.data();
+  
+  const auto& list =  GeometryDBReader::Instance().GetData();
   
   
   for (auto const& obj : list) {
     if (obj.sc_id != "nan" && obj.sc_id != "" && !obj.sc_id.empty()) {
-      D3DDetector::m_db_cells_positioning.push_back({ obj.sc_id, obj.com }); // This should be in GeometryDBReader -> And also parser should be ranamed as GeometryDBReader
       continue;
     }
     auto* tessSolid = new G4TessellatedSolid(obj.component + "_Solid");

@@ -15,6 +15,7 @@
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
 #include "GeometryBuilder.hh"
+#include "GeometryDBReader.hh"
 #include "ModularWaterPhantom.hh"
 
 
@@ -200,7 +201,7 @@ bool PatientGeometry::design(void) {
 
   if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
     auto path = thisConfig()->GetValue<std::string>("PatientDBPath");
-    // TODO:: GeometryDBReader::LoadDB(path);
+    GeometryDBReader::Instance().LoadDataBase(path);
   }
   return true;
 }

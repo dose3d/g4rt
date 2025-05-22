@@ -18,9 +18,6 @@
 class D3DDetector : public VPatient, public GeoComponet {
   public:
 
-    /// 
-    struct CellInfo { std::string sc_id; G4ThreeVector com; };
-    inline static std::vector<CellInfo> m_db_cells_positioning;
 
     ///
     D3DDetector(const std::string& label = "D3DDetector");

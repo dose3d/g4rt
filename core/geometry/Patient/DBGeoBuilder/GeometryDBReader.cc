@@ -1,4 +1,4 @@
-#include "GeometryParser.hh"
+#include "GeometryDBReader.hh"
 
 #include <stdexcept>
 
@@ -8,21 +8,29 @@
 
 namespace py = pybind11;
 
-GeometryParser::GeometryParser()
+GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
 
-GeometryParser::~GeometryParser() = default;
+GeometryDBReader::~GeometryDBReader() = default;
+
+GeometryDBReader& GeometryDBReader::Instance() {
+    static GeometryDBReader instance;
+    return instance;
+}
 
 // Load and parse geometry data from Excel/CSV
-void GeometryParser::load(const std::string& filename,
-                          const std::string& csv_filename,
-                          const std::string& sheet)
+void GeometryDBReader::LoadDataBase(const std::string& path)
 {
+    db_filename = path + "/d3df_scintillator_mapping_db.xlsx";
+    csv_filename = path + "/D3DF_bodies.csv";
+    sheet = "scintillator_mapping_db";
+    
+
     py::object sheet_arg = sheet.empty()
     ? py::object(py::none())
     : py::object(py::str(sheet));
-    py::object py_list = m_parser.attr("get_geometries")(filename, csv_filename, sheet_arg);
+    py::object py_list = m_parser.attr("get_geometries")(db_filename, csv_filename, sheet_arg);
     auto vec = py_list.cast<std::vector<py::dict>>();
 
     geoms_.clear();
@@ -35,7 +43,7 @@ void GeometryParser::load(const std::string& filename,
         gd.component = py::cast<std::string>(d["component"]);
         
         // Body name / identifier
-        gd.body      = py::cast<std::string>(d["body"]);
+        gd.body = py::cast<std::string>(d["body"]);
 
         // Center of mass 
         auto com_py = d["com"].cast<std::vector<double>>();
@@ -43,6 +51,9 @@ void GeometryParser::load(const std::string& filename,
 
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
+        if (gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == ""){
+            AddCell(gd.sc_id, gd.com);
+        }
 
         // Nodes
         gd.nodes = d["nodes"].cast<std::vector<std::array<int,3>>>();

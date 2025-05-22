@@ -33,7 +33,6 @@ Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-# nParticles = [1e4] # Per Control Point
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
 nParticles = 5000      # This will overwrite Rotation value for all below plan files!

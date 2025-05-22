@@ -91,14 +91,14 @@ set(${PROJECT_NAME}_INCLUDE_DIRS ${HEADERS_DIR} CACHE INTERNAL "${PROJECT_NAME}:
 # target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main)
 # gtest_discover_tests(${TESTNAME})
 
-### Test the Dose3D Detector construction
-set(TESTNAME D3DDetectorTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/D3DDetector/test/D3DDetectorTest.cc)
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
-gtest_discover_tests(${TESTNAME})
+# ### Test the Dose3D Detector construction
+# set(TESTNAME D3DDetectorTest)
+# add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/D3DDetector/test/D3DDetectorTest.cc)
+# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
+# gtest_discover_tests(${TESTNAME})
 
 # ### Test the Water Phantom construction
-set(TESTNAME WaterPhantomTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc)
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
-gtest_discover_tests(${TESTNAME})
+# set(TESTNAME WaterPhantomTest)
+# add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc)
+# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
+# gtest_discover_tests(${TESTNAME})

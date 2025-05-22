@@ -1,13 +1,13 @@
 [RunSvc]
 JobName = "TestowaIba"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/TrueBeam" 
+PhspInputFileName = "/mnt/e/PHSP/TB_40x40_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 1
-PrintProgressFrequency = 0.001
+PrintProgressFrequency = 0.0735
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = true
+NTupleAnalysis = false
 RunAnalysis = true
 
 [GeoSvc]
@@ -34,7 +34,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 5000      # This will overwrite Rotation value for all below plan files!
+nParticles = 100      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

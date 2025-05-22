@@ -23,7 +23,7 @@ G4ThreeVector IbaImRT::IbaToLocalTranslation(0.0, 0.0, 0.0);
 ///
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
   
-  if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") != "IbaImRT_Full") {
+  if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") != "IbaImRT_3mf") {
 
   G4VSolid* FullPhantom;
   auto my_rotation = new G4RotationMatrix;

@@ -193,6 +193,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     }
     else{
       label += "_Cell_"+db_cells_positioning[counter].sc_id; 
+      std::cout << "DEBUG: Cell label from DB db_cells_positioning[counter].sc_id: " << db_cells_positioning[counter].sc_id << std::endl;
       counter += 1;
     }
     std::cout << "label = " << label << "  position: " << cell_position << std::endl;
@@ -542,8 +543,8 @@ void D3DDetector::ComputeRegularCellPositioning(){
   G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
 
   G4double width = D3DCell::SIZE + D3DDetector::COVER_WIDTH;
-  //TODO: auto& db_cells_positioning = GeometryDBReader::GetCellsPositioning();
-  if(m_db_cells_positioning.empty()){
+  auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
+  if(db_cells_positioning.empty()){
     for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
       auto current_z = init_z + iz * width;
       for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
@@ -556,7 +557,8 @@ void D3DDetector::ComputeRegularCellPositioning(){
     }
   }
   else{
-    for (auto& pos : m_db_cells_positioning){
+    for (auto& pos : db_cells_positioning){
+
       m_d3d_cells_positioning.emplace_back(pos.com.getX(),pos.com.getY(),pos.com.getZ());
     }
   }

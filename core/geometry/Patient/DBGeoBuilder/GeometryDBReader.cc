@@ -12,7 +12,6 @@ GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
 
-GeometryDBReader::~GeometryDBReader() = default;
 
 GeometryDBReader& GeometryDBReader::Instance() {
     static GeometryDBReader instance;
@@ -51,7 +50,7 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
-        if (gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == ""){
+        if (!(gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == "")){
             AddCell(gd.sc_id, gd.com);
         }
 

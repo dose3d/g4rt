@@ -23,6 +23,9 @@
 #include "TGeoVolume.h"
 #include "TFile.h"
 #include "TTree.h"
+#include <pybind11/embed.h>
+#include "GeometryDBReader.hh"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -327,6 +330,11 @@ void RunSvc::Finalize() {
 
   LOGSVC_INFO("Goodbye from G4RT!");
   LogSvc::ShutDown();
+
+  
+  GeometryDBReader::Instance().Finalize();
+  py::finalize_interpreter();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

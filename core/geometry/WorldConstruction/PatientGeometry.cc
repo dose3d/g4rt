@@ -200,7 +200,7 @@ bool PatientGeometry::design(void) {
   }
 
   if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
-    auto path = thisConfig()->GetValue<std::string>("PatientDBPath");
+    auto path = std::string(PROJECT_DATA_PATH) + "/" + thisConfig()->GetValue<std::string>("PatientDBPath");
     GeometryDBReader::Instance().LoadDataBase(path);
   }
   return true;
@@ -262,12 +262,12 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   if (envPatientEnvelop.compare("IbaImRT_Full") == 0 || envPatientEnvelop.compare("IbaImRT_Box") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
     ibaImRT->IPhysicalVolume::Construct(this);
-    // m_patient->SetConfig(cells...); TODO: IMPLEMENT MEEEEEE
     m_patient->IPhysicalVolume::Construct(ibaImRT);
     m_patient->WriteInfo();
   }else if(envPatientEnvelop.compare("IbaImRT_3mf") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
     ibaImRT->IPhysicalVolume::Construct(this);
+    SetPhysicalVolume(pv);
     m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }

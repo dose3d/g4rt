@@ -14,7 +14,7 @@ GeometryDBReader::GeometryDBReader()
 
 void GeometryDBReader::Finalize() {
     std::cout << "[DEBUG]:: GeometryDBReader manual finalizer\n";
-    m_parser = py::object();
+    
 }
 
 GeometryDBReader& GeometryDBReader::Instance() {
@@ -52,6 +52,9 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         auto com_py = d["com"].cast<std::vector<double>>();
         gd.com = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm );
 
+        // Material name
+        gd.mat = py::cast<std::string>(d["material"]);
+
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
         if (!(gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == "")){
@@ -79,5 +82,7 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         geoms_.push_back(std::move(gd));
     }
+    m_parser = py::object(); 
+
 }
 

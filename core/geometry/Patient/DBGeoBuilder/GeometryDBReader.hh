@@ -18,6 +18,7 @@ struct GeometryData {
     std::string                     body;           // Body identifier
     G4ThreeVector                   com;            // Center of mass
     std::string                     sc_id;          // Scintilator identifier
+    std::string                     mat;          // Material name
     std::vector<std::array<int,3>>  nodes;          // Node IDs
     std::vector<G4ThreeVector>      vertices;       // Vertex positions
     std::vector<G4ThreeVector>      normals;        // Vertex normals

@@ -491,7 +491,10 @@ void GeoSvc::WriteWorldToTFile() {
   setNodesVisByMaterial("G4_WATER",38,50);
   setNodesVisByMaterial("BaritesConcrete",12,50);
   // setNodesVisByMaterial("PMMA",12,30);
-  setNodesVisByMaterial("PMMA",38,50);
+  setNodesVisByMaterial("PMMA",95,30);
+  setNodesVisByMaterial("PLA",57,70);
+  setNodesVisByMaterial("RW3",83,30);
+  setNodesVisByMaterial("Rubber",156,30);
 
   // Dose3D visibility 
   setNodesVisByName("D3D",49);

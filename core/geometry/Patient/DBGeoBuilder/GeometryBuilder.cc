@@ -66,7 +66,7 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
     auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
       
       
-      new G4PVPlacement(nullptr, G4ThreeVector(-90.0,0.0,20.0), obj.component + "_PV", componentLV, parentWorld, false, 0);
+      new G4PVPlacement(nullptr, G4ThreeVector(-95.0,-90.0,-90.0), obj.component + "_PV", componentLV, parentWorld, false, 0);
     }
 
   }

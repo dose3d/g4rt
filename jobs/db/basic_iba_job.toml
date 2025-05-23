@@ -1,8 +1,8 @@
 [RunSvc]
 JobName = "TestowaIba"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/PHSP/TB_40x40_Merged" 
-PhspEvtVrtxMultiplicityTreshold = 1
+PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
+PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.0735
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
@@ -16,8 +16,8 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX = 0.0
-PatientIsocentreY = 0.0
+PatientIsocentreX = -60.0
+PatientIsocentreY = -60.0
 PatientIsocentreZ = 0.0
 EnviromentSizeX = 600.0
 EnviromentSizeY = 650.0
@@ -34,7 +34,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 100      # This will overwrite Rotation value for all below plan files!
+nParticles = 100000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

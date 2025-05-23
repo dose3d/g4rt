@@ -15,8 +15,8 @@ This lets you keep one repo inside another, but still treat it as an independent
 
 ````bash
 # In your simulator’s repo root:
-git submodule add git@github.com:Dose3D-Future/d3df-patients.git submodules/d3df-patients
-git commit -m "Add d3df-patients as submodule under submodules/d3df-patients"
+git submodule add git@github.com:Dose3D-Future/d3df-patients.git submodules/g4rtd3df-patients
+git commit -m "Add d3df-patients as submodule under submodules/g4rtd3df-patients"
 ````
 
 That will create or update a file called `.gitmodules`:

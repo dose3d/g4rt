@@ -33,8 +33,8 @@ GeometryBuilder::~GeometryBuilder() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
-  auto* nist = G4NistManager::Instance();
-  auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium); // Default temp material
+  // auto* nist = G4NistManager::Instance();
+  // auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium); // Default temp material
   
   
   const auto& list =  GeometryDBReader::Instance().GetData();
@@ -60,9 +60,10 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
 
       }
       
+    auto mat = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", std::string(obj.mat));
+
     tessSolid->SetSolidClosed(true);
-    auto* componentLV = new G4LogicalVolume(
-      tessSolid, mat, obj.component + "_Logic");
+    auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
       
       
       new G4PVPlacement(nullptr, G4ThreeVector(), obj.component + "_PV", componentLV, parentWorld, false, 0);

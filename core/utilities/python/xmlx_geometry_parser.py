@@ -85,7 +85,7 @@ def get_geometries(excel_file: str,
         mesh_df.rename(columns={'BodyName': 'Body_Name'}, inplace=True)
 
     # Required metadata columns
-    required_meta = ['Component_Name', 'Body_Name', 'Co_M_X', 'Co_M_Y', 'Co_M_Z', 'SC_id']
+    required_meta = ['Component_Name', 'Body_Name', 'Co_M_X', 'Co_M_Y', 'Co_M_Z', 'SC_id', 'Physical_Material']
     missing_meta = [c for c in required_meta if c not in meta_df.columns]
     if missing_meta:
         raise KeyError(f"Missing metadata columns in Excel: {missing_meta}")
@@ -110,15 +110,16 @@ def get_geometries(excel_file: str,
 
     # Optional: column rename map for output (no-op by default)
     rename_map = {
-        'Component_Name': 'Component_Name',
-        'Body_Name':      'Body_Name',
-        'Co_M_X':         'Co_M_X',
-        'Co_M_Y':         'Co_M_Y',
-        'Co_M_Z':         'Co_M_Z',
-        'SC_id':          'SC_id',
-        'MeshVertices':  'MeshVertices',
-        'MeshNodes':     'MeshNodes',
-        'MeshNormalVectors': 'MeshNormalVectors'
+        'Component_Name':       'Component_Name',
+        'Body_Name':            'Body_Name',
+        'Physical_Material':    'Physical_Material',
+        'Co_M_X':               'Co_M_X',
+        'Co_M_Y':               'Co_M_Y',
+        'Co_M_Z':               'Co_M_Z',
+        'SC_id':                'SC_id',
+        'MeshVertices':         'MeshVertices',
+        'MeshNodes':            'MeshNodes',
+        'MeshNormalVectors':    'MeshNormalVectors'
     }
     df.rename(columns=rename_map, inplace=True)
 
@@ -145,11 +146,13 @@ def get_geometries(excel_file: str,
         vertices = parse_list('MeshVertices', row['MeshVertices'], idx)
         nodes = parse_list('MeshNodes', row['MeshNodes'], idx)
         normals = parse_list('MeshNormalVectors', row['MeshNormalVectors'], idx)
+        mat = str(row['Physical_Material']).strip()
         
         results.append({
             'component': component,
             'body':      body,
             'com':       com,
+            'material':  mat,
             'sc_id':     sc_id,
             'vertices':  vertices,
             'nodes':     nodes,

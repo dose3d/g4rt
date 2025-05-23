@@ -50,7 +50,7 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         // Center of mass 
         auto com_py = d["com"].cast<std::vector<double>>();
-        gd.com = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm );
+        gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
 
         // Material name
         gd.mat = py::cast<std::string>(d["material"]);

@@ -15,7 +15,49 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){}
+GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){
+
+  ParseTomlConfig();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///   
+void GeometryBuilder::ParseTomlConfig(){
+  SetTomlConfigFile();
+  auto configFile = GetTomlConfigFile();
+  auto configPrefix = GetTomlConfigPrefix();
+
+  // LOGSVC_INFO("Importing configuration from:\n{}",configFile); // Not Logable RN
+  // if (!svc::checkIfFileExist(configFile)) {
+  //   LOGSVC_CRITICAL("File {} not fount.", configFile);
+  //   G4Exception("GeometryBuilder", "ParseTomlConfig", FatalErrorInArgument, "");
+  // }
+
+  std::cout << "Importing configuration from:\n" << configFile << "\n";
+  auto config = toml::parse_file(configFile);
+  std::cout << config << "\n";
+
+
+  m_centrePositionX = config["Phantom"]["Position"][0].value_or(0.0);
+  m_centrePositionY = config["Phantom"]["Position"][1].value_or(0.0);
+  m_centrePositionZ = config["Phantom"]["Position"][2].value_or(0.0);
+
+  m_phantomRotationX = config["Phantom"]["Rotation"][0].value_or(0.0);
+  m_phantomRotationY = config["Phantom"]["Rotation"][1].value_or(0.0);
+  m_phantomRotationZ = config["Phantom"]["Rotation"][2].value_or(0.0);
+
+  m_exclusde_object_list = config["ExcludeObjList"].as_array();
+
+  if (m_exclusde_object_list) {
+    for (const auto& elem : *m_exclusde_object_list) {
+      if (elem.is_string()) {
+        std::string value = elem.value_or("");
+        std::cout << "Wykluczony obiekt: " << value << "\n";
+      }
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -27,7 +69,7 @@ GeometryBuilder* GeometryBuilder::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 GeometryBuilder::~GeometryBuilder() {
-
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +81,16 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   
   const auto& list =  GeometryDBReader::Instance().GetData();
   
+
+  if (m_exclusde_object_list) {
+    for (const auto& elem : *m_exclusde_object_list) {
+      if (elem.is_string()) {
+        std::string value = elem.value_or("");
+        std::cout << "Wykluczony obiekt: " << value << "\n";
+      }
+    }
+  }
+
   
   for (auto const& obj : list) {
     if (obj.sc_id != "nan" && obj.sc_id != "" && !obj.sc_id.empty()) {
@@ -75,11 +127,5 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
     }
 
   }
-
-  void GeometryBuilder::ParseTomlConfig(){
-    std::cout << __FUNCTION__ << " called\n";
-  }
+    
   
-  
-  ////////////////////////////////////////////////////////////////////////////////
-  /// 

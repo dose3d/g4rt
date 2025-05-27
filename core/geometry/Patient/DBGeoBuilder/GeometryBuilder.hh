@@ -6,7 +6,7 @@
 
 #include "G4PVPlacement.hh"
 #include "IPhysicalVolume.hh"
-
+#include "toml.hh"
 #include "TomlConfigurable.hh"
 #include "Services.hh"
 
@@ -22,10 +22,14 @@ class GeometryBuilder : public TomlConfigModule {
     
     
     // Phantom parameters
-    std::string m_phantomMedium = "RW3"; 
     G4double m_centrePositionX = 0.0;
     G4double m_centrePositionY = 0.0;
     G4double m_centrePositionZ = 0.0;
+    G4double m_phantomRotationX = 0.0;
+    G4double m_phantomRotationY = 0.0;
+    G4double m_phantomRotationZ = 0.0;
+    // std::string m_phantomMedium = "RW3"; 
+    toml::array* m_exclusde_object_list = nullptr;
     
   public:
     // Singleton access

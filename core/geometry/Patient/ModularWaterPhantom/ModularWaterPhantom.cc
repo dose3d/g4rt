@@ -4,6 +4,7 @@
 #include "Services.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4UnionSolid.hh"
+#include "GeometryBuilder.hh"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +25,7 @@ ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
 ///
 void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
 
+    if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_simplified") {
     // create the actual phantom
     auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
     auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
@@ -71,5 +73,11 @@ void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
                                           "bigAquaBoxPV6",   bigAquaBoxLV,   parentPV, false, 0);
     auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
                                           "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, parentPV, false, 0);
+    }
+
+    else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf") {
+      auto geometryBuilder = GeometryBuilder::GetInstance();
+      geometryBuilder->Build(parentPV);
+    }
 
 }

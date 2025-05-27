@@ -200,7 +200,8 @@ bool PatientGeometry::design(void) {
   }
 
   if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
-    auto path = std::string(PROJECT_DATA_PATH) + "/" + thisConfig()->GetValue<std::string>("PatientDBPath");
+    // auto path = std::string(PROJECT_DATA_PATH) + "/" + thisConfig()->GetValue<std::string>("PatientDBPath");
+    auto path = thisConfig()->GetValue<std::string>("PatientDBPath");
     GeometryDBReader::Instance().LoadDataBase(path);
   }
   return true;

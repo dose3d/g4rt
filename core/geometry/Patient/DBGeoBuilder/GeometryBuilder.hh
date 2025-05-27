@@ -18,9 +18,10 @@ class GeometryBuilder : public TomlConfigModule {
     
     // Config parsing
     void ParseTomlConfig() override;
-    void LoadConfiguration();
+    G4bool LoadDefaultParameterization();
+    G4bool LoadParameterization();
     
-    
+
     // Phantom parameters
     G4double m_centrePositionX = 0.0;
     G4double m_centrePositionY = 0.0;
@@ -28,9 +29,7 @@ class GeometryBuilder : public TomlConfigModule {
     G4double m_phantomRotationX = 0.0;
     G4double m_phantomRotationY = 0.0;
     G4double m_phantomRotationZ = 0.0;
-    // std::string m_phantomMedium = "RW3"; 
-    toml::array* m_exclusde_object_list = nullptr;
-    
+    std::vector<std::string> m_exclusde_object_list;
   public:
     // Singleton access
     static GeometryBuilder* GetInstance();

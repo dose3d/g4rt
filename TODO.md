@@ -1,4 +1,3 @@
 # TODO List
-
-- Create module that will allow to exclude some of elements from the building process by name.
-- STH 
+ - Update README.md here and in the submodule. 
+ - Implement rotation of 3mf parts.

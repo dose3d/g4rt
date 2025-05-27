@@ -8,16 +8,16 @@
 #include "NTupleEventAnalisys.hh"
 #include "G4UserLimits.hh"
 #include "GeometryBuilder.hh"
-#include "toml.hh"
 #include "Services.hh"
 #include "D3DCell.hh"
 #include "D3DDetector.hh"
+#include <algorithm>
+#include <cctype>
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){
 
-  ParseTomlConfig();
 }
 
 
@@ -39,23 +39,21 @@ void GeometryBuilder::ParseTomlConfig(){
   std::cout << config << "\n";
 
 
-  m_centrePositionX = config["Phantom"]["Position"][0].value_or(0.0);
-  m_centrePositionY = config["Phantom"]["Position"][1].value_or(0.0);
-  m_centrePositionZ = config["Phantom"]["Position"][2].value_or(0.0);
+  m_centrePositionX = config[configPrefix]["Position"][0].value_or(0.0);
+  m_centrePositionY = config[configPrefix]["Position"][1].value_or(0.0);
+  m_centrePositionZ = config[configPrefix]["Position"][2].value_or(0.0);
 
-  m_phantomRotationX = config["Phantom"]["Rotation"][0].value_or(0.0);
-  m_phantomRotationY = config["Phantom"]["Rotation"][1].value_or(0.0);
-  m_phantomRotationZ = config["Phantom"]["Rotation"][2].value_or(0.0);
+  m_phantomRotationX = config[configPrefix]["Rotation"][0].value_or(0.0);
+  m_phantomRotationY = config[configPrefix]["Rotation"][1].value_or(0.0);
+  m_phantomRotationZ = config[configPrefix]["Rotation"][2].value_or(0.0);
 
-  m_exclusde_object_list = config["ExcludeObjList"].as_array();
-
-  if (m_exclusde_object_list) {
-    for (const auto& elem : *m_exclusde_object_list) {
-      if (elem.is_string()) {
-        std::string value = elem.value_or("");
-        std::cout << "Wykluczony obiekt: " << value << "\n";
+  auto* arr = config[configPrefix]["ExcludeObjList"].as_array();
+  if (arr) {
+      for (const auto& val : *arr) {
+          if (const auto* s = val.as_string()) {
+            m_exclusde_object_list.push_back(s->get());
+          }
       }
-    }
   }
 }
 
@@ -74,25 +72,58 @@ GeometryBuilder::~GeometryBuilder() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+G4bool GeometryBuilder::LoadParameterization(){
+  // Configurable::ValidateConfig();
+  if(IsTomlConfigExists()){
+    ParseTomlConfig();
+  }
+  else{
+    LoadDefaultParameterization();
+  }
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4bool GeometryBuilder::LoadDefaultParameterization(){
+  return true;
+}
+
+
+static std::string to_lower(const std::string& input) {
+    std::string out;
+    out.resize(input.size());
+    std::transform(input.begin(), input.end(), out.begin(),
+                  [](unsigned char c) { return std::tolower(c); });
+    return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
+  LoadParameterization();
   // auto* nist = G4NistManager::Instance();
   // auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium); // Default temp material
-  
-  
-  const auto& list =  GeometryDBReader::Instance().GetData();
+    const auto& list =  GeometryDBReader::Instance().GetData();
   
 
-  if (m_exclusde_object_list) {
-    for (const auto& elem : *m_exclusde_object_list) {
-      if (elem.is_string()) {
-        std::string value = elem.value_or("");
-        std::cout << "Wykluczony obiekt: " << value << "\n";
-      }
+
+  for (const auto& obj : list) {
+    std::string component_lower = to_lower(obj.component);
+
+    // Check if any exclusion string is a case-insensitive substring of the component name
+    bool is_excluded = std::any_of(
+        m_exclusde_object_list.begin(),
+        m_exclusde_object_list.end(),
+        [&](const std::string& excl) {
+            return component_lower.find(to_lower(excl)) != std::string::npos;
+        });
+
+    if (is_excluded) {
+        std::cout << "Skipping excluded object: " << obj.component << "\n";
+        continue;
     }
-  }
 
-  
-  for (auto const& obj : list) {
     if (obj.sc_id != "nan" && obj.sc_id != "" && !obj.sc_id.empty()) {
       continue;
     }

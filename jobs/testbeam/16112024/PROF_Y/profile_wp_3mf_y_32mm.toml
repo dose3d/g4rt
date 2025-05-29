@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "profile_wp_3mf_y_32mm"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged" 
+PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"

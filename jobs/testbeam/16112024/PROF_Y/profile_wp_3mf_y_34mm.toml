@@ -1,9 +1,9 @@
 [RunSvc]
-JobName = "PokazowyWP"
+JobName = "profile_wp_3mf_y_34mm"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
-PrintProgressFrequency = 0.0005
+PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = false
@@ -17,14 +17,22 @@ BuildPatient = true
 [PatientGeometry]
 Type = "D3DDetector"
 PatientIsocentreX = 0.0
-PatientIsocentreY = 0.0
+PatientIsocentreY = 34.0
 PatientIsocentreZ = 0.0
 EnviromentSizeX = 680.0
 EnviromentSizeY = 710.0
 EnviromentSizeZ = 460.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "ModularWaterPhantom_3mf" # 
-PatientDBPath = "/home/jackie/work/dose3d/g4rt/submodules/d3df-patients/data/phantoms/modular_water_phantom" # 
+PatientDBPath = "d3df-patients/patient/phantoms/modular_water_phantom"  
+
+
+[GeometryBuilder]
+ExcludeObjList = [
+        "WaterPhantom v8|Cap v3:5"
+]
+Position = [0.0, 0.0, 0.0] # Position X/Y/Z inside the patient environment
+Rotation = [0.0, 0.0, 0.0] # Rotation aouynd axis X/Y/Z inside the patient environment
 
 [D3DDetector_Cell]
 Medium = "RMPS470" #G4_WATER, PMMA

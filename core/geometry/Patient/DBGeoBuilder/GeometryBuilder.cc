@@ -149,12 +149,17 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
     auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
     G4ThreeVector tranlation;
       if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf"){
-        tranlation = G4ThreeVector(-95.0,-90.0,-90.0);
+        tranlation = G4ThreeVector(-95.0,90.0-90.0);
       }
       else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
-        tranlation = G4ThreeVector(-271.0,-275.0,-225.0);
+        tranlation = G4ThreeVector(-271.0,275.0,225.0);
       }
-      new G4PVPlacement(nullptr, tranlation, obj.component + "_PV", componentLV, parentWorld, false, 0);
+      m_rot = G4RotationMatrix();
+      m_rot.rotateX(m_phantomRotationX * deg);
+      m_rot.rotateX(180.0 * deg);
+      m_rot.rotateY(m_phantomRotationY * deg);
+      m_rot.rotateZ(m_phantomRotationZ * deg);
+      new G4PVPlacement(&m_rot, tranlation, obj.component + "_PV", componentLV, parentWorld, false, 0);
     }
 
   }

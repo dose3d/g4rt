@@ -29,6 +29,9 @@ class GeometryBuilder : public TomlConfigModule {
     G4double m_phantomRotationX = 0.0;
     G4double m_phantomRotationY = 0.0;
     G4double m_phantomRotationZ = 0.0;
+
+    G4RotationMatrix m_rot;
+
     std::vector<std::string> m_exclusde_object_list;
   public:
     // Singleton access

@@ -9,6 +9,7 @@
 #include <pybind11/stl.h>
 #include <G4ThreeVector.hh>
 
+
 namespace py = pybind11;
 
 
@@ -36,8 +37,7 @@ private:
     GeometryDBReader();
     ~GeometryDBReader() = default;
 
-public:
-
+    public:
     // Singleton accessor
     static GeometryDBReader& Instance();
 

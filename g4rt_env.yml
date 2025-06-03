@@ -1,8 +1,10 @@
-name: g4rt
+name: g4rt_devel
 channels:
   - conda-forge
 dependencies:
   - cmake=4.0.2
+  - clang
+  - clangxx
   - cxx-compiler=1.9.0
   - doxygen=1.13.2
   - fmt=11.1.4
@@ -17,6 +19,7 @@ dependencies:
   - loguru=0.7.3
   - make=4.4.1
   - matplotlib=3.10.3
+  - ninja
   - numpy=2.2.6
   - openpyxl=3.1.5
   - pandas=2.2.3

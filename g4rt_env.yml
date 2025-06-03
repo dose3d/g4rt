@@ -6,6 +6,7 @@ dependencies:
   - cxx-compiler=1.9.0
   - doxygen=1.13.2
   - fmt=11.1.4
+  - freetype-py=2.5.1
   - geant4=11.3.2
   - gtest=1.16.0
   - gxx=13.3.0
@@ -24,7 +25,7 @@ dependencies:
   - pthread-stubs=0.4
   - pybind11=2.13.6
   - pydicom=3.0.1
-  - pyglet=2.1.6
+  - pyglet=1.5.27  
   - python=3.12
   - root=6.34
   - scipy=1.15.2

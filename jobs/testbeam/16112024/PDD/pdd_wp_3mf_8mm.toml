@@ -16,12 +16,12 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX = 0.0
-PatientIsocentreY = 0.0
-PatientIsocentreZ = 0.0
-EnviromentSizeX = 680.0
-EnviromentSizeY = 710.0
-EnviromentSizeZ = 460.0
+PatientIsocentreX       = 0.0
+PatientIsocentreY       = 0.0
+PatientIsocentreZ       = 197.5
+EnviromentSizeX         = 680.0
+EnviromentSizeY         = 710.0
+EnviromentSizeZ         = 460.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "ModularWaterPhantom_3mf" # 
 PatientDBPath = "d3df-patients/patient/phantoms/modular_water_phantom" 

@@ -69,6 +69,7 @@ void MaterialsSvc::Configure() {
   //  LiF doped with Mg and Ti - > Thermoluminescent dosimeter material
   //  LiF:Mg,Ti
   DefineUnit<G4MaterialSPtr>("LiF:Mg,Ti");
+  DefineUnit<G4MaterialSPtr>("LiF:Cu,Mg,P");
 
   DefineUnit<G4MaterialSPtr>("RMPS470");
   DefineUnit<G4MaterialSPtr>("EPS"); // Expanded Polystyrene
@@ -224,6 +225,19 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       lif->AddMaterial(temp_mat, 0.99983);
       lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00005);
       lif->AddElement(G4NISTManager->FindOrBuildElement("Ti"), 0.00012);
+      lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
+  }
+
+  if (unit.compare("LiF:Cu,Mg,P") == 0) {
+
+      G4Material* temp_mat = G4NISTManager->FindOrBuildMaterial("G4_LITHIUM_FLUORIDE");
+      d = 1.867 * g / cm3;
+      G4Material* lif = new G4Material("LiF:Cu,Mg,P", d, 4);
+      lif->AddMaterial(temp_mat, 0.99274);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Cu"), 0.00024);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00097);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("P"), 0.00605);
       lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
   }

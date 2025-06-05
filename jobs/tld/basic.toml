@@ -18,7 +18,8 @@ MlcModel = "Simplified"
 Position = [0.0,0.0,0.0] 
 Rotation = [0.0,0.0,0.0]
 TLDVoxelization = [20,20,10]
-TLDMedium = "LiF:Mg,Ti"
+# TLDMedium = "LiF:Mg,Ti"
+TLDMedium = "LiF:Cu,Mg,P"
 TLD_Geometry_File_Path = "tldGeometry/three-hole.stl"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute

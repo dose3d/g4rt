@@ -31,7 +31,7 @@ private:
     py::object m_parser;                                        // Python parser object
     std::vector<GeometryData> geoms_;                           // Parsed geometry entries
     struct CellInfo { std::string sc_id; G4ThreeVector com; };
-    inline static std::vector<CellInfo> m_db_cells_positioning; // Cells positioning data
+    static std::vector<CellInfo> m_db_cells_positioning;        // Cells positioning data
     
     // Private constructor for singleton
     GeometryDBReader();
@@ -58,11 +58,6 @@ private:
 
     // Access cells positioning data 
     const std::vector<CellInfo>& GetCellsPositioning() const { return m_db_cells_positioning; } 
-
-    // Add single cell (for use inside load)
-    void AddCell(const std::string& sc_id, const G4ThreeVector& com) {
-        m_db_cells_positioning.push_back({sc_id, com});
-    }
 };
 
 #endif // GEOMETRY_PARSER_HH

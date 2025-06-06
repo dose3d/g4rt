@@ -9,6 +9,8 @@
 
 namespace py = pybind11;
 
+std::vector<GeometryDBReader::CellInfo> GeometryDBReader::m_db_cells_positioning;
+
 GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
@@ -26,6 +28,8 @@ GeometryDBReader& GeometryDBReader::Instance() {
 // Load and parse geometry data from Excel/CSV
 void GeometryDBReader::LoadDataBase(const std::string& path)
 {
+    std::cout << "Loading geoemtry data from: "<< path << std::endl;
+
     db_filename = path + "/D3DF_bodies.xlsx";
     csv_filename = path + "/D3DF_bodies.csv";
     sheet = "scintillator_mapping_db";
@@ -70,7 +74,7 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
         if (!(gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == "")){
-            AddCell(gd.sc_id, gd.com);
+            m_db_cells_positioning.emplace_back(gd.sc_id, gd.com);
         }
 
         // Nodes
@@ -96,5 +100,6 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
     }
     m_parser = py::object(); 
 
+    std::cout<< "Got #" << m_db_cells_positioning.size() << " cell entries." << std::endl;
 }
 

@@ -193,12 +193,14 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
 
   // Construct individual cells:
   if(geo_type.compare("GeometryDB")==0){
+    int _ix = 0;
     G4cout<< "D3D DB CELLS CONSTRUCTION... " <<G4endl;
     const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
     for(const auto& _cell_data : db_cells_positioning ){
       auto _label = m_label + "_Cell_" + _cell_data.sc_id; 
       LOGSVC_INFO("Defined Cell: {}",_label);
-      construc_cell(0,0,0,_label,_cell_data.com);
+      construc_cell(_ix,0,0,_label,_cell_data.com);
+      ++_ix;
     }
   }
   else {

@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "PokazowaIba"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.0005
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
@@ -24,7 +24,7 @@ EnviromentSizeY = 650.0
 EnviromentSizeZ = 450.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "IbaImRT_3mf" # Simplified iba Im'RT model
-PatientDBPath = "/home/jackie/work/dose3d/g4rt/submodules/g4rtd3df-patients/data/phantoms/IBA_ImRT_phantom" # TODO: If this exist -> read this and load 
+PatientDBPath = "d3df-patients/patient/phantoms/IBA_ImRT_phantom" # TODO: If this exist -> read this and load 
 
 
 [D3DDetector_Cell]
@@ -34,7 +34,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 5000000      # This will overwrite Rotation value for all below plan files!
+nParticles = 5000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

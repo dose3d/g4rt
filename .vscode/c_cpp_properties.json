@@ -14,6 +14,36 @@
             "intelliSenseMode": "gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
         },
+                {
+            "name": "linux-faculty-jakub",
+            "includePath": [
+                "/usr/local/include/*",
+                "~/miniforge3/envs/g4rt_devel/include/*",
+                "~/miniforge3/envs/g4rt_devel/include/Geant4/*",
+                "~/miniforge3/envs/g4rt_devel/include/python3.12/*",
+                "~/miniforge3/envs/g4rt_devel/include/spdlog/fmt/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "~/miniforge3/envs/g4rt_devel/bin/clang++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**",
+                    "/usr/local/include/*",
+                    "~/miniforge3/envs/g4rt_devel/include/*",
+                    "~/miniforge3/envs/g4rt_devel/include/Geant4/*",
+                    "~/miniforge3/envs/g4rt_devel/include/python3.12/*",
+                    "~/miniforge3/envs/g4rt_devel/include/spdlog/fmt/*",
+                    "${workspaceFolder}/*"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        },
         {
             "name": "alma-jakub",
             "includePath": [
@@ -50,7 +80,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/geant4/include/**",
-                "/home/geant4/miniconda3/envs/g4rt/include/**"
+                "/home/geant4/miniconda3/envs/g4rt_devel/include/**"
             ],
             "defines": [],
             "compilerPath": "/home/geant4/miniconda3/envs/dose3d/bin/g++",

@@ -68,6 +68,9 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ///
     G4double GetVolume() const;
 
+    ///
+    virtual G4double GetCellVolume() const { return GetVolume(); };
+
 
 };
 #endif //Dose3DVPatient_HH

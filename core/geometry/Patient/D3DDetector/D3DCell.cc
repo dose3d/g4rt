@@ -134,7 +134,8 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // userLimits->SetMaxAllowedStep(1.0 * um);
   // dose3dCellLV->SetUserLimits(userLimits);
 
-  }
+  SetVolume(D3DCell::SIZE*D3DCell::SIZE*D3DCell::SIZE);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

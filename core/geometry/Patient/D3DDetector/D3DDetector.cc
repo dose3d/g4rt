@@ -158,7 +158,6 @@ void D3DDetector::SetConfig(const D3DDetector::Config& config) {
 ///
 void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
-  auto size = D3DCell::SIZE;
 
   auto geo_type = D3DDetector::SetGeometrySource();
   G4cout<< "D3D GEOMETRY CONSTRUCTION: "<< geo_type <<G4endl;
@@ -414,7 +413,6 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
     
   // G4cout<<"GetScoringHashedMap for " << run_collection << " / " <<Scoring::to_string(type)<<G4endl;
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
-  auto size = D3DCell::SIZE;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_cell_medium);
   for(const auto& cell: m_d3d_cells){
     auto centre = cell->GetGlobalCentre();
@@ -454,7 +452,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       hashed_map_scoring[cellHash].SetCentre(centre);
       hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);
       hashed_map_scoring[cellHash].SetGlobalId(cIdX,cIdY,cIdZ); // Id == GlobalId
-      hashed_map_scoring[cellHash].SetVolume( size*size*size );
+      hashed_map_scoring[cellHash].SetVolume( GetCellVolume() );
       hashed_map_scoring[cellHash].SetMass(Medium->GetDensity()*hashed_map_scoring[cellHash].GetVolume());
       hashed_map_scoring[cellHash].SetLabel(cell->GetName());
       // hashed_map_scoring[cellHash].Print();

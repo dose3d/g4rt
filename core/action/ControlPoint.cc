@@ -80,8 +80,7 @@ void ControlPointRun::InitializeScoringCollection(){
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
     LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
-    auto cell_size = D3DCell::SIZE;
-    auto cell_volume = cell_size*cell_size*cell_size;
+    auto cell_volume = Service<GeoSvc>()->Patient()->GetCellVolume();
     auto merge = [&](ScoringMap& left, const ScoringMap& right){
         for(auto& scoring : left){
             G4double total_dose(0);

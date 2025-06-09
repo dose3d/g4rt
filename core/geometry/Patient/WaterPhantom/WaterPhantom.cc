@@ -148,8 +148,9 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   regVol->SetProductionCuts(cuts);
   waterPhantomLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(waterPhantomLV);
-  D3DCell::SIZE = std::cbrt( m_sizeX * m_sizeY * m_sizeZ ); // It may differ but for propouse of scoring it is still will be cubed to get the volume. 
 
+  // Set volume for scoring purposes
+  SetVolume(m_sizeX * m_sizeY * m_sizeZ ); // Volume in mm^3
 }
 
 

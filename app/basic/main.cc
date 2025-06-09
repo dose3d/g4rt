@@ -15,8 +15,10 @@
 #include "colors.hh"
 #include "LogSvc.hh"
 #include "WorldConstruction.hh"
+#include <locale.h>
 
 int main(int argc, const char *argv[]) {
+  setenv("LC_ALL", "C", 1);
 
 
   py::initialize_interpreter();

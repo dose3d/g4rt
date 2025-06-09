@@ -563,13 +563,12 @@ void D3DDetector::ComputeRegularCellPositioning(){
     G4double init_x = m_config.m_translation_in_local_frame.getX() - (m_config.m_nX_cells-1) * D3DDetector::COVER_WIDTH/2.;
     G4double init_y = m_config.m_translation_in_local_frame.getY() - (m_config.m_nY_cells-1) * D3DDetector::COVER_WIDTH/2. ; 
     G4double init_z = m_config.m_translation_in_local_frame.getZ() + D3DDetector::COVER_WIDTH/2.;
-    G4double width = D3DCell::SIZE + D3DDetector::COVER_WIDTH;
     for(int iz = 0; iz < m_config.m_nZ_cells; ++iz ){
-      auto current_z = init_z + iz * width;
+      auto current_z = init_z + iz * (D3DCell::SIZE.getX() + D3DDetector::COVER_WIDTH);
       for(int iy = 0; iy < m_config.m_nY_cells; ++iy ){
-        auto current_y = init_y + iy * width;
+        auto current_y = init_y + iy * (D3DCell::SIZE.getY() + D3DDetector::COVER_WIDTH);;
         for(int ix = 0; ix < m_config.m_nX_cells; ++ix ){
-          auto current_x = init_x + ix * width;
+          auto current_x = init_x + ix * (D3DCell::SIZE.getZ() + D3DDetector::COVER_WIDTH);;
           m_d3d_cells_positioning.emplace_back(current_x,current_y,current_z);
         }
       }

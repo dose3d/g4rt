@@ -59,7 +59,7 @@ class D3DCell : public VPatient {
 
 
     ///
-    static G4double SIZE;
+    static G4ThreeVector SIZE;
 
     ///
     void ParseTomlConfig() override {}

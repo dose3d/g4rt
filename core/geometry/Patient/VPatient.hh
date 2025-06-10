@@ -28,6 +28,11 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     /// Pointer to the sensitive detectors, wrapped into the MT service
     G4Cache<VPatientSD*> m_patientSD;
 
+    /// Volume in mm^3
+    /// Initial value should be overritten by the final class, 
+    /// otherwise calling the GetVolume method will throw an exception.
+    G4double m_volume = -1.;
+
   public:
     ///
     VPatient() = delete;
@@ -56,6 +61,15 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
       LOGSVC_WARN("Returning empty scoring hashed map!");
       return std::map<std::size_t, VoxelHit>();
     }
+
+    ///
+    void SetVolume(G4double volume) {m_volume = volume; };
+
+    ///
+    G4double GetVolume() const;
+
+    ///
+    virtual G4double GetCellVolume() const { return GetVolume(); };
 
 
 };

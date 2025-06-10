@@ -30,7 +30,14 @@ class GeometryDBReader {
 private:
     py::object m_parser;                                        // Python parser object
     std::vector<GeometryData> geoms_;                           // Parsed geometry entries
-    struct CellInfo { std::string sc_id; G4ThreeVector com; };
+
+    struct CellInfo { 
+        std::string sc_id; 
+        G4ThreeVector com;
+        CellInfo(const std::string& id, const G4ThreeVector& vec): sc_id(id), com(vec) {}
+    };
+
+
     static std::vector<CellInfo> m_db_cells_positioning;        // Cells positioning data
     
     // Private constructor for singleton

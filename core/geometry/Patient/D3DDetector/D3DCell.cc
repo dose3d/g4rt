@@ -19,7 +19,8 @@ namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
 }
 
-G4double D3DCell::SIZE = 10.0 * mm;
+G4ThreeVector D3DCell::SIZE = {10.0*mm, 10.0*mm, 10.0*mm};
+
 // G4double D3DCell::SIZE = 5.4 * mm;
 // G4double D3DCell::SIZE = 2 * cm;
 
@@ -103,7 +104,7 @@ void D3DCell::SetNVoxels(char axis, int nv){
 void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // std::cout << "[INFO]:: D3DCell construction... " << std::endl;
   auto label = GetName();
-  auto size = G4ThreeVector(D3DCell::SIZE,D3DCell::SIZE,D3DCell::SIZE);
+  const auto& size = D3DCell::SIZE;
   // std::cout << "Parent world was set. " << std::endl;
 
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
@@ -134,7 +135,8 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // userLimits->SetMaxAllowedStep(1.0 * um);
   // dose3dCellLV->SetUserLimits(userLimits);
 
-  }
+  SetVolume(size.getX()* size.getY() * size.getZ());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

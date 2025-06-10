@@ -59,7 +59,7 @@ class D3DDetector : public VPatient, public GeoComponet {
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
     //
-
+    G4double GetCellVolume() const override { return D3DCell::SIZE.getX() * D3DCell::SIZE.getY() * D3DCell::SIZE.getZ(); };
 
     class Config {
       public:

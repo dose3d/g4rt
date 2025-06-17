@@ -127,10 +127,11 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
       continue;
     } 
     if(model == EMlcModel::Simplified){
-      BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
         if(!m_mlc->IsInField(vrtx)) {
           delete vrtx;
           p_vrtx.at(i) = nullptr;
+          if(p_vrtx.at(i))
+            BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
         }
     } else {
       BeamCollimation::SetParticlePositionBeforeCollimators(p_vrtx.at(i), BeforeJaws);

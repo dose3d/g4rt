@@ -8,6 +8,12 @@
 #include "TLDWorldConstruction.hh"
 
 int main(int argc, const char *argv[]) {
+  // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
+  // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit
+  // invalid or locale-specific formats that ROOT or GDML parsers can't read.
+  // This fixes cases where exponent notation is lost or misformatted.
+  setenv("LC_ALL", "C", 1);
+
 
   pybind11::scoped_interpreter guard{};
   pybind11::module sys = pybind11::module::import("sys");
@@ -96,3 +102,5 @@ int main(int argc, const char *argv[]) {
   
   return EXIT_SUCCESS;
 }
+
+

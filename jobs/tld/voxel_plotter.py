@@ -29,7 +29,7 @@ def add_voxel(ax, x_center, y_center, z_center, voxel_side_len, dose, min, max):
 
 if __name__ == "__main__":
     
-    path = '/home/jackie/work/dose3d/g4rt_backup/output/tld_basic_3/sim/cp10x10/cp10x10_tld_voxel.csv'
+    path = '/home/jackie/Dokumenty/work/g4rt/output/tld_basic_16/sim/cp10x10/cp10x10_tld_voxel.csv'
     dtypes_polars = {
     'X [mm]': pl.Float64,
     'Y [mm]': pl.Float64,
@@ -44,13 +44,13 @@ if __name__ == "__main__":
 
 
     # Set size of a voxell
-    voxel_side_len = 1
+    voxel_side_len = 5
 
     observable = "Dose [Gy]"
 
     fig = plt.figure(figsize=(16, 12))
     ax = fig.add_subplot(111, projection='3d')
-    print (cell_df.size)
+    print (cell_df["Dose [Gy]"].size)
     
     # Normalize Dose to 100%
     dose_max = cell_df[observable].max()

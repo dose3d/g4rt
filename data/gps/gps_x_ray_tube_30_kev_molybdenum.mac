@@ -4,21 +4,15 @@
 # 2) POZYCJA ŹRÓDŁA:    płaska        powierzchnia (x-y), promień 5 mm, 90 mm przed targetem
 /gps/pos/type Plane
 /gps/pos/shape Circle
-/gps/pos/radius 5 mm
-/gps/pos/centre  0 0 -50 mm
-# Na głębokości - >   - 60 mm   ->    powierzchnia byłaby prawie punktowa.
-# Na głębokości - >   - 50 mm   ->    powierzchnia kołowa średnicy 10 mm      (Koordynaty od -5 mm do 5 mm)
-# Na głębokości - >   - 10 mm   ->    powierzchnia kołowa średnicy 57.72 mm   (Koordynaty od -28.86 mm do 28.86 mm)
-# Na głębokości - >      0 mm   ->    powierzchnia kołowa średnicy 69.28 mm   (Koordynaty od -34.64 mm do 34.64 mm)
-# Na głębokości - >     40 mm   ->    powierzchnia kołowa średnicy 115.46 mm  (Koordynaty od -57.73 mm do 57.73 mm)
+/gps/pos/radius 0.5 mm
+/gps/pos/centre  0 0 0 mm # Dokładna pozycja ustawiona na poziomie konfiguracji zadania.
 
 # 3) KIERUNEK: emisja izotropowa, ograniczona do półkuli +Z - stożkowa
 /gps/ang/type iso
 /gps/ang/mintheta 0 deg
-/gps/ang/maxtheta 30 deg
+/gps/ang/maxtheta 5 deg
 /gps/ang/minphi 0 deg
 /gps/ang/maxphi 360 deg
-
 
 /gps/ene/type User
 /gps/ene/emspec 0

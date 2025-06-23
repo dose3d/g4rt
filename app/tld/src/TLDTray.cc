@@ -65,7 +65,7 @@ void TLDTray::LoadConfiguration(){
 
     // Deafult configuration
     m_rot = G4RotationMatrix(); //.rotateY(180.*deg);
-    m_tray_world_halfSize = G4ThreeVector(120,120,10); //102.,111.,9.2
+    m_tray_world_halfSize = G4ThreeVector();  
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
@@ -96,14 +96,28 @@ void TLDTray::ParseTomlConfig(){
     // G4cout << "global_centre: " << m_global_centre << G4endl;
 
     auto vox_nX = config[configPrefix]["TLDVoxelization"][0].value_or(0);
-    if(vox_nX > 0 ) 
-        m_config.m_tld_nX_voxels = vox_nX;
     auto vox_nY = config[configPrefix]["TLDVoxelization"][1].value_or(0);
-    if(vox_nY > 0 ) 
-        m_config.m_tld_nY_voxels = vox_nY;
     auto vox_nZ = config[configPrefix]["TLDVoxelization"][2].value_or(0);
-    if(vox_nZ > 0 ) 
+    if((vox_nX > 0) && (vox_nY > 0) && (vox_nZ > 0)) {
+        m_config.m_tld_nX_voxels = vox_nX;
+        m_config.m_tld_nY_voxels = vox_nY;
         m_config.m_tld_nZ_voxels = vox_nZ;
+    }
+
+    auto world_x = config[configPrefix]["World_Size"][0].value_or(0.0);
+    auto world_y = config[configPrefix]["World_Size"][1].value_or(0.0);
+    auto world_z = config[configPrefix]["World_Size"][2].value_or(0.0);
+    if ((world_x > 0.0)&&(world_y > 0.0)&&(world_z > 0.0)){
+        m_tray_world_halfSize = G4ThreeVector(world_x,world_y,world_z);
+    }
+
+    auto tld_id_x = config[configPrefix]["TLDGrid"][0].value_or(0);
+    auto tld_id_y = config[configPrefix]["TLDGrid"][1].value_or(0);
+    if((tld_id_x > 0)&&( tld_id_y > 0)){
+        m_config.m_nX_tld = tld_id_x;
+        m_config.m_nY_tld = tld_id_y;
+    }
+
 
     auto rotX = config[configPrefix]["Rotation"][0].value_or(0);
     if(rotX > 0 ) 

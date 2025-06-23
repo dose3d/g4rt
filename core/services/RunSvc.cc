@@ -25,6 +25,7 @@
 #include "TTree.h"
 #include <pybind11/embed.h>
 #include "GeometryDBReader.hh"
+#include "LinacGeometry.hh"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,6 +418,7 @@ void RunSvc::ParseTomlConfig(){
   // Reading the plan from custom TOML inteface is defined with the highest priority
   LOGSVC_INFO("Verifying control point configuration from file: {}",configFile);
   auto n_beam_rot = config[configObj]["BeamRotation"].value_or(0.0);
+  LinacGeometry::SetIsocentreDistance(config[configObj]["BeamSID"].value_or(0.0));
   if(n_beam_rot >= 0) {
     if (m_control_points_config.size()>0){ // configs already exist from plan files
       LOGSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot); 

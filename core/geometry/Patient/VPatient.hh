@@ -16,9 +16,6 @@ class VPatientSD;
 
 class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable {
   protected:
-    /// mm^3
-    double m_volume = 0;
-
     ///
     bool m_tracks_analysis = false;
 
@@ -47,12 +44,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
 
     ///
     ~VPatient() = default;
-
-    ///
-    void SetVolume(double volume) {m_volume = volume;}
-
-    ///
-    double GetVolume() const {return m_volume;}
 
     ///
     void SetTracksAnalysis(bool flag) {m_tracks_analysis = flag; }

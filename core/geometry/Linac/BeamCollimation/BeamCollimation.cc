@@ -101,7 +101,7 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified && model != EMlcModel::None))){
     setCustomPositioning("Jaw1X");
     setCustomPositioning("Jaw2X");
     setCustomPositioning("Jaw1Y");

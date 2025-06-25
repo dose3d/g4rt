@@ -55,9 +55,9 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             c_outFile << "# FieldArea: " + std::to_string(cp->GetRun()->GetBeamMaskArea()) << std::endl;
             auto beam_grav_centre = cp->GetRun()->GetBeamMaskeGravCentre();
             c_outFile << "# FieldGravCentre: "+std::to_string(beam_grav_centre.first)+","+std::to_string (beam_grav_centre.second) << std::endl;
-            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
+            std::string header = "Label,Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
             if(scoring_type==Scoring::Type::Voxel)
-                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
+                header = "Label,Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
             c_outFile << header << std::endl;
             for(auto& scoring : data){
                 writeVolumeHitDataRaw(c_outFile, scoring.second, scoring_type==Scoring::Type::Voxel);

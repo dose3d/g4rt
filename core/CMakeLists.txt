@@ -25,14 +25,11 @@ find_package(pybind11 REQUIRED)
 # Legacy fallback
 set(PYTHON_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python" CACHE FILEPATH "" FORCE)
 
-#
-find_package(spdlog REQUIRED)
 
 #----------------------------------------------------------------------------
 add_definitions(${Geant4_DEFINITIONS}
         ${ConfigSvc_DEFINITIONS}
         ${ROOT_DEFINITIONS}
-        ${spdlog_DEFINITIONS}
         ${IAEA_DEFINITIONS})
 
 #----------------------------------------------------------------------------
@@ -58,14 +55,12 @@ set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/geometry/PhaseSpace
         ${PROJECT_SOURCE_DIR}/geometry/BeamMonitoring
         ${PROJECT_SOURCE_DIR}/geometry/WorldConstruction
-        ${PROJECT_SOURCE_DIR}/services/log
         ${PROJECT_SOURCE_DIR}/services)
 
 include_directories(${HEADERS_DIR}
         ${IAEA_INCLUDE_DIR}
         ${Geant4_INCLUDE_DIRS}
         ${ConfigSvc_INCLUDE_DIR}
-        ${spdlog_INCLUDE_DIR}
         ${ROOT_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/action/*.cc
@@ -77,7 +72,7 @@ file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/action/*.cc
 
 #----------------------------------------------------------------------------
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
-target_link_libraries(${PROJECT_NAME} IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml spdlog::spdlog pybind11::embed)
+target_link_libraries(${PROJECT_NAME} IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml pybind11::embed)
 
 
 #----------------------------------------------------------------------------
@@ -94,11 +89,11 @@ set(${PROJECT_NAME}_INCLUDE_DIRS ${HEADERS_DIR} CACHE INTERNAL "${PROJECT_NAME}:
 # ### Test the Dose3D Detector construction
 # set(TESTNAME D3DDetectorTest)
 # add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/D3DDetector/test/D3DDetectorTest.cc)
-# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
+# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main)
 # gtest_discover_tests(${TESTNAME})
 
 # ### Test the Water Phantom construction
 # set(TESTNAME WaterPhantomTest)
 # add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc)
-# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES} gtest gtest_main)
+# target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main)
 # gtest_discover_tests(${TESTNAME})

@@ -4,7 +4,6 @@
 #include "cxxopts.h"
 #include <pybind11/embed.h>
 #include "toml.hh"
-#include "LogSvc.hh"
 #include "TLDWorldConstruction.hh"
 
 int main(int argc, const char *argv[]) {
@@ -19,11 +18,11 @@ int main(int argc, const char *argv[]) {
   pybind11::module sys = pybind11::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
   
-  SPDLOG_DEBUG("Initialize services");
+  //   SPDLOG_DEBUG("Initialize services");
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
 
-  SPDLOG_INFO("Wellcome G4RT!");
+  //   SPDLOG_INFO("Wellcome G4RT!");
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -53,7 +52,7 @@ int main(int argc, const char *argv[]) {
     // --------------------------------------------------------------------
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      LogSvc::DefaulLogLevel(logLevelStr);
+      // LogSvc::DefaulLogLevel(logLevelStr);
     }
 
       // OPERATION

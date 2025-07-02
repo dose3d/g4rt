@@ -22,10 +22,11 @@ WaterPhantom::~WaterPhantom() { Destroy(); }
 void WaterPhantom::ParseTomlConfig() {
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
-  LOGSVC_INFO("Importing configuration from:\n{}", configFile);
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Importing configuration from:\n{}", configFile);
 
   if (!svc::checkIfFileExist(configFile)) {
-    LOGSVC_CRITICAL("File {} not fount.", configFile);
+    //   LOGSVC_CRITICAL("File {} not fount.", configFile);
     G4Exception("WaterPhantom", "ParseTomlConfig", FatalErrorInArgument, "");
   }
 
@@ -36,7 +37,7 @@ void WaterPhantom::ParseTomlConfig() {
     configObjScoring.insert(0, configPrefix + "_");
   } else {
     G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg.data());
+    //   LOGSVC_CRITICAL(msg.data());
     G4Exception("WaterPhantom", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
 
@@ -77,19 +78,23 @@ void WaterPhantom::WriteInfo() {
   info = "Size of the water phantom: " + std::to_string(m_sizeX / cm) + " x " + std::to_string(m_sizeY / cm) + " x " + std::to_string(m_sizeZ / cm) + " [cm^3]";
   G4ThreeVector translation(configSvc->GetValue<double>("PatientGeometry", "PatientIsocentreX"), configSvc->GetValue<double>("PatientGeometry", "PatientIsocentreY"),
                             configSvc->GetValue<double>("PatientGeometry", "PatientIsocentreZ"));
-  LOGSVC_INFO(info);
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO(info);
   info = "Centre of the water phantom environment: (" + std::to_string(translation.getX() / cm) + "," + std::to_string(translation.getX() / cm) + "," +
          std::to_string(translation.getX() / cm) + ") [cm]\n";
-  LOGSVC_INFO(info);
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO(info);
 
   G4ThreeVector centre(m_centrePositionX * mm, m_centrePositionY * mm, m_centrePositionZ * mm);
-  LOGSVC_INFO("Centre of the water phantom (within the phantom world environment): {} [cm]\n", centre / cm);
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Centre of the water phantom (within the phantom world environment): {} [cm]\n", centre / cm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void WaterPhantom::Destroy() {
-  LOGSVC_INFO("Destroing the WaterPhantom volume.");
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Destroing the WaterPhantom volume.");
   auto phantomVolume = GetPhysicalVolume();
   if (phantomVolume) {
     delete phantomVolume;

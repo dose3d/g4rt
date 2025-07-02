@@ -73,13 +73,15 @@ void TLD::SetIDs(G4int x, G4int y, G4int z) {
 ////////////////////////////////////////////////////////////////////////////////
 // Write info (TODO)
 ////////////////////////////////////////////////////////////////////////////////
-void TLD::WriteInfo() { LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName()); }
+void TLD::WriteInfo() { std::cout << "Temp" << "\n";}
+                //   LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Destroy volumes and clean up
 ////////////////////////////////////////////////////////////////////////////////
 void TLD::Destroy() {
-  LOGSVC_INFO("Destroing the TLD volume.");
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Destroing the TLD volume.");
   // auto phantomVolume = GetPhysicalVolume();
   // if (phantomVolume) {
   //   delete phantomVolume;

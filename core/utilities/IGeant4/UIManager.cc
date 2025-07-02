@@ -3,14 +3,14 @@
 #include "G4Timer.hh"
 #include "toml.hh"
 #include "PrimaryGenerationAction.hh"
-#include "LogSession.hh"
+// #include "LogSession.hh"
 #include "LinacGeometry.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
-      LogSession * LoggedSession = new LogSession();
-      UIG4Manager->SetCoutDestination(LoggedSession);
+      // LogSession * LoggedSession = new LogSession();
+      // UIG4Manager->SetCoutDestination(LoggedSession);
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,8 @@ void UIManager::UserRunInitialization() {
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
-    LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
+    std::cout << "Temp" << "\n";
+                //   LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 

@@ -62,12 +62,14 @@ void D3DCell::SetIDs(G4int x, G4int y, G4int z) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void D3DCell::WriteInfo() { LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName()); }
+void D3DCell::WriteInfo() { std::cout << "Temp" << "\n";}
+                //   LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::Destroy() {
-  LOGSVC_INFO("Destroing the D3DCell volume.");
+  std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Destroing the D3DCell volume.");
   auto phantomVolume = GetPhysicalVolume();
   if (phantomVolume) {
     delete phantomVolume;
@@ -149,7 +151,8 @@ void D3DCell::DefineSensitiveDetector() {
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre;  // wrap this to VPatient::GetGlobalTranslation
 
-    LOGSVC_DEBUG("Construct SD >> current centre {} {} {}", centre.x(), centre.y(), centre.z());
+    std::cout << "Temp" << "\n";
+                //   LOGSVC_DEBUG("Construct SD >> current centre {} {} {}", centre.x(), centre.y(), centre.z());
 
     auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
     auto label = GetName();

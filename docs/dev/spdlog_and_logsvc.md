@@ -26,17 +26,17 @@ LogSvc::DefaulLogLevel(logLevelStr);
 
 For default logger use macro:
 ```
-SPDLOG_INFO("Message");
-SPDLOG_INFO("Message {} {}",var1,var2);
+//   SPDLOG_INFO("Message");
+//   SPDLOG_INFO("Message {} {}",var1,var2);
 ```
 Available macros for each level:
 ```
-SPDLOG_TRACE();
-SPDLOG_DEBUG();
-SPDLOG_INFO();
-SPDLOG_WARN();
-SPDLOG_ERROR();
-SPDLOG_CRITICAL()
+//   SPDLOG_TRACE();
+//   SPDLOG_DEBUG();
+//   SPDLOG_INFO();
+//   SPDLOG_WARN();
+//   SPDLOG_ERROR();
+//   SPDLOG_CRITICAL()
 ```
 
 # Use as class local logger
@@ -51,7 +51,7 @@ Add class member m_logger:
 In class constructor use macro to initialize logger with class name as logger name (typeid(*this).name())
 
 ```
-LOGSVC_LOGGER_INITIALIZE;
+//   LOGSVC_LOGGER_INITIALIZE;
 ```
 
 Or with custom logger name
@@ -63,17 +63,21 @@ m_logger = LogSvc::GetLogger("RunSvc");
 
 For local class logger use macro: 
 ```
-LOGSVC_INFO("Message");
-LOGSVC_INFO("Message {} {}",var1,var2);
+std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Message");
+std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO("Message {} {}",var1,var2);
 ```
 Available macros for each level:
 
 ```
-LOGSVC_TRACE();
-LOGSVC_DEBUG();
-LOGSVC_INFO();
-LOGSVC_WARN();
-LOGSVC_ERROR();
-LOGSVC_CRITICAL()
+//   LOGSVC_TRACE();
+std::cout << "Temp" << "\n";
+                //   LOGSVC_DEBUG();
+std::cout << "Temp" << "\n";
+                //   LOGSVC_INFO();
+//   LOGSVC_WARN();
+//   LOGSVC_ERROR();
+//   LOGSVC_CRITICAL()
 ```
 

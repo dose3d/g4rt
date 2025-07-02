@@ -14,6 +14,7 @@
 #include "toml.hh"
 #include "colors.hh"
 #include "WorldConstruction.hh"
+#include "LogSvc.hpp"
 #include <locale.h>
 
 int main(int argc, const char *argv[]) {
@@ -24,12 +25,15 @@ int main(int argc, const char *argv[]) {
   py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  //   SPDLOG_DEBUG("Initialize services");
+
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-  //   SPDLOG_DEBUG("End of initialize services");
 
-  //   SPDLOG_INFO("Wellcome G4RT!");
+    // Inicjalizacja loggera
+    LogSvc::Init(argc, argv, "/home/jackie/Dokumenty/PersonalProjects/g4rt/build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+    LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
+    // LogSvc::AddModuleLogFile("RunAnalysis", "logs/RunAnalysis.log", loguru::Verbosity_MAX);
+
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -70,7 +74,7 @@ int main(int argc, const char *argv[]) {
 
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      // LogSvc::DefaulLogLevel(logLevelStr);
+      // LogSvc::DefaulLogLevel(logLevelStr); (TODO: Obsłuż przechwytywanie tego.)
     }
 
       // OPERATION
@@ -128,8 +132,13 @@ int main(int argc, const char *argv[]) {
     } 
     auto world = WorldConstruction::GetInstance();
     runSvc->Initialize(world);
+    LOGSVC_INFO("MainModule", "Program startuje.");
     runSvc->Run();
+    LOGSVC_DEBUG("MainModule", "Debug log testowy.");
     runSvc->Finalize();
+    LOGSVC_INFO("MainModule", "Program kończy działanie. Zwyciestwo!");
+    loguru::shutdown();  // Zamknięcie loggera
+
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;
   }

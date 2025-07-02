@@ -6,6 +6,7 @@
 #define CSV_RUN_ANALYSIS_HH
 
 #include "globals.hh"
+#include "LogSvc.hpp"
 
 class G4Run;
 

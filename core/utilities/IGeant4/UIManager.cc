@@ -3,14 +3,14 @@
 #include "G4Timer.hh"
 #include "toml.hh"
 #include "PrimaryGenerationAction.hh"
-// #include "LogSession.hh"
+#include "LogSession.hh"
 #include "LinacGeometry.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
-      // LogSession * LoggedSession = new LogSession();
-      // UIG4Manager->SetCoutDestination(LoggedSession);
+      auto log_session = new LogSession(); // Utworzenie sesji
+      G4UImanager::GetUIpointer()->SetCoutDestination(log_session);
     }
 
 ////////////////////////////////////////////////////////////////////////////////

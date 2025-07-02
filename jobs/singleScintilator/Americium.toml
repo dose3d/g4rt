@@ -2,7 +2,7 @@
 JobName = "AmerykOnGPS"
 BeamType = "gps"
 GpsMacFileName = "gps/gps_alpha_Am_241.mac" # gets file from data/ in this repo
-PrintProgressFrequency = 0.0005
+PrintProgressFrequency = 0.05
 Physics = "LowE_Polar_Livermore" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = true

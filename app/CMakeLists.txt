@@ -19,11 +19,21 @@ find_package(Geant4 REQUIRED)
 include(${Geant4_USE_FILE})
 
 #----------------------------------------------------------------------------
-# Setup the module for embedding the python interpreter
-set(PYBIND11_FINDPYTHON ON)
+# Konfiguracja Loguru
+set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
+set(LOGURU_SRC ${LOGURU_INCLUDE_DIR}/loguru.cpp)
+
+#----------------------------------------------------------------------------
+find_package(fmt REQUIRED)
+#----------------------------------------------------------------------------
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+include_directories(${Python3_INCLUDE_DIRS})
+link_directories(${Python3_LIBRARY_DIRS})
+add_definitions(-DPYTHON_EXECUTABLE=\"${Python3_EXECUTABLE}\")
+set(PYBIND11_PYTHON_VERSION ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
+set(PYBIND11_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/pybind11/include)
 find_package(pybind11 REQUIRED)
-# Legacy fallback
-set(PYTHON_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python" CACHE FILEPATH "" FORCE)
+
 
 
 #----------------------------------------------------------------------------
@@ -46,6 +56,7 @@ include_directories(${IAEA_INCLUDE_DIR}
         ${TOML_INCLUDE_DIR}
         ${Geant4_INCLUDE_DIRS}
         ${ROOT_INCLUDE_DIRS}
+        ${LOGURU_INCLUDE_DIR}
         ${HEADERS_DIR})
 
         
@@ -53,8 +64,9 @@ include_directories(${IAEA_INCLUDE_DIR}
 if(BUILD_G4RT)
         message(STATUS "BUILD_G4RT is ON: \tBuilding g4rt executable.")
         file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
-        add_executable(g4rt ${SOURCES} basic/main.cc)
-        target_link_libraries(g4rt IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+        add_executable(g4rt ${SOURCES} basic/main.cc ${CMAKE_SOURCE_DIR}/core/services/LogSvc.cpp)
+        target_link_libraries(g4rt IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl fmt::fmt)
+        target_include_directories(g4rt PRIVATE ${LOGURU_INCLUDE_DIR})
 else()
         message(STATUS "BUILD_G4RT is OFF: \tSkipping build of g4rt executable.")
 endif()
@@ -63,8 +75,9 @@ endif()
 if(BUILD_BG4RT)
         message(STATUS "BUILD_BG4RT is ON: \tBuilding g4rt_bworld executable.")
         file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
-        add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
-        target_link_libraries(g4rt_bworld IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+        add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc ${CMAKE_SOURCE_DIR}/core/services/LogSvc.cpp)
+        target_link_libraries(g4rt_bworld IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl fmt::fmt)
+        target_include_directories(g4rt_bworld PRIVATE ${LOGURU_INCLUDE_DIR})
 else()
         message(STATUS "BUILD_BG4RT is OFF: \tSkipping build of g4rt_bworld executable.")
 endif()
@@ -73,8 +86,9 @@ endif()
 if(BUILD_DCM2DAT)
         message(STATUS "BUILD_DCM2DAT is ON: \tBuilding dcm2dat executable.")
         file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
-        add_executable(dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc)
-        target_link_libraries(dcm2dat IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+        add_executable(dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc ${CMAKE_SOURCE_DIR}/core/services/LogSvc.cpp)
+        target_link_libraries(dcm2dat IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl fmt::fmt)
+        target_include_directories(dcm2dat PRIVATE ${LOGURU_INCLUDE_DIR})
 else()
         message(STATUS "BUILD_DCM2DAT is OFF: \tSkipping build of dcm2dat executable.")
 endif()
@@ -83,8 +97,9 @@ endif()
 if(BUILD_TLD)
         message(STATUS "BUILD_TLD is ON: \tBuilding tld executable.")
         file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/tld/*.cc)
-        add_executable(tld ${SOURCES_DCM2DAT} tld/main.cc)
-        target_link_libraries(tld IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+        add_executable(tld ${SOURCES_DCM2DAT} tld/main.cc ${CMAKE_SOURCE_DIR}/core/services/LogSvc.cpp)
+        target_link_libraries(tld IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl fmt::fmt)
+        target_include_directories(tld PRIVATE ${LOGURU_INCLUDE_DIR})
 else()
         message(STATUS "BUILD_TLD is OFF: \tSkipping build of tld executable.")
 endif()
@@ -97,10 +112,5 @@ install(TARGETS g4rt
 install(DIRECTORY "${PROJECT_DATA_PATH}" DESTINATION "${PROJECT_INSTALL_DIR}/")
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/..scripts/g4rt.sh" DESTINATION "/etc/profile.d/")
 
-# deb package definitions
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "madej") #required
-SET(CPACK_PACKAGE_VERSION "0.0.5")
-SET(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-#SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/postinst")
+
 INCLUDE(CPack)

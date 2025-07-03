@@ -8,7 +8,13 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-add_compile_definitions(LOGURU_USE_FMTLIB=1)
+add_compile_definitions(LOGURU_USE_FMTLIB=1
+                        LOGURU_FILENAME_WIDTH=32
+                        LOGURU_THREADNAME_WIDTH=16
+                        LOGURU_SCOPE_TEXT_SIZE=256)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+
 #----------------------------------------------------------------------------
 # prevent for in-source building
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

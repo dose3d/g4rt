@@ -32,7 +32,6 @@ int main(int argc, const char *argv[]) {
     // Inicjalizacja loggera
     LogSvc::Init(argc, argv, "/home/jackie/Dokumenty/PersonalProjects/g4rt/build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
     LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
-    // LogSvc::AddModuleLogFile("RunAnalysis", "logs/RunAnalysis.log", loguru::Verbosity_MAX);
 
 
   if (argc > 1) {

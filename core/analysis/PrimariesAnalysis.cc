@@ -31,8 +31,7 @@ void PrimariesAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   // Book Primaries data Ntuple
   //------------------------------------------
   std::string treeName = "PrimariesTree";
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("PrimariesAnalysis::Defining TTree: {}",treeName);
+  LOGSVC_INFO("Analysis","PrimariesAnalysis::Defining TTree: {}",treeName);
   auto ntupleId = analysisManager->CreateNtuple(treeName,"Primaries data");
   m_ntupleId.Put(ntupleId);
   m_gammaN.Put(0);

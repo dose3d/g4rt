@@ -326,11 +326,9 @@ void VoxelHit::Print() const { const_cast<VoxelHit*>(this)->Print(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void VoxelHit::Print() {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Volume {}", m_Voxel.m_global_idx_x, 
-                // m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z, m_Voxel.m_idx_x, m_Voxel.m_idx_y,
-                // m_Voxel.m_idx_z, m_Voxel.m_Mass, m_Voxel.m_Volume);
+void VoxelHit::Print() {LOGSVC_INFO("Geometry","Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Volume {}", 
+                        m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z, m_Voxel.m_idx_x, 
+                        m_Voxel.m_idx_y, m_Voxel.m_idx_z, m_Voxel.m_Mass, m_Voxel.m_Volume);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -479,8 +477,7 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 ///
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check) {
   // if(!global_and_local_allignemnt_check)
-  //   Print(); std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("+"); other.Print();
+  // Print(); LOGSVC_INFO("Geometry","+"); other.Print();
   if (IsAligned(other, global_and_local_allignemnt_check)) {
     if (!global_and_local_allignemnt_check) {  // cell/voxel
       // G4cout << "[INFO]::VoxelHit::Cumulate m_Voxel.m_Dose pre summ "<<m_Voxel.m_Dose << G4endl;
@@ -495,9 +492,9 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
       return *this += other;
     }
   } else {
-    //   LOGSVC_WARN("Trying to cumulate misaligned VoxelHits...");
+      LOGSVC_WARN("Geometry","Trying to cumulate misaligned VoxelHits...");
     Print();
-    //   LOGSVC_WARN("+");
+      LOGSVC_WARN("Geometry","+");
     other.Print();
   }
   return *this;

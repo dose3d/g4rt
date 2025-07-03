@@ -69,13 +69,12 @@ void D3DTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();
     if (!svc::checkIfFileExist(configFile)) {
-        //   LOGSVC_CRITICAL("D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
+        LOGSVC_FATAL("Geometry","D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
         exit(1);
     }
     auto config = toml::parse_file(configFile);
     auto configPrefix = GetTomlConfigPrefix();
-    std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
+    LOGSVC_INFO("Geometry","D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
 
     m_global_centre.setX(config[configPrefix]["Position"][0].value_or(0.0));
     m_global_centre.setY(config[configPrefix]["Position"][1].value_or(0.0));

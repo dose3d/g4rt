@@ -13,8 +13,7 @@
 void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr){
   if(m_patientSD.Get()==0) // NOTE: this should be checked already from the caller!
     m_patientSD.Put(sensitiveDetectorPtr);
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Setting Sensitive Detector ({}) for {}",sensitiveDetectorPtr->GetName(),logicalVName);
+  LOGSVC_INFO("Geometry","Setting Sensitive Detector ({}) for {}",sensitiveDetectorPtr->GetName(),logicalVName);
   G4SDManager::GetSDMpointer()->AddNewDetector(m_patientSD.Get());
   Service<GeoSvc>()->World()->SetSensitiveDetector(logicalVName, m_patientSD.Get());
 }
@@ -24,7 +23,7 @@ void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* se
 G4double VPatient::GetVolume() const {
   if(m_volume<-1){
     G4String msg = "Volume of the "+GetName()+" no set or set with value < 0.";
-    //   LOGSVC_CRITICAL(msg.data());
+    LOGSVC_FATAL("Geometry",msg.data());
     G4Exception("RunSvc", "DefineControlPoints", FatalErrorInArgument, msg);
   }
   return m_volume;

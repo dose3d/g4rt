@@ -120,7 +120,7 @@ Using convenient macros provided by LogSvc:
 
 ```cpp
 LOGSVC_INFO("Physics", "Particle simulation started.");
-LOGSVC_WARNING("Detector", "Detector anomaly at energy: {} MeV", 13.37);
+LOGSVC_WARN("Detector", "Detector anomaly at energy: {} MeV", 13.37);
 LOGSVC_ERROR("Analysis", "Data analysis failed due to missing inputs.");
 ```
 
@@ -128,7 +128,7 @@ Define custom macros for readability and module-specific logging:
 
 ```cpp
 #define PHYSIC_INFO(msg, ...)    LOGSVC_INFO("PhysicsModule", msg, ##__VA_ARGS__)
-#define DETECTOR_WARN(msg, ...)  LOGSVC_WARNING("DetectorModule", msg, ##__VA_ARGS__)
+#define DETECTOR_WARN(msg, ...)  LOGSVC_WARN("DetectorModule", msg, ##__VA_ARGS__)
 #define ANALYSIS_ERROR(msg, ...) LOGSVC_ERROR("AnalysisModule", msg, ##__VA_ARGS__)
 
 // Example Usage:

@@ -148,8 +148,8 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 ///
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
-    std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Service initialization...");
+    
+      LOGSVC_INFO("Geometry","Service initialization...");
     PrintConfig();
 
     if (m_configSvc->GetValue<bool>("RunSvc", "SavePhSp")) 
@@ -415,8 +415,8 @@ void GeoSvc::ExportToGateGenericRepeater() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Writing Scroing Components to CSV...");
+  
+      LOGSVC_INFO("Geometry","Writing Scroing Components to CSV...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
       // Generic geometry export
@@ -429,12 +429,12 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Writing Scroing Components to TFile...");
+  
+      LOGSVC_INFO("Geometry","Writing Scroing Components to TFile...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
-      std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Implement me ...");
+      
+      LOGSVC_INFO("Geometry","Implement me ...");
       // gc->ExportPositioningToTFile(output_dir); to be repaired to new scoring maps scheme
   }
 }
@@ -442,8 +442,8 @@ void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Write geometry as TGeometry object in TFile
 void GeoSvc::WriteWorldToTFile() {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_DEBUG("Writing World Geometry To TFile...");
+  
+      LOGSVC_DEBUG("Geometry","Writing World Geometry To TFile...");
   auto output_dir = GetOutputDir();
   if(!m_is_gdml_exported){
     WriteWorldToGdml();
@@ -510,8 +510,8 @@ void GeoSvc::WriteWorldToTFile() {
   // Final export
   geo_dir->WriteTObject(tgeom,"World_Geometry");
   tgeom->UnlockGeometry();
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Writing to {} - done!",geo_tfile);
+  
+      LOGSVC_INFO("Geometry","Writing to {} - done!",geo_tfile);
   m_is_tfile_exported = true;
 }
 
@@ -536,8 +536,8 @@ void GeoSvc::WritePatientToDicomCT(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteWorldToGdml(){
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_DEBUG("Writing World Geometry To GDML...");
+  
+      LOGSVC_DEBUG("Geometry","Writing World Geometry To GDML...");
   World()->ExportToGDML(GetOutputDir(),m_world_file_name+".gdml");
   m_is_gdml_exported = true;
 }

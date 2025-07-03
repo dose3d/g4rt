@@ -125,8 +125,8 @@ void WorldConstruction::DefaultConfig(const std::string &unit) {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void WorldConstruction::Destroy() {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Destroing the World volumes... ");
+
+            LOGSVC_INFO("Geometry","Destroing the World volumes... ");
   auto physicalWorldVolume = GetPhysicalVolume();
   if (physicalWorldVolume) {
     G4GeometryManager::GetInstance()->OpenGeometry();
@@ -192,8 +192,7 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
       m_gantryEnv->IPhysicalVolume::Construct(this);
     }
   } else {
-    std::cout << "Temp" << "\n";
-                //   LOGSVC_DEBUG('WorldConstruction:: The gantry geometry is switched off...')
+            LOGSVC_DEBUG("Geometry","The gantry geometry is switched off...");
   }
 
   // ___________________________________________________________________
@@ -204,8 +203,8 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
       m_phantomEnv->IPhysicalVolume::Construct(this);
     }
   } else {
-    std::cout << "Temp" << "\n";
-                //   LOGSVC_DEBUG("[DEBUG]::WorldConstruction:: The patient geometry is switched off... ")
+  
+            LOGSVC_DEBUG("Geometry","The patient geometry is switched off... ");
   }
 
   // ___________________________________________________________________
@@ -242,8 +241,8 @@ G4bool WorldConstruction::Update() { return true; } // override
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool WorldConstruction::Update(int runId) {
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Updating world geometry for run {}",runId);
+
+            LOGSVC_INFO("Geometry","Updating world geometry for run {}",runId);
   // if (thisConfig()->GetStatus()) {
   //   G4cout << "[INFO]:: World configuration has been updated..." << G4endl;
   //   for (auto param : thisConfig()->GetUnitsNames()) {
@@ -331,19 +330,19 @@ std::string WorldConstruction::ExportToGDML(const std::string& path, const std::
   // select the top world for the export begin from:
   auto worldToBeExported = GetPhysicalVolume(worldName);
   if (!worldName.empty() && !worldToBeExported) {
-    //   LOGSVC_ERROR("ExportToGDML:: Couldn't find the world of interest");
+  LOGSVC_ERROR("Geometry","ExportToGDML:: Couldn't find the world of interest");
     return file;
   }
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Exporting: {}", worldToBeExported->GetName());
+
+  LOGSVC_INFO("Geometry","Exporting: {}", worldToBeExported->GetName());
   
   // build and switch to the solid like volumes of parameterized worlds
   // TODO make this working for all geometry tree!
   // IPhysicalVolume::ParameterisationInstantiation(IParameterisation::EXPORT);
 
   parserW->Write(file, worldToBeExported);
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("World exported to gdml file");
+
+  LOGSVC_INFO("Geometry","World exported to gdml file");
 
   // after the export, switch back the voxelization to the parameterized one.
   // TODO make this working for all geometry tree!

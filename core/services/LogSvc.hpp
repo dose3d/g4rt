@@ -1,8 +1,8 @@
 // LogSvc.hpp
 #pragma once
-
 #include <loguru.hpp>
 #include <fmt/format.h>
+#include "FmtFormatters.hpp"
 #include <string>
 #include <unordered_map>
 #include <memory>
@@ -29,7 +29,7 @@ public:
      * @param verbosity Logging verbosity level.
      */
     static void AddModuleLogFile(const std::string& module, const std::string& full_log_path, loguru::Verbosity verbosity);
-
+    static void SetThreadName(const std::string& name);
 
     /**
      * @brief Ustawia poziom logowania do terminala.
@@ -40,18 +40,16 @@ public:
     static void SetLogFolder(const std::string& folder) { s_log_folder = folder; }
     static std::string GetLogFolder() { return s_log_folder; }
 
-    static void SetVerbosity(loguru::Verbosity verbosity) {
-        s_verbosity = verbosity;
-        loguru::g_stderr_verbosity = verbosity;
-    }
-    static loguru::Verbosity GetVerbosity() { return s_verbosity; }
+
+    static loguru::Verbosity GetVerbosity() { return s_terminal_verbosity; }
 
     /**
      * @brief Replaces the current main log file with a new one.
      * @param new_log_full_path Full path to the new log file.
      */
     static void ReconfigureMainLog(const std::string& new_log_full_path);
-
+    static void EnableCustomVerbosityNames();
+    static void EnableColoredTerminalOutput();
 
     
 
@@ -60,7 +58,7 @@ public:
      */
 template<typename... Args>
 static void LogDebug(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
-    logToModule(module, loguru::Verbosity_MAX, file, line, format, args...);
+    logToModule(module, loguru::Verbosity_9, file, line, format, args...);
 }
 
 template<typename... Args>
@@ -88,12 +86,15 @@ static void LogFatal(const std::string& module, const char* file, int line, cons
 
     static inline std::string s_log_folder = "logs";
     static inline std::string s_main_log_id = "";
-    static inline loguru::Verbosity s_verbosity = loguru::Verbosity_INFO;
+    static inline loguru::Verbosity s_terminal_verbosity = loguru::Verbosity_INFO;
+
 
     static std::unordered_map<std::string, std::shared_ptr<FILE>> module_log_files;
     /**
      * @brief Logs a formatted message to the specified module.
      */
+
+
 template<typename... Args>
 static void logToModule(const std::string& module, loguru::Verbosity verbosity, const char* file, int line, const char* format, const Args&... args) {
     std::string formatted_message = fmt::vformat(format, fmt::make_format_args(args...));
@@ -101,8 +102,15 @@ static void logToModule(const std::string& module, loguru::Verbosity verbosity, 
 }
 };
 
-#define LOGSVC_DEBUG(module, msg, ...)      LogSvc::LogDebug(module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
-#define LOGSVC_INFO(module, msg, ...)       LogSvc::LogInfo(module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
-#define LOGSVC_WARNING(module, msg, ...)    LogSvc::LogWarning(module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
-#define LOGSVC_ERROR(module, msg, ...)      LogSvc::LogError(module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
-#define LOGSVC_FATAL(module, msg, ...)      LogSvc::LogFatal(module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define LOGSVC_DEBUG(   module, msg, ...)           LogSvc::LogDebug(   module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define LOGSVC_INFO(    module, msg, ...)           LogSvc::LogInfo(    module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define LOGSVC_WARN(    module, msg, ...)           LogSvc::LogWarning( module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define LOGSVC_ERROR(   module, msg, ...)           LogSvc::LogError(   module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define LOGSVC_FATAL(   module, msg, ...)           LogSvc::LogFatal(   module, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+
+#define LOGSVC_DEBUG_RAW(   module, msg, ...)       LogSvc::LogDebug(   module, "Geant4", 0, msg, ##__VA_ARGS__)
+#define LOGSVC_INFO_RAW(    module, msg, ...)       LogSvc::LogInfo(    module, "Geant4", 0, msg, ##__VA_ARGS__)
+#define LOGSVC_WARN_RAW(    module, msg, ...)       LogSvc::LogWarning( module, "Geant4", 0, msg, ##__VA_ARGS__)
+#define LOGSVC_ERROR_RAW(   module, msg, ...)       LogSvc::LogError(   module, "Geant4", 0, msg, ##__VA_ARGS__)
+#define LOGSVC_FATAL_RAW(   module, msg, ...)       LogSvc::LogFatal(   module, "Geant4", 0, msg, ##__VA_ARGS__)
+

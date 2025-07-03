@@ -351,7 +351,7 @@ void PatientGeometry::DefineSensitiveDetector() {
       m_patient->DefineSensitiveDetector();
     } else {
       std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
-      //   LOGSVC_WARN("No sensitive detector defined for patient. Any analysis is switched on ({})!",worker);
+      LOGSVC_WARN("Geometry","No sensitive detector defined for patient. Any analysis is switched on ({})!",worker);
     }
   }
 }
@@ -412,8 +412,7 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   G4int zResolution = env_size_z / sizeZ;
 
   // Log the resolution
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("ExportToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
+  LOGSVC_INFO("Geometry","ExportToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // Dump metadata to file
   auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
@@ -514,8 +513,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   G4int yResolution = env_size_y / sizeY;
   G4int zResolution = env_size_z / sizeZ;
 
-  std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
+  LOGSVC_INFO("Geometry","ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // DUMP METADATA TO FILE 
   auto meta =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_series_metadata.csv";

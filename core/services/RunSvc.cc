@@ -233,6 +233,10 @@ void RunSvc::Initialize(WorldConstruction* world) {
   world->Create();
   Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
+  auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir");
+  LogSvc::ReconfigureMainLog(output_dir + "/logs/main.log");
+  LogSvc::AddModuleLogFile("RunSvc", output_dir + "/logs/RunSvc.log", loguru::Verbosity_MAX);
+  // LogSvc::AddModuleLogFile("Physic", output_dir + "/logs/physic.log", loguru::Verbosity_INFO);
   // LogSvc::Configure();
   // m_logger = LogSvc::RecreateLogger("RunSvc");
   

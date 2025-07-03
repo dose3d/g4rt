@@ -37,8 +37,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
   std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
 
   if (hcName.empty()) {
-    std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Defining TTree: {} (single scoring volume)", treeName);
+    LOGSVC_INFO("Analysis","Defining TTree: {} (single scoring volume)", treeName);
 
     // Create new entry for single-scoring-volume case
     ttreeVec.emplace_back();
@@ -64,8 +63,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
     }
 
     if (!treeExists) {
-      std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Defining TTree: {} (new shared tree)", treeName);
+      LOGSVC_INFO("Analysis","Defining TTree: {} (new shared tree)", treeName);
       ttreeVec.emplace_back();
       auto& tree = ttreeVec.back();
       tree.m_name = treeName;

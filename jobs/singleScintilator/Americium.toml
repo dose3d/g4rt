@@ -9,14 +9,14 @@ PrimariesAnalysis = true
 NTupleAnalysis = true
 StepAnalysis = false
 RunAnalysis = true
-EnableExtraProcesses = true
+EnableExtraProcesses = false
 
-StoreTracks= true
-StorePositions= true
-StoreEnergies = true
-StorePrimaries = true
-StoreRunInfo= true
-MinimalMode= false
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
 
 [GeoSvc]
 BuildLinac = true
@@ -48,7 +48,7 @@ FarmerDoseCalibration = false
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 2000      # This will overwrite Rotation value for all below plan files!
+nParticles = 5000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp5x5.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

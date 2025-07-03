@@ -235,8 +235,7 @@ bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
         dynamic_cast<MlcHd120*>(m_mlc)->IPhysicalVolume::Construct(this);
         break;
       case EMlcModel::Simplified:
-        std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Using Simplified type of MLC");
+        LOGSVC_INFO("Geometry","Using Simplified type of MLC");
         m_mlc = new MlcSimplified;
         break;
     }
@@ -255,8 +254,7 @@ bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
         break;
       case EMlcModel::Simplified:
         delete m_mlc;
-        std::cout << "Temp" << "\n";
-                //   LOGSVC_INFO("Using Simplified type of MLC");
+        LOGSVC_INFO("Geometry","Using Simplified type of MLC");
         m_mlc = new MlcSimplified();
         break;
     }

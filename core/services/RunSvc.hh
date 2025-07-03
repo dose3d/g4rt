@@ -15,7 +15,13 @@
 #include "VoxelHit.hh"
 #include "LogSvc.hpp"
 
+#define DEFAULT_MODULE "RunSvc"
 
+#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_WARNING(msg, ...) LOGSVC_WARN(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(DEFAULT_MODULE, msg, ##__VA_ARGS__)
 /// TODO 1: TpFractionCounter (double evtTotalEnergy); // return EvtFractionId
 /// TODO 2: DaqTimeCounter(); // based on the global timer, returns EvtTimeId
 
@@ -39,13 +45,7 @@ enum class OperationalMode {
 class RunSvc : public TomlConfigurable {
   private:
 
-  #define DEFAULT_MODULE "RunSvc"
 
-  #define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-  #define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-  #define RUNSVC_WARNING(msg, ...) LOGSVC_WARNING(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-  #define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-  #define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(DEFAULT_MODULE, msg, ##__VA_ARGS__)
 
   RunSvc();
 

@@ -55,7 +55,7 @@ std::string svc::getOutputDir(){ // const std::string& path
   auto configSvc = Service<ConfigSvc>();
   auto output_dir = configSvc->GetValue<std::string>("RunSvc", "OutputDir");
     if(output_dir.empty()){
-      //   LOGSVC_CRITICAL("OutputDir must be not empty!");
+      LOGSVC_FATAL("Service","OutputDir must be not empty!");
       std::exit(EXIT_FAILURE);
       
       // configSvc->SetValue("RunSvc", "OutputDir", output_dir);

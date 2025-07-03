@@ -8,8 +8,10 @@ void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_f
                   loguru::Verbosity verbosity, int flush_interval_ms) {
     char** nonConstArgv = const_cast<char**>(argv);
     loguru::init(argc, nonConstArgv);
+    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+    loguru::add_stack_cleanup("std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >", "std::string");
 
-    SetVerbosity(verbosity);
+
 
 #ifdef PROJECT_LOCATION_PATH
     SetLogFolder(PROJECT_LOCATION_PATH + std::string("/logs"));
@@ -19,13 +21,16 @@ void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_f
 
     std::string full_path = s_log_folder + "/" + default_log_file;
     s_main_log_id = full_path;
-    loguru::add_file(full_path.c_str(), loguru::Append, s_verbosity);
+    loguru::add_file(full_path.c_str(), loguru::Append, s_terminal_verbosity);
     loguru::g_flush_interval_ms = flush_interval_ms;
+    EnableCustomVerbosityNames();
+    EnableColoredTerminalOutput();
 }
 
 void LogSvc::SetTerminalLogLevel(loguru::Verbosity verbosity) {
-    loguru::g_stderr_verbosity = verbosity;
+    s_terminal_verbosity = verbosity;
 }
+
 
 void LogSvc::ReconfigureMainLog(const std::string& new_log_full_path) {
     if (!s_main_log_id.empty()) {
@@ -38,7 +43,11 @@ void LogSvc::ReconfigureMainLog(const std::string& new_log_full_path) {
 
     // Save the full path as ID
     s_main_log_id = new_log_full_path;
-    loguru::add_file(new_log_full_path.c_str(), loguru::Append, s_verbosity);
+    loguru::add_file(new_log_full_path.c_str(), loguru::Append, s_terminal_verbosity);
+}
+
+void LogSvc::SetThreadName(const std::string& name) {
+    loguru::set_thread_name(name.c_str());
 }
 
 void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full_log_path, loguru::Verbosity verbosity) {
@@ -80,5 +89,56 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
     
 }
 
+void LogSvc::EnableColoredTerminalOutput() {
+    loguru::add_callback(
+        "colored_terminal",
+        [](void*, const loguru::Message& msg) {
+            if (msg.verbosity > s_terminal_verbosity) return;
+
+            const char* color = "";
+            switch (msg.verbosity) {
+                case loguru::Verbosity_FATAL:   color = loguru::terminal_red();        break;
+                case loguru::Verbosity_ERROR:   color = loguru::terminal_light_red();  break;
+                case loguru::Verbosity_WARNING: color = loguru::terminal_yellow();     break;
+                case loguru::Verbosity_INFO:    color = loguru::terminal_green();      break;
+                case 9:                         color = loguru::terminal_purple();     break;
+                default:                        color = "";      break;
+            }
+
+            fprintf(stderr, "%s%s%s%s\n",
+                    color,
+                    msg.preamble,
+                    msg.message,
+                    loguru::terminal_reset());
+
+            if (loguru::g_flush_interval_ms == 0) {
+                fflush(stderr);
+            }
+        },
+        nullptr,
+        loguru::Verbosity_MAX
+    );
+}
 
 
+void LogSvc::EnableCustomVerbosityNames() {
+    loguru::set_verbosity_to_name_callback([](loguru::Verbosity v) -> const char* {
+        switch (v) {
+            case loguru::Verbosity_FATAL:   return "FATAL";
+            case loguru::Verbosity_ERROR:   return "ERROR";
+            case loguru::Verbosity_WARNING: return "WARNING";
+            case loguru::Verbosity_INFO:    return "INFO";
+            case 9:                         return "DEBUG";
+            default:                        return nullptr;
+        }
+    });
+
+    loguru::set_name_to_verbosity_callback([](const char* name) -> loguru::Verbosity {
+        if (strcmp(name, "FAT") == 0) return loguru::Verbosity_FATAL;
+        if (strcmp(name, "ERR") == 0) return loguru::Verbosity_ERROR;
+        if (strcmp(name, "WRN")  == 0) return loguru::Verbosity_WARNING;
+        if (strcmp(name, "INF")  == 0) return loguru::Verbosity_INFO;
+        if (strcmp(name, "DEB") == 0) return 9;
+        return loguru::Verbosity_INVALID;
+    });
+}

@@ -5,7 +5,8 @@
 #include "EventAction.hh"
 #include "SteppingAction.hh"
 #include "RunAction.hh"
-
+#include "LogSvc.hpp"
+#include "G4Threading.hh"
 /////////////////////////////////////////////////////////////////////////////
 ///
 void ActionInitialization::BuildForMaster() const {
@@ -24,6 +25,10 @@ void ActionInitialization::BuildForMaster() const {
 /////////////////////////////////////////////////////////////////////////////
 ///
 void ActionInitialization::Build() const {
+
+  std::stringstream name;
+  name << "worker-" << G4Threading::G4GetThreadId();
+  LogSvc::SetThreadName(name.str());
 
   G4ScoringManager::GetScoringManager()->SetScoreWriter(new UserScoreWriter());
 

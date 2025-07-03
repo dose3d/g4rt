@@ -30,6 +30,7 @@ public:
      */
     static void AddModuleLogFile(const std::string& module, const std::string& full_log_path, loguru::Verbosity verbosity);
     static void SetThreadName(const std::string& name);
+    static loguru::Verbosity ParseVerbosityLevel(const std::string& level_str);
 
     /**
      * @brief Ustawia poziom logowania do terminala.

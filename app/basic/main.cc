@@ -29,9 +29,9 @@ int main(int argc, const char *argv[]) {
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
 
-    // Inicjalizacja loggera
-    LogSvc::Init(argc, argv, "/home/jackie/Dokumenty/PersonalProjects/g4rt/build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
-    LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
+  // Inicjalizacja loggera
+  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+  
 
 
   if (argc > 1) {
@@ -61,7 +61,6 @@ int main(int argc, const char *argv[]) {
       std::cout << options.help({"", "Application run mode"}) << std::endl;
       std::exit(EXIT_SUCCESS);
     }
-
     auto cmdopts = std::move(results);
 
     // GENERAL
@@ -73,6 +72,15 @@ int main(int argc, const char *argv[]) {
 
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
+      auto verbosity = LogSvc::ParseVerbosityLevel(logLevelStr);
+
+      if (verbosity == loguru::Verbosity_INVALID) {
+          std::cerr << "Invalid log level: " << logLevelStr << "\n"
+                    << "Valid values: OFF, FATAL, ERROR, WARNING, INFO, DEBUG, or integer 0–9\n";
+          return 1;
+      }
+      LogSvc::SetTerminalLogLevel(verbosity); // Set it by command line option
+
       // LogSvc::DefaulLogLevel(logLevelStr); (TODO: Obsłuż przechwytywanie tego.)
     }
 

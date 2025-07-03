@@ -120,7 +120,6 @@ void LogSvc::EnableColoredTerminalOutput() {
     );
 }
 
-
 void LogSvc::EnableCustomVerbosityNames() {
     loguru::set_verbosity_to_name_callback([](loguru::Verbosity v) -> const char* {
         switch (v) {
@@ -134,11 +133,35 @@ void LogSvc::EnableCustomVerbosityNames() {
     });
 
     loguru::set_name_to_verbosity_callback([](const char* name) -> loguru::Verbosity {
-        if (strcmp(name, "FAT") == 0) return loguru::Verbosity_FATAL;
-        if (strcmp(name, "ERR") == 0) return loguru::Verbosity_ERROR;
-        if (strcmp(name, "WRN")  == 0) return loguru::Verbosity_WARNING;
-        if (strcmp(name, "INF")  == 0) return loguru::Verbosity_INFO;
-        if (strcmp(name, "DEB") == 0) return 9;
+        if (strcmp(name, "FATAL") == 0) return loguru::Verbosity_FATAL;
+        if (strcmp(name, "ERROR") == 0) return loguru::Verbosity_ERROR;
+        if (strcmp(name, "WARNING")  == 0) return loguru::Verbosity_WARNING;
+        if (strcmp(name, "INFO")  == 0) return loguru::Verbosity_INFO;
+        if (strcmp(name, "DEBUG") == 0) return 9;
         return loguru::Verbosity_INVALID;
     });
+}
+
+loguru::Verbosity LogSvc::ParseVerbosityLevel(const std::string& level_str) {
+    std::string upper;
+    upper.reserve(level_str.size());
+    for (char c : level_str) {
+        upper += std::toupper(static_cast<unsigned char>(c));
+    }
+
+    if (upper == "DEBUG") {
+        return loguru::Verbosity_MAX;
+    }
+
+    loguru::Verbosity level = loguru::get_verbosity_from_name(upper.c_str());
+
+    if (level == loguru::Verbosity_INVALID) {
+        char* end = nullptr;
+        int lvl = std::strtol(upper.c_str(), &end, 10);
+        if (end && *end == '\0' && lvl >= loguru::Verbosity_FATAL && lvl <= loguru::Verbosity_MAX) {
+            return static_cast<loguru::Verbosity>(lvl);
+        }
+    }
+
+    return level;
 }

@@ -1,105 +1,115 @@
-# Lista zadań G4RT - TODO
+# G4RT TODO Task List
 
-## 🔧 Konfiguracja i Setup
+## 🔧 Configuration and Setup
 
-- **TLD.hh:17** - Rozwiązać konflikt między ROOT a CADMesh (problem z makrami i kolejnością includów)
-- **ConfigSvc.hh:18** - Dodać elastyczność std::ostream
+- **TLD.hh:17** - Resolve conflict between ROOT and CADMesh (macro naming and include order issues)
+- **ConfigSvc.hh:18** - Add std::ostream flexibility
 
-## 🎯 Akcje i Kontrola
+## 🎯 Actions and Control
 
-- **ControlPoint.hh:33** - Wprowadzić FieldType jako enum (definicja w Types.hh)
-- **RunAction.cc:71** - Przejrzeć i zweryfikować kod
+- **ControlPoint.hh:33** - Introduce FieldType as enum type (see definition in Types.hh)
+- **RunAction.cc:71** - Review and verify code implementation
 
-## 📊 Analiza Danych
+## 📊 Data Analysis
 
-- **BeamAnalysis.cc:126** - Sprawdzić czy to samo co preStepPoint->GetTotalEnergy()
-- **RunAnalysis.cc:21** - Zaimplementować RUN_CSV_ANALYSIS
-- **RunAnalysis.cc:23** - Zaimplementować RUN_NTUPLE_ANALYSIS  
-- **RunAnalysis.cc:25** - Zaimplementować RUN_HDF5_ANALYSIS
-- **StepAnalysis.cc:63** - Zdefiniować podstawowe histogramy
+- **BeamAnalysis.cc:126** - Check if this is the same as preStepPoint->GetTotalEnergy()
+- **RunAnalysis.cc:21** - Implement RUN_CSV_ANALYSIS
+- **RunAnalysis.cc:23** - Implement RUN_NTUPLE_ANALYSIS  
+- **RunAnalysis.cc:25** - Implement RUN_HDF5_ANALYSIS
+- **StepAnalysis.cc:63** - Define basic histograms
 
-## 🏗️ Geometria
+## 🏗️ Geometry
 
 ### Linac
 
-- **MlcHD120.cc:40** - Uzupełnić implementację
-- **MlcSimplified.cc:20** - Pobrać wartości z konfiguracji
-- **README.md:2** - Dodać tabelę z parametryzacją każdego modelu
-- **BeamCollimation.cc:83** - Uzupełnić implementację
+- **MlcHD120.cc:40** - Complete implementation
+- **MlcSimplified.cc:20** - Get values from configuration
+- **README.md:2** - Add table summarizing each model parameterization
+- **BeamCollimation.cc:83** - Complete implementation
 
-### Patient/Detektor
+### Patient/Detector
 
-- **D3DCell.cc:157** - Przekazać pv i wydobyć współrzędne globalne
-- **D3DCell.cc:182** - Wydobyć z zakresu Detector::name
-- **D3DDetector.cc:26** - Uzupełnić implementację
-- **D3DDetector.cc:209** - Zaimplementować metodę
+- **D3DCell.cc:157** - Pass pv and extract global coordinates from it
+- **D3DCell.cc:182** - Extract this from Detector::name scope
+- **D3DDetector.cc:26** - Complete implementation
+- **D3DDetector.cc:209** - Implement method
 
 ### Phantom
 
-- **DishCubePhantom.cc** - Zaimplementować metody (linie 24, 80, 99, 103, 107)
-- **IbaImRT.cc:59** - Filtrowanie elementów do usunięcia z IbaImRT
-- **IbaImRT.cc:60** - Stworzenie modułu do pobierania ścieżki do DB i CSV z PhantomWorld
-- **SciSlicePhantom.cc:21,64** - Zaimplementować metody
-- **WaterPhantom.cc:144** - Zaimplementować metodę
-- **WaterPhantom.cc:152** - Zweryfikować implementację
-- **PatientTest.hh:34** - Zmienić na std::unique
-- **VPatientSD.hh:53** - Sprawdzić czy potrzebne
+- **DishCubePhantom.cc** - Implement methods (lines 24, 80, 99, 103, 107)
+- **IbaImRT.cc:59** - Filter elements to be removed from IbaImRT
+- **IbaImRT.cc:60** - Create module to fetch DB and CSV paths from PhantomWorld
+- **SciSlicePhantom.cc:21,64** - Implement methods
+- **WaterPhantom.cc:144** - Implement method
+- **WaterPhantom.cc:152** - Verify implementation
+- **PatientTest.hh:34** - Make std::unique
+- **VPatientSD.hh:53** - Check if this is really needed here
 
 ### VoxelHit
 
-- **VoxelHit.cc:184** - Przechowywać wszystkie cząstki i interakcje (nie tylko elektrony)
-- **VoxelHit.cc:209** - Przechowywać Parent ID lub Primary ID dla wizualizacji
-- **VoxelHit.cc:241,257** - Obsłużyć błędy
-- **VoxelHit.cc:268** - Zastąpić running 1/2-average prawdziwą średnią arytmetyczną
-- **VoxelHit.cc:506** - Sprawdzić wzór na dawkę
-- **VoxelHit_README.md:151** - Kontynuować dokumentację
+- **VoxelHit.cc:184** - Store all particles and interactions (not just electrons)
+- **VoxelHit.cc:209** - Store Parent ID or Primary ID for visualization purposes
+- **VoxelHit.cc:241,257** - Handle these errors
+- **VoxelHit.cc:268** - Replace running 1/2-average with true arithmetic mean
+- **VoxelHit.cc:506** - Check dose formula implementation
+- **VoxelHit_README.md:151** - Continue documentation
 
 ### PhaseSpace
 
-- **SavePhSpAnalysis.cc:54** - Przenieść kod z SavePhSpSD::ProcessHits
-- **SavePhSpSD.cc:30** - Właściwe obsługiwanie zapisywania danych do katalogu phsp w NTuple
+- **SavePhSpAnalysis.cc:54** - Move code from SavePhSpSD::ProcessHits
+- **SavePhSpSD.cc:30** - Proper handling of data dumping into phsp directory within NTuple
 
 ### WorldConstruction
 
-- **LinacGeometry.cc:154** - Refaktoryzacja do smart pointers
-- **LinacGeometry.hh:36** - Brak rotacji geometrii - cząstki powinny być rotowane po przejściu przez Jaws i MLC
-- **PatientGeometry.cc:323** - Zaktualizować GetPhysicalVolume()
-- **PatientGeometry.cc:439,539** - Uczynić generycznym dla każdego pacjenta
-- **SavePhSpConstruction.cc:70** - Przenieść definicję do finalnego modelu
-- **SavePhSpConstruction.cc:72** - Przejrzeć logikę tworzenia instancji SavePhSpSD
-- **WorldConstruction.cc:340,348** - Uruchomić dla całego drzewa geometrii
+- **LinacGeometry.cc:154** - Refactor code to smart pointers
+- **LinacGeometry.hh:36** - No geometry rotation - particles should be rotated after going through Jaws and MLC
+- **PatientGeometry.cc:323** - Update GetPhysicalVolume() method
+- **PatientGeometry.cc:439,539** - Make generic for any patient
+- **SavePhSpConstruction.cc:70** - Move definition to final/specific model definition
+- **SavePhSpConstruction.cc:72** - Revise logic for creating SavePhSpSD instances
+- **WorldConstruction.cc:340,348** - Make this work for entire geometry tree
 
-## ⚛️ Fizyka
+## ⚛️ Physics
 
-- **IaeaPrimaryGenerator.cc:27** - Sprawdzić funkcje
-- **IaeaPrimaryGenerator.cc:32** - Sprawdzić konfigurację wielu plików PHSP
-- **IonPrimaryGenerator.cc:27** - Sfinalizować specyfikację źródła
-- **IonPrimaryGenerator.cc:33** - Skonfigurować ustawienia
-- **PhysicsList.cc:14** - Rozważyć migrację do w pełni modularnej listy fizyki
+- **IaeaPrimaryGenerator.cc:27** - Check these functions
+- **IaeaPrimaryGenerator.cc:32** - Check how to setup multiple PHSP files
+- **IonPrimaryGenerator.cc:27** - Finalize source specification
+- **IonPrimaryGenerator.cc:33** - Configure settings
+- **PhysicsList.cc:14** - Consider migrating to fully modular physics list
 
-## 🛠️ Usługi
+## 🛠️ Services
 
-- **DicomSvc.cc:65** - Refaktoryzacja kodu specyficznego dla kontekstu
-- **DicomSvc.cc:138,147,380** - Uzupełnić implementację
-- **DicomSvc.cc:384** - Zaimplementować FieldType::RTPlan
-- **DicomSvc.cc:397** - Zaimplementować FieldType::CustomPlan
-- **DicomSvc.hh:63** - Zastosować zasadę DRY
-- **GeoSvc.cc:244** - Refaktoryzacja tymczasowego kodu
-- **GeoSvc.cc:369** - Użyć typów enum
-- **RunSvc.cc:271** - Zdefiniować tryby operacji
-- **RunSvc.cc:465** - Sprawdzić warunek (zawsze true)
-- **RunSvc.cc:511** - Zaimplementować metody eksportu konkretnych wolumenów
-- **RunSvc.cc:565** - Rozwiązać problem z błędem przy zamykaniu pliku phasespace
-- **RunSvc.cc:600** - Uzupełnić implementację
-- **RunSvc.hh:25,26** - Zaimplementować TpFractionCounter i DaqTimeCounter
-- **Services.cc:243** - Notatka o RDF::MakeCsvDataFrame
+- **DicomSvc.cc:65** - Refactor context-specific code
+- **DicomSvc.cc:138,147,380** - Complete implementation
+- **DicomSvc.cc:384** - Implement FieldType::RTPlan
+- **DicomSvc.cc:397** - Implement FieldType::CustomPlan
+- **DicomSvc.hh:63** - Apply DRY principle
+- **GeoSvc.cc:244** - Refactor temporary code
+- **GeoSvc.cc:369** - Use enum types
+- **RunSvc.cc:271** - Define operation modes
+- **RunSvc.cc:465** - Check condition (always true for now)
+- **RunSvc.cc:511** - Implement methods for exporting specific world volumes
+- **RunSvc.cc:565** - Fix error when closing phasespace file
+- **RunSvc.cc:600** - Complete implementation
+- **RunSvc.hh:25,26** - Implement TpFractionCounter and DaqTimeCounter
+- **Services.cc:243** - Note about RDF::MakeCsvDataFrame
 
-## 🔧 Narzędzia
+## 🔧 Utilities
 
-- **UIManager.cc:106** - Zaimplementować runSvc->GetCurrentRun()
+- **UIManager.cc:106** - Implement runSvc->GetCurrentRun()
 
-## 📁 Dane i Konfiguracja
+## 📁 Data and Configuration
 
-- **gpsCLinac_pre.mac:80** - Sprawdzić /gps/ene/emspec 0
-- **basic_iba_job.toml:27** - Jeśli istnieje -> odczytać i załadować
-- **basic_gps.toml:25** - Zdefiniować typ
+- **gpsCLinac_pre.mac:80** - Check /gps/ene/emspec 0
+- **basic_iba_job.toml:27** - If exists -> read and load
+- **basic_gps.toml:25** - Define type
+
+## 🔗 External Libraries
+
+- **G4IAEAphspReader.hh:227** - Create setter for multiple files and parallel readout
+- **G4IAEAphspReader.cc:142** - Add possibility to introduce theSourceReadId
+- **G4IAEAphspReader.cc:543** - Place filtering logic here
+- **loguru.cpp:77** - Use defined(_POSIX_VERSION)
+- **loguru.cpp:1061** - Store thread name on weird platforms
+- **loguru.cpp:1904** - Implement signal handlers on Windows
+- **loguru.hpp:1198** - Fix HACK

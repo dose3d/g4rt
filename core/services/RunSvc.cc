@@ -228,10 +228,6 @@ bool RunSvc::ValidateConfig() const { return true; }
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::Initialize(WorldConstruction* world) {
-  // build a geometry
-  world->Configure();
-  world->Create();
-  Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
   auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir");
   LogSvc::ReconfigureMainLog(output_dir + "/logs/main.log");
@@ -241,6 +237,10 @@ void RunSvc::Initialize(WorldConstruction* world) {
   // m_logger = LogSvc::RecreateLogger("RunSvc");
   
   RUNSVC_INFO("Logger recreated.");
+  // build a geometry
+  world->Configure();
+  world->Create();
+  Service<GeoSvc>()->SetWorld(world);
 
   if (m_application_mode == OperationalMode::BuildGeometry) return;
 

@@ -70,10 +70,9 @@ void D3DDetector::ParseTomlConfig() {
   auto config = toml::parse_file(configFile);
 
   ///
-  m_config.m_translation_in_local_frame.setX(config[configObjCell]["TranslationInLocalFrame"][0].value_or(0.0));
-  m_config.m_translation_in_local_frame.setY(config[configObjCell]["TranslationInLocalFrame"][1].value_or(0.0));
-  m_config.m_translation_in_local_frame.setZ(config[configObjCell]["TranslationInLocalFrame"][2].value_or(0.0));
-
+  m_config.m_translation_in_local_frame.setX(config[configObjDetector]["TranslationInLocalFrame"][0].value_or(0.0));
+  m_config.m_translation_in_local_frame.setY(config[configObjDetector]["TranslationInLocalFrame"][1].value_or(0.0));
+  m_config.m_translation_in_local_frame.setZ(config[configObjDetector]["TranslationInLocalFrame"][2].value_or(0.0));
   if (Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Full") == 0 ||
       Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop").compare("IbaImRT_Box") == 0) {
     m_config.m_translation_in_local_frame += IbaImRT::IbaToLocalTranslation;
@@ -525,11 +524,11 @@ void D3DDetector::ComputeRegularCellPositioning() {
   const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();
   if (!db_cells_positioning.empty()) {
     
-                LOGSVC_INFO("Geometry","Importing Cells positioning from GeometryDBReader...");
+    LOGSVC_INFO("Geometry","Importing Cells positioning from GeometryDBReader...");
     for (const auto& cell_info : db_cells_positioning) m_d3d_cells_positioning.push_back(cell_info.com);
   } else {
     
-                LOGSVC_INFO("Geometry","Creating regular Cells positioning...");
+    LOGSVC_INFO("Geometry","Creating regular Cells positioning...");
     G4double size_x = D3DCell::SIZE.getX() + 2 * D3DDetector::COVER_WIDTH;
     G4double size_y = D3DCell::SIZE.getY() + 2 * D3DDetector::COVER_WIDTH;
     G4double size_z = D3DCell::SIZE.getZ() + 2 * D3DDetector::COVER_WIDTH;
@@ -542,6 +541,7 @@ void D3DDetector::ComputeRegularCellPositioning() {
         auto current_y = init_y + iy * size_y;
         for (int ix = 0; ix < m_config.m_nX_cells; ++ix) {
           auto current_x = init_x + ix * size_z;
+          LOGSVC_INFO("Geometry","Cell starting position {} {} {}",m_config.m_translation_in_local_frame.getX(), m_config.m_translation_in_local_frame.getY(), m_config.m_translation_in_local_frame.getZ());
           m_d3d_cells_positioning.emplace_back(current_x, current_y, current_z);
         }
       }

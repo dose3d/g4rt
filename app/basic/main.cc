@@ -14,6 +14,7 @@
 #include "toml.hh"
 #include "colors.hh"
 #include "WorldConstruction.hh"
+#include "LogSession.hh"
 #include "LogSvc.hpp"
 #include <locale.h>
 
@@ -25,14 +26,13 @@ int main(int argc, const char *argv[]) {
   py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
+  // In order to capture G4cout and G4err before the kernel UI manager launches -> I initialize loggSession at the beginning of Main.
+
+  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+  auto* logSession = new LogSession();
 
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-
-  // Inicjalizacja loggera
-  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
-  
-
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");

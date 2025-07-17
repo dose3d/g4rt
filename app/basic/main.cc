@@ -1,12 +1,3 @@
-/**
-*
-* \file main_setup_run_from_TOML.cc
-* \author 
-* \date 
-* \brief 
-*
-*/
-
 #include <cstdlib>
 #include "Services.hh"
 #include "cxxopts.h"
@@ -14,11 +5,14 @@
 #include "toml.hh"
 #include "colors.hh"
 #include "WorldConstruction.hh"
-#include "LogSession.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 #include <locale.h>
 
 int main(int argc, const char *argv[]) {
+  // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
+  // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit
+  // invalid or locale-specific formats that ROOT or GDML parsers can't read.
+  // This fixes cases where exponent notation is lost or misformatted.
   setenv("LC_ALL", "C", 1);
 
 
@@ -26,10 +20,7 @@ int main(int argc, const char *argv[]) {
   py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  // In order to capture G4cout and G4err before the kernel UI manager launches -> I initialize loggSession at the beginning of Main.
-
   LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
-  auto* logSession = new LogSession();
 
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
@@ -79,9 +70,7 @@ int main(int argc, const char *argv[]) {
                     << "Valid values: OFF, FATAL, ERROR, WARNING, INFO, DEBUG, or integer 0–9\n";
           return 1;
       }
-      LogSvc::SetTerminalLogLevel(verbosity); // Set it by command line option
-
-      // LogSvc::DefaulLogLevel(logLevelStr); (TODO: Obsłuż przechwytywanie tego.)
+      LogSvc::SetTerminalLogLevel(verbosity); 
     }
 
       // OPERATION
@@ -139,11 +128,11 @@ int main(int argc, const char *argv[]) {
     } 
     auto world = WorldConstruction::GetInstance();
     runSvc->Initialize(world);
-    LOGSVC_INFO("MainModule", "Program startuje.");
+    LOG_INFO( "Program startuje.");
     runSvc->Run();
-    LOGSVC_DEBUG("MainModule", "Debug log testowy.");
+    LOG_DEBUG( "Debug log testowy.");
     runSvc->Finalize();
-    LOGSVC_INFO("MainModule", "Program kończy działanie. Zwyciestwo!");
+    LOG_INFO( "Program kończy działanie. Zwyciestwo! Ten Log też kiedyś zmienię, obiecuję.");
     loguru::shutdown();  // Zamknięcie loggera
 
   } else {

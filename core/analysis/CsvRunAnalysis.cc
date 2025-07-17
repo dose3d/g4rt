@@ -40,11 +40,11 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
     
-    LOGSVC_INFO("RunAnalysis","CsvRunAnalysis::WriteDoseToCsv #{} collections:",scoring_maps.size());
+    ANA_INFO("CsvRunAnalysis::WriteDoseToCsv #{} collections:",scoring_maps.size());
 
     for(auto& scoring_map: scoring_maps){
         
-        LOGSVC_INFO("RunAnalysis","CsvRunAnalysis::WriteDoseToCsv for {} run collection:",scoring_map.first);
+        ANA_INFO("CsvRunAnalysis::WriteDoseToCsv for {} run collection:",scoring_map.first);
         for(auto& scoring: scoring_map.second){
             auto scoring_type = scoring.first;
             auto& data = scoring.second;
@@ -66,10 +66,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             }
             c_outFile.close();
             
-        LOGSVC_INFO("RunAnalysis","Output file closed: {}",file);
+        ANA_INFO("Output file closed: {}",file);
         }
         
-        LOGSVC_INFO("RunAnalysis","CsvRunAnalysis::WriteDoseToCsv for {} run collection - done!",scoring_map.first);
+        ANA_INFO("CsvRunAnalysis::WriteDoseToCsv for {} run collection - done!",scoring_map.first);
     }
 }
 
@@ -80,7 +80,7 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto data_types = cp->DataTypes();
     for(const auto& type : data_types){
         
-        LOGSVC_INFO("RunAnalysis","Writing field mask (type={}) to CSV...",type);
+        ANA_INFO("Writing field mask (type={}) to CSV...",type);
         const auto& field_mask = cp->GetFieldMask(type);
         if(field_mask.size()>0){
             auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
@@ -92,7 +92,7 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
                 c_outFile << mp.getX() << "," << mp.getY() << "," << mp.getZ() << std::endl;
             c_outFile.close();
             
-        LOGSVC_INFO("RunAnalysis","Writing Field Mask to file {} - done!",file);
+        ANA_INFO("Writing Field Mask to file {} - done!",file);
             auto writePngCopy = py::module::import("field_mask_png");
             writePngCopy.attr("save_mask_as_png")(file);
         }

@@ -1,15 +1,16 @@
 // LogSvc.cpp
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
+#include "LogSession.hh"
 #include <filesystem>
 
 std::unordered_map<std::string, std::shared_ptr<FILE>> LogSvc::module_log_files;
 
 void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_file,
                   loguru::Verbosity verbosity, int flush_interval_ms) {
-    char** nonConstArgv = const_cast<char**>(argv);
-    loguru::init(argc, nonConstArgv);
+    loguru::init(argc, const_cast<char**>(argv));
     loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
     loguru::add_stack_cleanup("std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >", "std::string");
+    static LogSession logSession;
 
 
 
@@ -18,7 +19,6 @@ void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_f
 #else
     SetLogFolder("logs");
 #endif
-
     std::string full_path = s_log_folder + "/" + default_log_file;
     s_main_log_id = full_path;
     loguru::add_file(full_path.c_str(), loguru::Append, s_terminal_verbosity);
@@ -56,10 +56,8 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
         throw std::runtime_error("Failed to open log file for module: " + module);
     }
 
-    {
-        std::lock_guard<std::mutex> guard(module_log_files_mutex);
-        module_log_files[module] = std::shared_ptr<FILE>(file, [](FILE* f) { fclose(f); });
-    }
+    std::lock_guard<std::mutex> guard(module_log_files_mutex);
+    module_log_files[module] = std::shared_ptr<FILE>(file, [](FILE* f) { fclose(f); });
 
     loguru::add_callback(
         module.c_str(),

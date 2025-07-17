@@ -37,7 +37,6 @@ include_directories(${Python3_INCLUDE_DIRS})
 link_directories(${Python3_LIBRARY_DIRS})
 add_definitions(-DPYTHON_EXECUTABLE=\"${Python3_EXECUTABLE}\")
 set(PYBIND11_PYTHON_VERSION ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
-set(PYBIND11_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/pybind11/include) 
 find_package(pybind11 REQUIRED)
 #----------------------------------------------------------------------------
 add_definitions(${Geant4_DEFINITIONS}

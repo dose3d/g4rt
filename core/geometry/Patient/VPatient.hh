@@ -9,7 +9,7 @@
 #include "IPhysicalVolume.hh"
 #include "TomlConfigModule.hh"
 #include "VoxelHit.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 #include <map>
 
 class VPatientSD;
@@ -56,7 +56,7 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
     VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {
-      LOGSVC_WARN("Geometry","Returning empty scoring hashed map!");
+      WARN_GEO("Returning empty scoring hashed map!");
       return std::map<std::size_t, VoxelHit>();
     }
 

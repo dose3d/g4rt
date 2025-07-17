@@ -1,5 +1,5 @@
 #include "LogSession.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 #include <sstream>
 
 LogSession::LogSession() : G4UIsession() {

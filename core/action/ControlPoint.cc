@@ -15,7 +15,7 @@
 #include <random>
 #include "VMlc.hh"
 #include "Services.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 #include <numeric> 
 #include <cmath>
 

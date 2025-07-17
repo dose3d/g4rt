@@ -13,15 +13,15 @@
 #include "G4RunManager.hh"
 #include "ControlPoint.hh"
 #include "VoxelHit.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 
-#define DEFAULT_MODULE "RunSvc"
+#define RUNSVC_MODULE "RunSvc"
 
-#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_WARNING(msg, ...) LOGSVC_WARN(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_WARNING(msg, ...) LOGSVC_WARN(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(RUNSVC_MODULE, msg, ##__VA_ARGS__)
 /// TODO 1: TpFractionCounter (double evtTotalEnergy); // return EvtFractionId
 /// TODO 2: DaqTimeCounter(); // based on the global timer, returns EvtTimeId
 

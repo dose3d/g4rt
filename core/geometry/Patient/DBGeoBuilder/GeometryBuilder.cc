@@ -31,7 +31,7 @@ void GeometryBuilder::ParseTomlConfig(){
   // std::cout << "Temp" << "\n";
                 //   LOGSVC_INFO("Importing configuration from:\n{}",configFile); // Not Logable RN
   // if (!svc::checkIfFileExist(configFile)) {
-  //   LOGSVC_FATAL("Geometry","File {} not fount.", configFile);
+  //   FATAL_GEO("File {} not fount.", configFile);
   //   G4Exception("GeometryBuilder", "ParseTomlConfig", FatalErrorInArgument, "");
   // }
 

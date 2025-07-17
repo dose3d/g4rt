@@ -47,7 +47,7 @@ add_definitions(-DPROJECT_BINARY_PATH=\"${PROJECT_BINARY_DIR}\")
 #----------------------------------------------------------------------------
 option(BUILD_G4RT "Build the g4rt executable" ON)
 option(BUILD_BG4RT "Build the g4rt_bworld executable" OFF)
-option(BUILD_DCM2DAT "Build the g4rt_bworld executable" OFF)
+option(BUILD_DCM2DAT "Build the g4rt_bworld executable" ON)
 option(BUILD_TLD "Build the tld executable" ON)
 
 #----------------------------------------------------------------------------

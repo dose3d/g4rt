@@ -33,7 +33,7 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
   }
   else {
     G4String msg =  "AddHitsCollection::The '"+hitsCollName+"' already added!";
-    LOGSVC_FATAL("Geometry","{} Verify the specified hits collection name",msg);
+    FATAL_GEO("{} Verify the specified hits collection name",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the specified hits collection name");
   }
 }
@@ -91,7 +91,7 @@ void VPatientSD::AcknowledgeHitsCollection(const G4String& runCollName, const st
     G4String msg =  "AcknowledgeHitsCollection::The '"+scoring_volume.first+"'";
     msg+=" being added to the run collection '"+runCollName+"' is not compatible with the previous added ones!";
     msg+=" Compatibility check performed by comparison to '"+compatibility_reference_obj+"'";
-    LOGSVC_FATAL("Geometry","{} Verify the specified run collection name",msg);
+    FATAL_GEO("{} Verify the specified run collection name",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the specified run collection name");
   }
 }
@@ -171,7 +171,7 @@ G4int VPatientSD::GetScoringHcId(const G4int scoringSdIdx) const{
     return m_scoring_volumes.at(scoringSdIdx).second->id;
   } else{
     G4String msg = "GetScoringHcId::The idx "+std::to_string(scoringSdIdx)+" doesn't exist! (max size = "+std::to_string(nElements)+")";
-    LOGSVC_FATAL("Geometry","{}. Verify given scoringSdIdx value!",msg);
+    FATAL_GEO("{}. Verify given scoringSdIdx value!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify given scoringSdIdx value");
   }
   return 0;
@@ -190,7 +190,7 @@ G4int VPatientSD::GetScoringVolumeIdx(const G4String& hitsCollName) const {
   }
   if (idx < 0 ){
     G4String msg =  "GetScoringVolumeIdx::The '"+hitsCollName+"' doesn't exist!";
-    LOGSVC_FATAL("Geometry","{} Verify the AddHitsCollection(...) calls!",msg);
+    FATAL_GEO("{} Verify the AddHitsCollection(...) calls!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
   }
   return idx;
@@ -215,7 +215,7 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx){
     return m_scoring_volumes.at(scoringSdIdx).second.get();
   else {
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
-    LOGSVC_FATAL("Geometry","{}. Verify the AddHitsCollection(...) calls!",msg);
+    FATAL_GEO("{}. Verify the AddHitsCollection(...) calls!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
   }
   return nullptr;
@@ -229,7 +229,7 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx) c
     return m_scoring_volumes.at(scoringSdIdx).second.get();
   else {
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
-    LOGSVC_FATAL("Geometry","{}. Verify the AddHitsCollection(...) calls!", msg);
+    FATAL_GEO("{}. Verify the AddHitsCollection(...) calls!", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
   }
   return nullptr;
@@ -298,7 +298,7 @@ void VPatientSD::SetScoringShape(const G4String& hitsCollName, const G4String& s
   auto scoringVolume = GetScoringVolumePtr(hitsCollName);
   if(shapeName!="Farmer30013" && shapeName!="Farmer30013ScanZBox" ){
     G4String msg = "SetScoringShape:: "+shapeName+" is not found. Available shape: Farmer30013";
-    LOGSVC_FATAL("Geometry","{}. Verify your input!", msg);
+    FATAL_GEO("{}. Verify your input!", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify your input!");
   }
   scoringVolume->m_shape = shapeName;
@@ -332,10 +332,10 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   minZ = svc::round_with_prec((m_sd_centre.z() + translation.z() - sdHColPtr->GetSizeZ() / 2.),8);
   maxZ = svc::round_with_prec((m_sd_centre.z() + translation.z() + sdHColPtr->GetSizeZ() / 2.),8);
 
-  LOGSVC_DEBUG("Geometry","VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
-  LOGSVC_DEBUG("Geometry","VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
-  LOGSVC_DEBUG("Geometry","VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
-  LOGSVC_DEBUG("Geometry","VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
+  DEBUG_GEO("VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
+  DEBUG_GEO("VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
+  DEBUG_GEO("VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
+  DEBUG_GEO("VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
 
   // Fill the information about voxels positioning
   auto nvX = sdHColPtr->m_nVoxelsX;
@@ -343,7 +343,7 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   auto nvZ = sdHColPtr->m_nVoxelsZ;
   if(nvX==0 || nvY==0 || nvZ==0){
     G4String msg = "SetScoringVolume:: Parameterization is empty! You should call SetScoringParameterization(...) before!";
-    LOGSVC_FATAL("Geometry","{}. Verify your logic...", msg);
+    FATAL_GEO("{}. Verify your logic...", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify your logic...");
   }
   // Comppute and set voxel position
@@ -403,7 +403,7 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
   // Check for underflow and overflow is being performed below, however it shouldn't happen,
   // - we are inside sensitive volume boundaries. Nonetheless give warning in case...
   auto OutOfRangeWarning = [=](char axis, G4double val, G4double min, G4double max){
-    // LOGSVC_WARN("Geometry","Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
+    // WARN_GEO("Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
     G4cout << "Out of range hit "<<hitPosition<< " | "<<axis<<", value is "<<val<<" => valid range: ("<<min<<","<<max<<")"<< G4endl;
   };
 
@@ -570,7 +570,7 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
     }
   } else {
       auto maxId = scoringVolumePtr->m_channelHCollectionIndex.size()-1;
-      LOGSVC_DEBUG("Geometry","Out of scope ChannelId: {}. Max voxel ID is: {}.\nPosition: {}\nIdX={}, IdY={}, IdZ={}",
+      DEBUG_GEO("Out of scope ChannelId: {}. Max voxel ID is: {}.\nPosition: {}\nIdX={}, IdY={}, IdZ={}",
                   voxelId,maxId,position,voxelIdX,voxelIdY,voxelIdZ);
   }
 }

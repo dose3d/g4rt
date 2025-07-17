@@ -5,7 +5,7 @@
 #include "PrimaryGenerationAction.hh"
 #include "LogSession.hh"
 #include "LinacGeometry.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
@@ -122,7 +122,7 @@ void UIManager::UserRunInitialization() {
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
-      LOGSVC_DEBUG("MainModule","UIManager::BeamOn({})",cp.GetNEvts());
+      LOG_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 

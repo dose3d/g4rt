@@ -1,10 +1,16 @@
 [RunSvc]
-JobName = "srunet3d_4x4x4_64x64x64"
+JobName = "d3df example job"
 BeamType = "IAEA"
-PhspInputFileName ="/mnt/data/PHSP/TB_20X20_Merged" 
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
 
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+
 GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = false
@@ -35,12 +41,8 @@ EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TranslationInLocalFrame = [0.0,0.0,-44.0] # In mm
-Voxelization = [4,4,4] # Number of cels in every direction
-
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
+TranslationInLocalFrame = [0.0,0.0,-44.0]
+Voxelization = [4,4,4]
 
 [D3DDetector_Cell]
 Medium = "RMPS470"

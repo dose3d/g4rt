@@ -2,7 +2,7 @@
 #pragma once
 #include <loguru.hpp>
 #include <fmt/format.h>
-#include "FmtFormatters.hpp"
+#include "FmtFormatters.hh"
 #include <string>
 #include <unordered_map>
 #include <memory>
@@ -105,8 +105,8 @@ static void logToModule(const std::string& module, loguru::Verbosity verbosity, 
 }
 };
 
-#define DEFAULT_MODULE "Main"
-#define SERVICE_MODULE "Service"
+#define DEFAULT_MODULE  "Main"
+#define SERVICE_MODULE  "Service"
 #define GEOMETRY_MODULE "Geometry"
 #define ANALYSIS_MODULE "Analysis"
 

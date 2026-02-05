@@ -29,11 +29,11 @@ MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX       = 0.0
+PatientIsocentreX       = 150.0
 PatientIsocentreY       = 0.0
 PatientIsocentreZ       = 500.0
-EnviromentSizeX         = 1000.0
-EnviromentSizeY         = 1000.0
+EnviromentSizeX         = 1200.0
+EnviromentSizeY         = 1200.0
 EnviromentSizeZ         = 220.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "TrayStackPhantom_3mf"

@@ -280,6 +280,8 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
     m_patient->WriteInfo();
   }
   else{
+    auto geometryBuilder = GeometryBuilder::GetInstance();
+    geometryBuilder->Build(pv);
     m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }

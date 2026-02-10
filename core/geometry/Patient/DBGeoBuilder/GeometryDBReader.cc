@@ -103,6 +103,9 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
     }
     m_parser = py::object(); 
 
-    std::cout<< "Got #" << m_db_cells_positioning.size() << " cell entries." << std::endl;
+    if(m_db_cells_positioning.size()<1)
+        ERROR_GEO("Couldn't fill cell positioning from DB source: {}",db_filename);
+    else
+        INFO_GEO("Got #{} cell entries.", m_db_cells_positioning.size());
 }
 

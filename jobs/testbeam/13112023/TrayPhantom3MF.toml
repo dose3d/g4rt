@@ -50,7 +50,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 500      # This will overwrite Rotation value for all below plan files!
+nParticles = 10e5      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp40x40.dat"
         # "plan/custom/cp10x10.dat"

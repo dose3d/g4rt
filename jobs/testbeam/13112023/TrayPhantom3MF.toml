@@ -29,12 +29,12 @@ MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"
-PatientIsocentreX       = 150.0
+PatientIsocentreX       = 0.0
 PatientIsocentreY       = 0.0
-PatientIsocentreZ       = 0.0
-EnviromentSizeX         = 1000.0
-EnviromentSizeY         = 1000.0
-EnviromentSizeZ         = 220.0
+PatientIsocentreZ       = 8.21 # In order to position tray in Z at Isocentre
+EnviromentSizeX         = 700.0
+EnviromentSizeY         = 700.0
+EnviromentSizeZ         = 20.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "TrayPhantom_3mf"
 PatientDBPath = "d3df-patients/patient/phantoms/Double_Tray" 

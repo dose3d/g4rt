@@ -1,11 +1,11 @@
 [RunSvc]
-JobName = "TrayStack"
+JobName = "Double Tray Phantom"
 BeamType = "IAEA"
-# PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
@@ -36,8 +36,8 @@ EnviromentSizeX         = 1200.0
 EnviromentSizeY         = 1200.0
 EnviromentSizeZ         = 220.0
 EnviromentMedium = "Usr_G4AIR20C"
-EnviromentPatientEnvelop = "TrayPhantom_3mf"
-PatientDBPath = "d3df-patients/patient/phantoms/Tray_Stack" 
+EnviromentPatientEnvelop = "TrayStackPhantom_3mf"
+PatientDBPath = "d3df-patients/patient/phantoms/Double_Tray" 
 
 [GeometryBuilder]
 Position = [0.0, 0.0, 0.0] # Position X/Y/Z inside the patient environment

@@ -65,6 +65,9 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayPhantom_3mf"){
             tranlation = G4ThreeVector(0.0,0.0,8.0); // Z value is the bottom of the tray and Assuming EnviromentSizeZ=20
         }
+        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayStackPhantom_3mf"){
+            tranlation = G4ThreeVector(0,0.0,32.85); 
+        }
         // gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
 
         auto temp_vec = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm);

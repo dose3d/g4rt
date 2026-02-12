@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "Tray"
+JobName = "Tray_Stack"
 BeamType = "IAEA"
 PhspInputFileName =  "/etude/jhajduga/data/mc/PHSP/TB_40x40_Merged"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
@@ -31,13 +31,13 @@ MlcModel="Varian-HD120"
 Type = "D3DDetector"
 PatientIsocentreX       = -100.0
 PatientIsocentreY       = 0.0
-PatientIsocentreZ       = 8.21 # In order to position tray in Z at Isocentre
-EnviromentSizeX         = 700.0
-EnviromentSizeY         = 700.0
-EnviromentSizeZ         = 20.0
+PatientIsocentreZ       = 0.0 # In order to position tray in Z at Isocentre
+EnviromentSizeX         = 900.0
+EnviromentSizeY         = 900.0
+EnviromentSizeZ         = 66.0
 EnviromentMedium = "Usr_G4AIR20C"
-EnviromentPatientEnvelop = "TrayPhantom_3mf"
-PatientDBPath = "d3df-patients/patient/phantoms/Double_Tray" 
+EnviromentPatientEnvelop = "TrayStackPhantom_3mf"
+PatientDBPath = "d3df-patients/patient/phantoms/Tray_Stack" 
 
 [GeometryBuilder]
 Position = [0.0, 0.0, 0.0] # Position X/Y/Z inside the patient environment
@@ -50,7 +50,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 100000000     # This will overwrite Rotation value for all below plan files!
+nParticles = 10000     # This will overwrite Rotation value for all below plan files!
 # nParticles = 1000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp40x40.dat"

@@ -1,0 +1,52 @@
+[RunSvc]
+JobName = "Tower_Narrow_beam"
+BeamType = "IAEA"
+PhspInputFileName = "/etude/jhajduga/data/mc/PHSP/TNSIM157_10x10s2-f0"
+PhspEvtVrtxMultiplicityTreshold = 55
+PrintProgressFrequency = 0.001
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+EnableExtraProcesses = true
+
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+MlcModel="Simplified"
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX       = -7.50
+PatientIsocentreY       = -7.50
+PatientIsocentreZ       = 0.00
+EnviromentSizeX         = 250.00
+EnviromentSizeY         = 250.00
+EnviromentSizeZ         = 874.00
+EnviromentMedium = "Usr_G4AIR20C"
+
+[D3DDetector_Detector]
+Geometry = "dose3d/geo/Tower/Union.stl"
+Positioning = "dose3d/geo/Tower/Union.csv"
+TranslationInLocalFrame = [0.0,0.0,0.0]
+
+[D3DDetector_Cell]
+Medium = "RMPS470"
+Voxelization = [5,5,5]
+
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 1e7     # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp4_1x4_1.dat"
+]

@@ -32,8 +32,8 @@ Type = "D3DDetector"
 PatientIsocentreX       = -100.0
 PatientIsocentreY       = 0.0
 PatientIsocentreZ       = 0.0 # In order to position tray in Z at Isocentre
-EnviromentSizeX         = 900.0
-EnviromentSizeY         = 900.0
+EnviromentSizeX         = 750.0
+EnviromentSizeY         = 750.0
 EnviromentSizeZ         = 66.0
 EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "TrayStackPhantom_3mf"
@@ -50,7 +50,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 10000     # This will overwrite Rotation value for all below plan files!
+nParticles = 10e8     # This will overwrite Rotation value for all below plan files!
 # nParticles = 1000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp40x40.dat"

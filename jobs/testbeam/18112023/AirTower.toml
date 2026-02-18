@@ -3,13 +3,12 @@ JobName = "NIO_Tower_2023-12-16"
 BeamType = "IAEA"
 PhspInputFileName = "/etude/jhajduga/data/mc/PHSP/TNSIM157_10x10s2-f0"
 PhspEvtVrtxMultiplicityTreshold = 55
-PrintProgressFrequency = 0.001
+PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = true
 RunAnalysis = true
-EnableExtraProcesses = true
 
 StoreTracks= false
 StorePositions= false
@@ -21,19 +20,20 @@ MinimalMode= true
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
-MlcModel="Simplified"
+MlcModel="Varian-HD120"
+
 
 
 [PatientGeometry]
 Type = "D3DDetector"
 PatientIsocentreX       = 0.0
 PatientIsocentreY       = 0.0
-PatientIsocentreZ       = 197.5
-EnviromentSizeX         = 680.0
-EnviromentSizeY         = 710.0
-EnviromentSizeZ         = 460.0
+PatientIsocentreZ       = 218.5
+EnviromentSizeX         = 470.0
+EnviromentSizeY         = 470.0
+EnviromentSizeZ         = 439.0
 EnviromentMedium = "Usr_G4AIR20C"
-EnviromentPatientEnvelop = "ModularWaterPhantom_3mf" # 
+EnviromentPatientEnvelop = "AirTower_3mf" # 
 PatientDBPath = "d3df-patients/patient/phantoms/NIO_Tower_2023-12-16" 
 
 [GeometryBuilder]
@@ -49,7 +49,7 @@ Voxelization = [5,5,5]
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 1e4     # This will overwrite Rotation value for all below plan files!
+nParticles = 1e7     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
-        "plan/custom/cp4_1x4_1.dat"
+        "plan/custom/cp4_4x4_4.dat"
 ]

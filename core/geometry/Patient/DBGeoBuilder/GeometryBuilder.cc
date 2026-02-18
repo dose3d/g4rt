@@ -161,6 +161,9 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
       else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayStackPhantom_3mf"){
         tranlation = G4ThreeVector(0,0.0,32.85); 
       }
+      else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "AirTower_3mf"){
+        tranlation = G4ThreeVector(-19.75,-19.75,218.5); 
+      }
       m_rot = G4RotationMatrix();
       m_rot.rotateX(m_phantomRotationX * deg);
       m_rot.rotateX(180.0 * deg);

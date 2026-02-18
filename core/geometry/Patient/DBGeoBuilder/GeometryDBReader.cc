@@ -68,6 +68,9 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayStackPhantom_3mf"){
             tranlation = G4ThreeVector(0,0.0,32.85); 
         }
+        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "AirTower_3mf"){
+            tranlation = G4ThreeVector(-19.75,-19.75,218.5); 
+        }
         // gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
 
         auto temp_vec = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm);

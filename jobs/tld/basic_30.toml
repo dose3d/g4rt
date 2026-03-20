@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "tld_basic_0_deg"
+JobName = "tld_basic_30_deg"
 BeamType = "gps"
 GpsMacFileName = "gps/gps_x_ray_tube_20_kev_molybdenum.mac"
 Physics = "LowE_Penelope" 
@@ -40,8 +40,8 @@ SupplementaryGeometryPosition = [0.0, 0.0, -2.05]
 SurfaceScoringLayers = 3
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 100000
-BeamRotation = 0.0 # in degrees, rotation of the beam around the Z axis (in the XY plane)
+nParticles = 5000000
+BeamRotation = 30.0 # in degrees, rotation of the beam around the Z axis (in the XY plane)
 BeamSID = 100.0 # (Obecne pole naświetlania koło o średnicy 16 cm (x od -8 cm do +8 cm/ y od -8 cm do +8 cm)
 PlanInputFile = [
     "plan/custom/cp10x10.dat"

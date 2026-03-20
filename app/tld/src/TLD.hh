@@ -12,6 +12,7 @@
 #include "Configurable.hh"
 #include "VPatient.hh"
 #include "CADMesh.hh"
+#include <algorithm>
 #undef Error
 #undef Next
 // FIXME: ROOT się gryzie z CADMeshem i oba mają tak samo nazwane makra zdefiniowane i problem z kolejnością includów czy coś takiego - nie do końca ogarniam.
@@ -49,6 +50,12 @@ class TLD : public VPatient {
 
     ///
     void SetIDs(G4int x, G4int y, G4int z);
+
+    ///
+    void SetSurfaceScoringLayers(G4int layers) { m_surface_scoring_layers = std::max(0, layers); }
+
+    ///
+    G4int GetSurfaceScoringLayers() const { return m_surface_scoring_layers; }
     
     ///
     G4int GetIdX() const { return m_id_x; }
@@ -93,6 +100,9 @@ class TLD : public VPatient {
     G4int m_tld_voxelization_x = 1;
     G4int m_tld_voxelization_y = 1;
     G4int m_tld_voxelization_z = 1;
+
+    ///
+    G4int m_surface_scoring_layers = 0;
 
     ///
     G4String m_tld_medium;

@@ -5,9 +5,11 @@
 #include "TomlConfigurable.hh"
 #include "Services.hh"
 #include "TLD.hh"
+#include "CADMesh.hh"
+#include <map>
+#include <memory>
+#include <vector>
 
-///
-// class TLDTray : public IPhysicalVolume, public TomlConfigModule {
 class TLDTray : public VPatient {
     private:
         ///
@@ -15,6 +17,9 @@ class TLDTray : public VPatient {
 
         ///
         void LoadConfiguration();
+
+        ///
+        void ConstructSupplementaryGeometry(G4VPhysicalVolume *parentPV);
 
         class Config {
             public:
@@ -30,7 +35,12 @@ class TLDTray : public VPatient {
                 G4int m_tld_nY_voxels = 10;
                 G4int m_tld_nZ_voxels = 10;
 
+                G4int m_surface_scoring_layers = 0;
+
                 G4String m_stl_geometry_file_path = "None";
+                G4String m_supplementary_geometry_path = "None";
+                G4String m_supplementary_geometry_material = "None";
+                G4ThreeVector m_supplementary_geometry_position = G4ThreeVector();
                 
                 bool m_initialized = false;
             };
@@ -60,9 +70,6 @@ class TLDTray : public VPatient {
     ///
     void DefineSensitiveDetector();
 
-
-    // VPatient* GetDetector() const { return m_detector; }
-
     G4ThreeVector m_global_centre;
     G4ThreeVector m_tray_world_halfSize;
     std::string m_tray_name;
@@ -78,7 +85,9 @@ class TLDTray : public VPatient {
     ///
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
+  private:
+    std::shared_ptr<CADMesh::TessellatedMesh> m_supplementary_mesh;
+    G4PVPlacement* m_supplementary_volume = nullptr;
 };
-
 
 #endif //Dose3D_TRAYCONSTRUCTION_HH

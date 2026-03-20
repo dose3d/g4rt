@@ -40,7 +40,7 @@ SupplementaryGeometryPosition = [0.0, 0.0, -2.05]
 SurfaceScoringLayers = 3
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 100000
+nParticles = 5000000
 BeamRotation = 0.0 # in degrees, rotation of the beam around the Z axis (in the XY plane)
 BeamSID = 100.0 # (Obecne pole naświetlania koło o średnicy 16 cm (x od -8 cm do +8 cm/ y od -8 cm do +8 cm)
 PlanInputFile = [

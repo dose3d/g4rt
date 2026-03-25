@@ -57,36 +57,6 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
             VMlc::m_leaves_x_positioning.push_back(leaf_center_x);
             current_x += leaf_width;
         }
-        // double x_half_width = 2.5/2; // mm
-        // double x_init = 30 * x_half_width * 2 - x_half_width; // mm
-        // for(int leaf_idx = 0; leaf_idx < mlc_a_positioning.size(); leaf_idx++){
-        //     double leaf_a_pos_y = mlc_a_positioning.at(leaf_idx);
-        //     double leaf_a_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafAPosition(leaf_idx);
-        //     m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x - x_half_width);
-        //     m_mlc_a_corners.emplace_back(leaf_a_pos_y, leaf_a_pos_x + x_half_width);
-
-        //     VMlc::m_leaves_x_positioning.push_back(leaf_a_pos_x);
-        // }
-        // const auto& mlc_b_positioning = control_point->GetMlcPositioning("Y2");
-        // for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
-        //     double leaf_b_pos_y = mlc_b_positioning.at(leaf_idx);
-        //     double leaf_b_pos_x = - x_init + leaf_idx * 2.5; // TEMP! fixed to 2.5 mm, TODO: getLeafBPosition(leaf_idx);
-        //     m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x - x_half_width);
-        //     m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_b_pos_x + x_half_width);
-        // }
-        // current_x = - total_width / 2.0;
-        // for(int leaf_idx = 0; leaf_idx < mlc_b_positioning.size(); leaf_idx++){
-        //     bool isInner = (leaf_idx >= outer_each_side && 
-        //         leaf_idx < outer_each_side + inner_leaf_count);
-        //     double leaf_width = isInner ? inner_leaf_width : outer_leaf_width;
-        //     double x_half_width = leaf_width / 2.0;
-        //     double leaf_center_x = current_x + x_half_width;
-        //     double leaf_b_pos_y = mlc_b_positioning.at(leaf_idx);
-        //     m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_center_x - x_half_width);
-        //     m_mlc_b_corners.emplace_back(leaf_b_pos_y, leaf_center_x + x_half_width);
-        //     current_x += leaf_width;
-        // }
-
 
         std::reverse(m_mlc_b_corners.begin(), m_mlc_b_corners.end());
         m_mlc_corners.insert(m_mlc_corners.end(), m_mlc_a_corners.begin(), m_mlc_a_corners.end());

@@ -98,7 +98,7 @@ if __name__=="__main__":
     
     job_name = "cp-2_dose3d_voxel.csv"
     # file = f"/home/g4rt/workDir/develop/g4rt/output/mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4_{job}/sim/{job_name}"
-    file = f"/home/g4rt/workDir/develop/g4rt/output/tray_basic_setup_6/sim/cp-0_tray001_voxel.csv"
+    file = f"/home/geant4/workspace/d3df_g4rt/output/srunet3d_4x4x2_64x64x64_tps_plan1/sim/tps_plan1/tps_plan1_d3ddetector_voxel.csv"
     plot_from_csv(file,0,"xy","Dose")
     # plot_from_csv(file,1,"xy","Dose")
     

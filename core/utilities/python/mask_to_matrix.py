@@ -5,6 +5,13 @@ import argparse
 import os
 import polars as pl
 
+
+def duplicate_rows_in_dataframe(df: pl.DataFrame, repeats: int = 25) -> pl.DataFrame:
+    rows = []
+    for row in df.iter_rows(named=True):
+        rows.extend([row] * repeats)
+    return pl.DataFrame(rows, schema=df.schema)
+
 def mask_to_matrix(plan_file: str,
                    out_csv: str = None,
                    out_pickle: str = None,
@@ -32,11 +39,32 @@ def mask_to_matrix(plan_file: str,
     # Parse mask segments
     segments = []
     for ln in lines[idx+1:]:
-        txt = ln.strip()
-        if not txt or txt.startswith('#'):
-            break
-        y1, y2 = map(float, txt.split(','))
-        segments.append(sorted([y1, y2]))
+        segments = []
+        for line_no, ln in enumerate(lines[idx+1:], start=idx+2):
+            txt = ln.strip()
+
+            if not txt:
+                break
+            if txt.startswith('#'):
+                break
+
+            # usuń komentarz na końcu linii, jeśli istnieje
+            txt = txt.split('#', 1)[0].strip()
+
+            # rozbij i wyrzuć puste pola
+            parts = [p.strip() for p in txt.split(',') if p.strip()]
+
+            if len(parts) != 2:
+                logger.warning(f"Skipping malformed MLC line {line_no}: {ln!r}")
+                continue
+
+            try:
+                y1, y2 = map(float, parts)
+            except ValueError:
+                logger.warning(f"Skipping non-numeric MLC line {line_no}: {ln!r}")
+                continue
+
+            segments.append(sorted([y1, y2]))
     logger.debug(f"Found {len(segments)} segments")
 
     # Build full matrix rows
@@ -55,7 +83,7 @@ def mask_to_matrix(plan_file: str,
     x_trim = x_positions[col_mask]
     matrix = matrix[:, col_mask]
 
-    # Trim to central 36 rows
+    # Trim to central 26 rows
     total_rows = matrix.shape[0]
     start_row = max((total_rows - 26)//2, 0)
     matrix = matrix[start_row:start_row+26, :]
@@ -77,7 +105,8 @@ def mask_to_matrix(plan_file: str,
 
     # Save CSV (no header)
     if out_csv:
-        df_int.write_csv(out_csv, include_header=False)
+        df_out = duplicate_rows_in_dataframe(df_int)
+        df_out.write_csv(out_csv, include_header=False)
         # df_int.write_ipc(out_csv+'out.feather', compression='lz4')
         logger.info(f"Saved CSV: {out_csv}")
 

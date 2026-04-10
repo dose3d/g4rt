@@ -371,6 +371,13 @@ def mask_to_matrix(plan_file: str,
     logger.debug(f"Cropped matrix shape: {cropped_matrix.shape}")
     logger.debug(f"Small binary matrix shape: {small_binary_matrix.shape}")
 
+    cropped_matrix = np.rot90(cropped_matrix, k=3, axes=(0, 1))
+    cropped_matrix = np.flip(cropped_matrix, axis=1)
+
+    small_binary_matrix = np.rot90(small_binary_matrix, k=3, axes=(0, 1))
+    small_binary_matrix = np.flip(small_binary_matrix, axis=1)
+    
+
     # Return the main exported matrix as a DataFrame
     df = build_polars_df(cropped_matrix)
 

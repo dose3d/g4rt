@@ -398,13 +398,13 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
   // Get the environment size in the x, y, and z directions
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
+  auto ct_cube_init_x = svc::round_with_prec(-env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
+  auto ct_cube_init_y = svc::round_with_prec(-env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
+  auto ct_cube_init_z = svc::round_with_prec(-env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
 
   // Calculate the resolution in the x, y, and z directions
   G4int xResolution = env_size_x / sizeX;

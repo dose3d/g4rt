@@ -318,6 +318,116 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Builds a CT voxel grid configuration aligned with the patient isocentre.
+///
+/// The first voxel position is defined as the CENTER of the first voxel:
+///     init = -env/2 + iso + size/2
+///
+/// This ensures:
+/// - voxel sampling is done at centers
+/// - the full voxel grid spans exactly:
+///       [-env/2 + iso, +env/2 + iso]
+///   when considering voxel boundaries
+CtTubeConfig PatientGeometry::BuildCtTubeConfig(const std::string& name) const {
+    CtTubeConfig cfg;
+    cfg.name = name;
+
+    cfg.sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT");
+    cfg.sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT");
+    cfg.sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT");
+
+    cfg.envX = thisConfig()->GetValue<double>("EnviromentSizeX");
+    cfg.envY = thisConfig()->GetValue<double>("EnviromentSizeY");
+    cfg.envZ = thisConfig()->GetValue<double>("EnviromentSizeZ");
+
+    auto isoX = thisConfig()->GetValue<double>("PatientIsocentreX");
+    auto isoY = thisConfig()->GetValue<double>("PatientIsocentreY");
+    auto isoZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
+
+    auto calcInit = [&](double env, double iso, double size) {
+        return svc::round_with_prec(-env / 2.0 + iso + size / 2.0, 4);
+    };
+
+    cfg.initX = calcInit(cfg.envX, isoX, cfg.sizeX);
+    cfg.initY = calcInit(cfg.envY, isoY, cfg.sizeY);
+    cfg.initZ = calcInit(cfg.envZ, isoZ, cfg.sizeZ);
+
+    cfg.xRes = static_cast<int>(std::round(cfg.envX / cfg.sizeX));
+    cfg.yRes = static_cast<int>(std::round(cfg.envY / cfg.sizeY));
+    cfg.zRes = static_cast<int>(std::round(cfg.envZ / cfg.sizeZ));
+
+    return cfg;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Writes CT grid metadata to CSV.
+///
+/// This function explicitly distinguishes between:
+///
+/// 1. Voxel CENTER range (discrete sampling positions):
+///    x_center_min = init
+///    x_center_max = init + (N-1)*size
+///
+/// 2. Physical BOUNDARY range (continuous volume extent):
+///    x_min = init - size/2
+///    x_max = init + (N-1)*size + size/2
+///
+/// These definitions ensure:
+/// - consistency with voxel-centered sampling
+/// - compatibility with imaging toolkits (ITK, SimpleITK, etc.)
+///
+/// IMPORTANT:
+/// - center_* values describe where data points exist
+/// - min/max values describe the physical extent of the volume
+/// - these must NOT be mixed or interpreted interchangeably
+void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfig& cfg) const {
+    std::ofstream file(path, std::ios::out);
+
+    file << "name," << cfg.name << "\n";
+
+    auto centerMax = [&](double init, int res, double step) {
+        return init + (res - 1) * step;
+    };
+
+    auto boundaryMin = [&](double init, double step) {
+        return init - step / 2.0;
+    };
+
+    auto boundaryMax = [&](double init, int res, double step) {
+        return init + (res - 1) * step + step / 2.0;
+    };
+
+    // centra
+    file << "x_center_min," << cfg.initX << "\n";
+    file << "y_center_min," << cfg.initY << "\n";
+    file << "z_center_min," << cfg.initZ << "\n";
+
+    file << "x_center_max," << centerMax(cfg.initX, cfg.xRes, cfg.sizeX) << "\n";
+    file << "y_center_max," << centerMax(cfg.initY, cfg.yRes, cfg.sizeY) << "\n";
+    file << "z_center_max," << centerMax(cfg.initZ, cfg.zRes, cfg.sizeZ) << "\n";
+
+    // granice
+    file << "x_min," << boundaryMin(cfg.initX, cfg.sizeX) << "\n";
+    file << "y_min," << boundaryMin(cfg.initY, cfg.sizeY) << "\n";
+    file << "z_min," << boundaryMin(cfg.initZ, cfg.sizeZ) << "\n";
+
+    file << "x_max," << boundaryMax(cfg.initX, cfg.xRes, cfg.sizeX) << "\n";
+    file << "y_max," << boundaryMax(cfg.initY, cfg.yRes, cfg.sizeY) << "\n";
+    file << "z_max," << boundaryMax(cfg.initZ, cfg.zRes, cfg.sizeZ) << "\n";
+
+    file << "x_resolution," << cfg.xRes << "\n";
+    file << "y_resolution," << cfg.yRes << "\n";
+    file << "z_resolution," << cfg.zRes << "\n";
+
+    file << "x_step," << cfg.sizeX << "\n";
+    file << "y_step," << cfg.sizeY << "\n";
+    file << "z_step," << cfg.sizeZ << "\n";
+
+    double SSD = 1000;
+    file << "SSD," << svc::round_with_prec(SSD, 4) << "\n";
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///
 G4bool PatientGeometry::Update() {
   // TODO:: Update this GetPhysicalVolume(); then the daughter

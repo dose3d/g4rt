@@ -51,7 +51,7 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-# nParticles = 10000
+nParticles = 1000
 PlanInputFile = [
         "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
 ]

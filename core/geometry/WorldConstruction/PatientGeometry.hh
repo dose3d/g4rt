@@ -120,7 +120,7 @@ class PatientGeometry : public IPhysicalVolume,
   void Configure() override;
 
   ///
-  CtTubeConfig BuildCtTubeConfig(const std::string& name) const;
+  CtTubeConfig BuildCtTubeConfig(const std::string& name="tube_64_64_64") const;
 
   ///
   void WriteCtMetadata(const std::string& path, const CtTubeConfig& cfg) const;
@@ -141,6 +141,9 @@ class PatientGeometry : public IPhysicalVolume,
 
   ///
   G4PVPlacement* m_suplementary_volume = nullptr;
+
+  ///
+  std::unique_ptr<G4Navigator> CreateNavigator() const;
 
   /// Iterate over all voxel centers in the CT grid.
   /// For each voxel index (x, y, z), the position is computed as:

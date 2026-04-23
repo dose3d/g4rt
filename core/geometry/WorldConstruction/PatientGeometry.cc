@@ -694,18 +694,18 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
      // =====================================================
      // OUTPUT FILES
      // =====================================================
-     std::string voxelFileAbsPath = outDir + "/" + planName + "_ct_dose_voxel.csv";
-     std::string cellFileAbsPath  = outDir + "/" + planName + "_ct_dose_cell.csv";
-     RUNSVC_INFO("ExportDoseToCsvCT [{}]:  CellFile={}", cfg.name, cellFileAbsPath);
-     RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelFile={}", cfg.name, voxelFileAbsPath);
-     std::ofstream voxelFile(voxelFileAbsPath);
-     std::ofstream cellFile (cellFileAbsPath);
+     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
+    //  std::string cellFileAbsPath  = outDir + "/" + planName + "_ct_dose_cell.csv";
+    //  RUNSVC_INFO("ExportDoseToCsvCT [{}]:  CellFile={}", cfg.name, cellFileAbsPath);
+     RUNSVC_INFO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
+     std::ofstream doseFile(doseFileAbsPath);
+    //  std::ofstream cellFile (cellFileAbsPath);
  
      std::string header =
-         "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose [Gy],FSF,ASF";
+         "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
  
-     voxelFile << header << "\n";
-     cellFile  << header << "\n";
+     doseFile << header << "\n";
+    //  cellFile  << header << "\n";
     
     // =====================================================
     // LOOKUP
@@ -751,39 +751,63 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                        ->GetMaterial()
                        ->GetName();
         auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+        int idX = -1, idY = -1, idZ = -1;
+        double doseVoxel = 0.0;
+        double doseCell = 0.0;
+        double fsf = 0.0;
+        double asf = 0.0;
 
         // ---------------- VOXEL ----------------
         if (const auto& hit = getVoxelHit(pos)) {
-            voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
-                      << "," << hit->GetGlobalID(0)
-                      << "," << hit->GetGlobalID(1)
-                      << "," << hit->GetGlobalID(2)
-                      << "," << materialHU
-                      << "," << hit->GetDose()
-                      << "," << hit->GetFieldScalingFactor()
-                      << "," << hit->GetAngleScalingFactor()
-                      << "\n";
-        } else {
-            voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
-                      << ",-1,-1,-1," << materialHU
-                      << ",0,0,0\n";
+            idX = hit->GetGlobalID(0);
+            idY = hit->GetGlobalID(1);
+            idZ = hit->GetGlobalID(2);
+            doseVoxel = hit->GetDose();
+            fsf = hit->GetFieldScalingFactor();
+            asf = hit->GetAngleScalingFactor();
         }
+        //     voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
+        //               << "," << hit->GetGlobalID(0)
+        //               << "," << hit->GetGlobalID(1)
+        //               << "," << hit->GetGlobalID(2)
+        //               << "," << materialHU
+        //               << "," << hit->GetDose()
+        //               << "," << hit->GetFieldScalingFactor()
+        //               << "," << hit->GetAngleScalingFactor()
+        //               << "\n";
+        // } else {
+        //     voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
+        //               << ",-1,-1,-1," << materialHU
+        //               << ",0,0,0\n";
+        // }
 
         // ---------------- CELL ----------------
         if (const auto& hit = getCellHit(pos)) {
-            cellFile << pos.x() << "," << pos.y() << "," << pos.z()
-                     << "," << hit->GetGlobalID(0)
-                     << "," << hit->GetGlobalID(1)
-                     << "," << hit->GetGlobalID(2)
-                     << "," << materialHU
-                     << "," << hit->GetDose()
-                     << "," << hit->GetFieldScalingFactor()
-                     << "," << hit->GetAngleScalingFactor()
-                     << "\n";
-        } else {
-            cellFile << pos.x() << "," << pos.y() << "," << pos.z()
-                     << ",-1,-1,-1," << materialHU
-                     << ",0,0,0\n";
+          doseCell = hit->GetDose();
         }
+        //     cellFile << pos.x() << "," << pos.y() << "," << pos.z()
+        //              << "," << hit->GetGlobalID(0)
+        //              << "," << hit->GetGlobalID(1)
+        //              << "," << hit->GetGlobalID(2)
+        //              << "," << materialHU
+        //              << "," << hit->GetDose()
+        //              << "," << hit->GetFieldScalingFactor()
+        //              << "," << hit->GetAngleScalingFactor()
+        //              << "\n";
+        // } else {
+        //     cellFile << pos.x() << "," << pos.y() << "," << pos.z()
+        //              << ",-1,-1,-1," << materialHU
+        //              << ",0,0,0\n";
+        // }
+        doseFile << pos.x() << "," << pos.y() << "," << pos.z()
+                 << "," << idX
+                 << "," << idY
+                 << "," << idZ
+                 << "," << materialHU
+                 << "," << doseCell
+                 << "," << doseVoxel
+                 << "," << fsf
+                 << "," << asf
+                 << "\n";
     });
 }

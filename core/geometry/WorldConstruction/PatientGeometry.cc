@@ -532,6 +532,78 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Export dose distribution mapped onto CT grid for both Voxel and Cell scorings.
+///
+/// This method projects simulation scoring data (Voxel and Cell) onto a regular CT grid
+/// and exports results into CSV files. The CT grid acts as the **single source of truth**
+/// for spatial sampling.
+///
+/// Two independent outputs are generated:
+///  - *_ct_dose_voxel.csv  → dose from Voxel scoring
+///  - *_ct_dose_cell.csv   → dose from Cell scoring
+///
+/// Additionally, CT metadata is exported to:
+///  - *_ct_dose_series_metadata.csv
+/// 
+/// =======  High_level High-level workflow =======
+///
+/// 1. Build CT grid definition (CtTubeConfig)
+/// 2. Extract scoring data from simulation (Voxel + Cell)
+/// 3. Build spatial mappings (centre-based)
+/// 4. Create lookup functions (nearest neighbour with tolerance)
+/// 5. Iterate over CT grid (ForEachVoxel)
+/// 6. Sample dose & material at each CT voxel
+/// 7. Export results to CSV
+//
+///
+/// ======= ct_grid CT grid (reference space) =======
+///
+/// The CT grid is defined by CtTubeConfig and represents a **regular 3D lattice**:
+///
+/// - origin: (x_min, y_min, z_min)
+/// - spacing: (sizeX, sizeY, sizeZ)
+/// - resolution: (xRes, yRes, zRes)
+///
+/// Each sampled point corresponds to the **centre of a CT voxel**.
+///
+/// IMPORTANT:
+/// - All exported data (Voxel + Cell) are **resampled onto this grid**
+/// - This ensures consistent spatial alignment across datasets
+///
+/// ======= Lookup Lookup strategy =======
+///
+/// Dose is retrieved via **nearest neighbour search with axis-aligned tolerance**:
+///
+/// For each CT voxel position:
+///
+/// 1. Iterate over mapping entries
+/// 2. Select candidates within tolerance:
+///      |dx| <= tol, |dy| <= tol, |dz| <= tol
+/// 3. Choose closest entry (Euclidean distance)
+///
+/// Separate lookup functions are used:
+///
+/// - getVoxelHit → small tolerance (~ half CT voxel size)
+/// - getCellHit  → larger tolerance (coarser grid)
+///
+/// ======= Coordinate_system Coordinate system notes =======
+///
+/// - All coordinates are in global Geant4 space
+/// - CT grid is aligned with simulation world
+/// - Sampling is performed at voxel centres
+///
+/// ======= Performance Performance considerations =======
+///
+/// Current lookup complexity:
+///   O(N_ct_voxels × N_mapping)
+///
+/// Where:
+///   - voxelMappings ~ large (e.g. 36k)
+///   - cellMappings  ~ small (e.g. 36)
+///
+/// Potential optimizations:
+///   - spatial hashing / grid indexing
+///   - direct ID-based mapping
 ///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();

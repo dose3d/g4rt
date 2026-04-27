@@ -532,78 +532,90 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Export dose distribution mapped onto CT grid for both Voxel and Cell scorings.
+/// Export dose distribution mapped onto a unified CT grid.
 ///
-/// This method projects simulation scoring data (Voxel and Cell) onto a regular CT grid
-/// and exports results into CSV files. The CT grid acts as the **single source of truth**
-/// for spatial sampling.
+/// Projection of the simulation scoring data (Voxel and Cell) onto a regular
+/// CT grid and exports results into a single CSV file. 
+/// The CT grid acts as the single source of truth for spatial sampling.
 ///
-/// Two independent outputs are generated:
-///  - *_ct_dose_voxel.csv  → dose from Voxel scoring
-///  - *_ct_dose_cell.csv   → dose from Cell scoring
+/// Output:
+///  - *_ct_dose.csv  → contains both Voxel and Cell dose evaluated at CT voxel centres
+///  - *_ct_dose_series_metadata.csv → CT metadata
 ///
-/// Additionally, CT metadata is exported to:
-///  - *_ct_dose_series_metadata.csv
-/// 
-/// =======  High_level High-level workflow =======
-///
+/// ======= High-level workflow =======
 /// 1. Build CT grid definition (CtTubeConfig)
 /// 2. Extract scoring data from simulation (Voxel + Cell)
-/// 3. Build spatial mappings (centre-based)
+/// 3. Build spatial mappings (centre-based, deduplicated)
 /// 4. Create lookup functions (nearest neighbour with tolerance)
 /// 5. Iterate over CT grid (ForEachVoxel)
-/// 6. Sample dose & material at each CT voxel
-/// 7. Export results to CSV
-//
+/// 6. Sample:
+///      - material (via navigator)
+///      - voxel dose (high resolution)
+///      - cell dose (coarse resolution)
+/// 7. Export all values into a single CSV row per CT voxel
 ///
-/// ======= ct_grid CT grid (reference space) =======
-///
-/// The CT grid is defined by CtTubeConfig and represents a **regular 3D lattice**:
-///
+/// ======= CT grid (reference space) =======
+/// The CT grid is defined by CtTubeConfig and represents a regular 3D lattice:
 /// - origin: (x_min, y_min, z_min)
 /// - spacing: (sizeX, sizeY, sizeZ)
 /// - resolution: (xRes, yRes, zRes)
 ///
-/// Each sampled point corresponds to the **centre of a CT voxel**.
+/// Each sampled point corresponds to the centre of a CT voxel.
 ///
 /// IMPORTANT:
-/// - All exported data (Voxel + Cell) are **resampled onto this grid**
-/// - This ensures consistent spatial alignment across datasets
+/// - Both Voxel and Cell scoring data are resampled onto this grid
+/// - This guarantees strict spatial alignment between datasets
+/// - No interpolation is performed (nearest neighbour sampling)
 ///
-/// ======= Lookup Lookup strategy =======
+/// ======= Mapping (scoring → CT space) =======
+/// Two independent mappings of scoring data are constructed:
 ///
-/// Dose is retrieved via **nearest neighbour search with axis-aligned tolerance**:
+/// - voxelMappings → dense, high-resolution scoring (VoxelHit)
+/// - cellMappings  → sparse, coarse scoring (CellHit)
+///
+/// For deduplication purposes, each mapping entry stores:
+///   - geometric centre (in global coordinates)
+///   - unique identifier (ID)
+///   - pointer to scoring data (VoxelHit)
+///
+/// ======= Lookup strategy =======
+/// Dose values are retrieved using nearest neighbour search with axis-aligned tolerance.
 ///
 /// For each CT voxel position:
-///
 /// 1. Iterate over mapping entries
-/// 2. Select candidates within tolerance:
+/// 2. Select candidates satisfying:
 ///      |dx| <= tol, |dy| <= tol, |dz| <= tol
-/// 3. Choose closest entry (Euclidean distance)
+/// 3. Choose closest match (minimum Euclidean distance)
 ///
-/// Separate lookup functions are used:
+/// Separate lookup configurations:
+/// - Voxel lookup:
+///     tolerance ≈ 0.5 × CT voxel size
+///     → precise, local mapping
 ///
-/// - getVoxelHit → small tolerance (~ half CT voxel size)
-/// - getCellHit  → larger tolerance (coarser grid)
+/// - Cell lookup:
+///     tolerance = larger constant (e.g. 5 mm)
+///     → coarse mapping (cell covers larger region)
 ///
-/// ======= Coordinate_system Coordinate system notes =======
-///
+/// ======= Coordinate system =======
 /// - All coordinates are in global Geant4 space
-/// - CT grid is aligned with simulation world
-/// - Sampling is performed at voxel centres
+/// - CT grid is aligned with the simulation world
+/// - Sampling is performed strictly at voxel centres
 ///
-/// ======= Performance Performance considerations =======
-///
+/// ======= Performance considerations =======
 /// Current lookup complexity:
 ///   O(N_ct_voxels × N_mapping)
 ///
-/// Where:
-///   - voxelMappings ~ large (e.g. 36k)
-///   - cellMappings  ~ small (e.g. 36)
+/// Typical sizes:
+///   - voxelMappings → large (e.g. ~36k)
+///   - cellMappings  → small (e.g. ~36)
+///
+/// Bottleneck:
+///   - voxel lookup dominates runtime
 ///
 /// Potential optimizations:
-///   - spatial hashing / grid indexing
-///   - direct ID-based mapping
+///   - spatial hashing (recommended)
+///   - uniform grid indexing
+///   - direct ID-based mapping (if topology allows)
 ///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
@@ -627,9 +639,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
-    // ----------------------------
     // Metadata
-    // ----------------------------
     auto metaDataFile =  outDir+"/"+planName+"_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
 
@@ -695,17 +705,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
      // OUTPUT FILES
      // =====================================================
      std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
-    //  std::string cellFileAbsPath  = outDir + "/" + planName + "_ct_dose_cell.csv";
-    //  RUNSVC_INFO("ExportDoseToCsvCT [{}]:  CellFile={}", cfg.name, cellFileAbsPath);
      RUNSVC_INFO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
      std::ofstream doseFile(doseFileAbsPath);
-    //  std::ofstream cellFile (cellFileAbsPath);
  
      std::string header =
          "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
  
      doseFile << header << "\n";
-    //  cellFile  << header << "\n";
     
     // =====================================================
     // LOOKUP
@@ -766,39 +772,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
             fsf = hit->GetFieldScalingFactor();
             asf = hit->GetAngleScalingFactor();
         }
-        //     voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
-        //               << "," << hit->GetGlobalID(0)
-        //               << "," << hit->GetGlobalID(1)
-        //               << "," << hit->GetGlobalID(2)
-        //               << "," << materialHU
-        //               << "," << hit->GetDose()
-        //               << "," << hit->GetFieldScalingFactor()
-        //               << "," << hit->GetAngleScalingFactor()
-        //               << "\n";
-        // } else {
-        //     voxelFile << pos.x() << "," << pos.y() << "," << pos.z()
-        //               << ",-1,-1,-1," << materialHU
-        //               << ",0,0,0\n";
-        // }
 
         // ---------------- CELL ----------------
         if (const auto& hit = getCellHit(pos)) {
           doseCell = hit->GetDose();
         }
-        //     cellFile << pos.x() << "," << pos.y() << "," << pos.z()
-        //              << "," << hit->GetGlobalID(0)
-        //              << "," << hit->GetGlobalID(1)
-        //              << "," << hit->GetGlobalID(2)
-        //              << "," << materialHU
-        //              << "," << hit->GetDose()
-        //              << "," << hit->GetFieldScalingFactor()
-        //              << "," << hit->GetAngleScalingFactor()
-        //              << "\n";
-        // } else {
-        //     cellFile << pos.x() << "," << pos.y() << "," << pos.z()
-        //              << ",-1,-1,-1," << materialHU
-        //              << ",0,0,0\n";
-        // }
+        
+        // ------------ write to file -----------
         doseFile << pos.x() << "," << pos.y() << "," << pos.z()
                  << "," << idX
                  << "," << idY

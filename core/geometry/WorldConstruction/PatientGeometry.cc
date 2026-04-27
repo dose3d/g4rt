@@ -379,6 +379,10 @@ CtTubeConfig PatientGeometry::BuildCtTubeConfig(const std::string& name) const {
 /// These definitions ensure:
 /// - consistency with voxel-centered sampling
 /// - compatibility with imaging toolkits (ITK, SimpleITK, etc.)
+/// - enable exporting data to DICOM-CT format
+///
+/// In practice, this layout is directly used for DICOM generation in:
+/// d3df_g4rt/core/utilities/python/dicom_ct.py
 ///
 /// IMPORTANT:
 /// - center_* values describe where data points exist

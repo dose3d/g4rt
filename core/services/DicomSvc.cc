@@ -448,7 +448,7 @@ double DicomSvc::GetHounsfieldScaleValue(const std::string& materialName, bool n
   if(!tconfig){
     auto hausfieldMaterialMapFile = std::string(PROJECT_DATA_PATH) + "/config/hounsfield_scale_120keV.toml";
     tconfig = std::make_unique<toml::table>(toml::parse_file(hausfieldMaterialMapFile));
-    LOGSVC_INFO("DcmSvc","Reading from Hounsfield Material Map File: {}",hausfieldMaterialMapFile);
+    LOGSVC_INFO("DicomSvc","Build Hounsfield Material Map from: {}",hausfieldMaterialMapFile);
   }
   const toml::table& config = *tconfig;
   G4double hu_value = 0.;

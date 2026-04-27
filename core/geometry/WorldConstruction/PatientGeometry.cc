@@ -312,9 +312,127 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   
 }
 
+}
+////////////////////////////////////////////////////////////////////////////////
+///
+std::unique_ptr<G4Navigator> PatientGeometry::CreateNavigator() const {
+    auto nav = std::make_unique<G4Navigator>();
+    nav->SetWorldVolume(Service<GeoSvc>()->World()->GetPhysicalVolume());
+    return nav;
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Builds a CT voxel grid configuration aligned with the patient isocentre.
+///
+/// The first voxel position is defined as the CENTER of the first voxel:
+///     init = -env/2 + iso + size/2
+///
+/// This ensures:
+/// - voxel sampling is done at centers
+/// - the full voxel grid spans exactly:
+///       [-env/2 + iso, +env/2 + iso]
+///   when considering voxel boundaries
+CtTubeConfig PatientGeometry::BuildCtTubeConfig(const std::string& name) const {
+    CtTubeConfig cfg;
+    cfg.name = name;
 
+    cfg.sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT");
+    cfg.sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT");
+    cfg.sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT");
 
+    cfg.envX = thisConfig()->GetValue<double>("EnviromentSizeX");
+    cfg.envY = thisConfig()->GetValue<double>("EnviromentSizeY");
+    cfg.envZ = thisConfig()->GetValue<double>("EnviromentSizeZ");
+
+    auto isoX = thisConfig()->GetValue<double>("PatientIsocentreX");
+    auto isoY = thisConfig()->GetValue<double>("PatientIsocentreY");
+    auto isoZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
+
+    auto calcInit = [&](double env, double iso, double size) {
+        return svc::round_with_prec(-env / 2.0 + iso + size / 2.0, 4);
+    };
+
+    cfg.initX = calcInit(cfg.envX, isoX, cfg.sizeX);
+    cfg.initY = calcInit(cfg.envY, isoY, cfg.sizeY);
+    cfg.initZ = calcInit(cfg.envZ, isoZ, cfg.sizeZ);
+
+    cfg.xRes = static_cast<int>(std::round(cfg.envX / cfg.sizeX));
+    cfg.yRes = static_cast<int>(std::round(cfg.envY / cfg.sizeY));
+    cfg.zRes = static_cast<int>(std::round(cfg.envZ / cfg.sizeZ));
+
+    return cfg;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Writes CT grid metadata to CSV.
+///
+/// This function explicitly distinguishes between:
+///
+/// 1. Voxel CENTER range (discrete sampling positions):
+///    x_center_min = init
+///    x_center_max = init + (N-1)*size
+///
+/// 2. Physical BOUNDARY range (continuous volume extent):
+///    x_min = init - size/2
+///    x_max = init + (N-1)*size + size/2
+///
+/// These definitions ensure:
+/// - consistency with voxel-centered sampling
+/// - compatibility with imaging toolkits (ITK, SimpleITK, etc.)
+/// - enable exporting data to DICOM-CT format
+///
+/// In practice, this layout is directly used for DICOM generation in:
+/// d3df_g4rt/core/utilities/python/dicom_ct.py
+///
+/// IMPORTANT:
+/// - center_* values describe where data points exist
+/// - min/max values describe the physical extent of the volume
+/// - these must NOT be mixed or interpreted interchangeably
+void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfig& cfg) const {
+    std::ofstream file(path, std::ios::out);
+
+    file << "name," << cfg.name << "\n";
+
+    auto centerMax = [&](double init, int res, double step) {
+        return init + (res - 1) * step;
+    };
+
+    auto boundaryMin = [&](double init, double step) {
+        return init - step / 2.0;
+    };
+
+    auto boundaryMax = [&](double init, int res, double step) {
+        return init + (res - 1) * step + step / 2.0;
+    };
+
+    // centra
+    file << "x_center_min," << cfg.initX << "\n";
+    file << "y_center_min," << cfg.initY << "\n";
+    file << "z_center_min," << cfg.initZ << "\n";
+
+    file << "x_center_max," << centerMax(cfg.initX, cfg.xRes, cfg.sizeX) << "\n";
+    file << "y_center_max," << centerMax(cfg.initY, cfg.yRes, cfg.sizeY) << "\n";
+    file << "z_center_max," << centerMax(cfg.initZ, cfg.zRes, cfg.sizeZ) << "\n";
+
+    // granice
+    file << "x_min," << boundaryMin(cfg.initX, cfg.sizeX) << "\n";
+    file << "y_min," << boundaryMin(cfg.initY, cfg.sizeY) << "\n";
+    file << "z_min," << boundaryMin(cfg.initZ, cfg.sizeZ) << "\n";
+
+    file << "x_max," << boundaryMax(cfg.initX, cfg.xRes, cfg.sizeX) << "\n";
+    file << "y_max," << boundaryMax(cfg.initY, cfg.yRes, cfg.sizeY) << "\n";
+    file << "z_max," << boundaryMax(cfg.initZ, cfg.zRes, cfg.sizeZ) << "\n";
+
+    file << "x_resolution," << cfg.xRes << "\n";
+    file << "y_resolution," << cfg.yRes << "\n";
+    file << "z_resolution," << cfg.zRes << "\n";
+
+    file << "x_step," << cfg.sizeX << "\n";
+    file << "y_step," << cfg.sizeY << "\n";
+    file << "z_step," << cfg.sizeZ << "\n";
+
+    double SSD = 1000;
+    file << "SSD," << svc::round_with_prec(SSD, 4) << "\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,386 +476,322 @@ void PatientGeometry::DefineSensitiveDetector() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/**
- * @brief Exports the patient geometry to CSV files.
- * 
- * This function exports the patient geometry to CSV files for CT imaging.
- * It creates a set of CSV files for each slice of the patient and saves
- * the position and material of each voxel in the CSV format. The CSV files
- * are saved in the specified output directory.
- * 
- * @param path_to_output_dir The path to the output directory where the CSV
- *                           files will be saved.
- */
+/// This function exports the patient geometry to CSV files for CT imaging.
+/// It creates a set of CSV files for each slice of the patient and saves
+/// the position and material of each voxel in the CSV format. The CSV files
+/// are saved in the specified output directory.
+///
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
-  // Get the patient environment and check if it exists
-  auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
-  if (!patientEnv) {
-    return;
-  }
-  auto patientInstance = patientEnv->GetPatient();
+    auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
+    if (!patientEnv) return;
 
-  // Create a G4Navigator object
-  auto g4Navigator = std::make_unique<G4Navigator>();
+    IO::CreateDirIfNotExits(path_to_output_dir);
 
-  // Get the world instance and set the world volume in the G4Navigator
-  auto worldInstance = Service<GeoSvc>()->World();
-  g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
-  
-  // Create the output directory if it does not exist
-  IO::CreateDirIfNotExits(path_to_output_dir);
+    auto cfg = BuildCtTubeConfig();
+    auto nav = CreateNavigator();
 
-  // Initialize variables
-  G4String materialName;
-  G4ThreeVector currentPos;
+    INFO_GEO("ExportToCsvCT [{}]: Resolution x={}, y={}, z={}",
+             cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
+    
+    INFO_GEO("ExportToCsvCT [{}]: Path={}", cfg.name, path_to_output_dir);
 
-  // Get the voxel size in the x, y, and z directions
-  auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
-  auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
-  auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
+    // ----------------------------
+    // Metadata
+    // ----------------------------
+    WriteCtMetadata(path_to_output_dir + "/ct_series_metadata.csv", cfg);
 
-  // Get the environment size in the x, y, and z directions
-  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = svc::round_with_prec(-env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
+    // ----------------------------
+    // Slice-by-slice export (Y axis)
+    // ----------------------------
+    for (int y = 0; y < cfg.yRes; y++) {
 
-  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = svc::round_with_prec(-env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
+        std::ostringstream ss;
+        ss << std::setw(4) << std::setfill('0') << (y + 1);
 
-  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = svc::round_with_prec(-env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
+        std::string filePath = path_to_output_dir + "/img" + ss.str() + ".csv";
+        std::ofstream file(filePath, std::ios::out);
 
-  // Calculate the resolution in the x, y, and z directions
-  G4int xResolution = env_size_x / sizeX;
-  G4int yResolution = env_size_y / sizeY;
-  G4int zResolution = env_size_z / sizeZ;
+        file << "X,Y,Z,Material\n";
 
-  // Log the resolution
-  INFO_GEO("ExportToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
+        for (int x = 0; x < cfg.xRes; x++) {
+            for (int z = 0; z < cfg.zRes; z++) {
 
-  // Dump metadata to file
-  auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
-  std::ofstream metadata_file;
-  metadata_file.open(meta.c_str(), std::ios::out);
+                G4ThreeVector pos;
+                pos.setX(cfg.initX + cfg.sizeX * x);
+                pos.setY(cfg.initY + cfg.sizeY * y);
+                pos.setZ(cfg.initZ + cfg.sizeZ * z);
 
-  metadata_file << "x_min," << ct_cube_init_x  << std::endl;
-  metadata_file << "y_min," << ct_cube_init_y  << std::endl;
-  metadata_file << "z_min," << ct_cube_init_z  << std::endl;
+                auto volume = nav->LocateGlobalPointAndSetup(pos);
+                auto material = volume->GetLogicalVolume()
+                                       ->GetMaterial()
+                                       ->GetName();
 
-  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x + sizeX),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y + sizeY),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z + sizeZ),4) << std::endl;
-
-  metadata_file << "x_resolution," << xResolution << std::endl;
-  metadata_file << "y_resolution," << yResolution << std::endl;
-  metadata_file << "z_resolution," << zResolution << std::endl;
-
-  metadata_file << "x_step," << sizeX << std::endl;
-  metadata_file << "y_step," << sizeY << std::endl;
-  metadata_file << "z_step," << sizeZ << std::endl;
-
-  double source_to_isocentre = 1000;
-  double SSD = 1000;  // TODO: calc this to be generic from any patient!
-  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
-
-  // Iterate over each slice
-  for( int y = 0; y < yResolution; y++ ){
-    // Create the file name
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << y+1 ;
-    std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/img"+s2+".csv";
-
-    // Create the CSV file
-    std::string header = "X [mm],Y [mm],Z [mm],Material";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
-
-    // Iterate over each voxel in the slice
-    for( int x = 0; x < xResolution; x++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        // Set the position of the current voxel
-        currentPos.setX((ct_cube_init_x+sizeX*x));
-        currentPos.setY((ct_cube_init_y+sizeY*y));
-        currentPos.setZ((ct_cube_init_z+sizeZ*z));
-
-        // Get the material of the current voxel
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-
-        // Write the position and material to the CSV file
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialName << std::endl;
-      }
+                file << pos.x() << ","
+                     << pos.y() << ","
+                     << pos.z() << ","
+                     << material << "\n";
+            }
+        }
     }
-    c_outFile.close();
-  }
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// Export dose distribution mapped onto a unified CT grid.
+///
+/// Projection of the simulation scoring data (Voxel and Cell) onto a regular
+/// CT grid and exports results into a single CSV file. 
+/// The CT grid acts as the single source of truth for spatial sampling.
+///
+/// Output:
+///  - *_ct_dose.csv  → contains both Voxel and Cell dose evaluated at CT voxel centres
+///  - *_ct_dose_series_metadata.csv → CT metadata
+///
+/// ======= High-level workflow =======
+/// 1. Build CT grid definition (CtTubeConfig)
+/// 2. Extract scoring data from simulation (Voxel + Cell)
+/// 3. Build spatial mappings (centre-based, deduplicated)
+/// 4. Create lookup functions (nearest neighbour with tolerance)
+/// 5. Iterate over CT grid (ForEachVoxel)
+/// 6. Sample:
+///      - material (via navigator)
+///      - voxel dose (high resolution)
+///      - cell dose (coarse resolution)
+/// 7. Export all values into a single CSV row per CT voxel
+///
+/// ======= CT grid (reference space) =======
+/// The CT grid is defined by CtTubeConfig and represents a regular 3D lattice:
+/// - origin: (x_min, y_min, z_min)
+/// - spacing: (sizeX, sizeY, sizeZ)
+/// - resolution: (xRes, yRes, zRes)
+///
+/// Each sampled point corresponds to the centre of a CT voxel.
+///
+/// IMPORTANT:
+/// - Both Voxel and Cell scoring data are resampled onto this grid
+/// - This guarantees strict spatial alignment between datasets
+/// - No interpolation is performed (nearest neighbour sampling)
+///
+/// ======= Mapping (scoring → CT space) =======
+/// Two independent mappings of scoring data are constructed:
+///
+/// - voxelMappings → dense, high-resolution scoring (VoxelHit)
+/// - cellMappings  → sparse, coarse scoring (CellHit)
+///
+/// For deduplication purposes, each mapping entry stores:
+///   - geometric centre (in global coordinates)
+///   - unique identifier (ID)
+///   - pointer to scoring data (VoxelHit)
+///
+/// ======= Lookup strategy =======
+/// Dose values are retrieved using nearest neighbour search with axis-aligned tolerance.
+///
+/// For each CT voxel position:
+/// 1. Iterate over mapping entries
+/// 2. Select candidates satisfying:
+///      |dx| <= tol, |dy| <= tol, |dz| <= tol
+/// 3. Choose closest match (minimum Euclidean distance)
+///
+/// Separate lookup configurations:
+/// - Voxel lookup:
+///     tolerance ≈ 0.5 × CT voxel size
+///     → precise, local mapping
+///
+/// - Cell lookup:
+///     tolerance = larger constant (e.g. 5 mm)
+///     → coarse mapping (cell covers larger region)
+///
+/// ======= Coordinate system =======
+/// - All coordinates are in global Geant4 space
+/// - CT grid is aligned with the simulation world
+/// - Sampling is performed strictly at voxel centres
+///
+/// ======= Performance considerations =======
+/// Current lookup complexity:
+///   O(N_ct_voxels × N_mapping)
+///
+/// Typical sizes:
+///   - voxelMappings → large (e.g. ~36k)
+///   - cellMappings  → small (e.g. ~36)
+///
+/// Bottleneck:
+///   - voxel lookup dominates runtime
+///
+/// Potential optimizations:
+///   - spatial hashing (recommended)
+///   - uniform grid indexing
+///   - direct ID-based mapping (if topology allows)
+///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
-  auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
-  if (!patientEnv) {
-    return;
-  }
-  auto patientInstance = patientEnv->GetPatient();
+    auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
+    if (!patientEnv) return;
+
+    auto cp = Service<RunSvc>()->CurrentControlPoint();
+
+    auto planName = std::filesystem::path(cp->GetPlanFile()).stem().string();
+    auto outDir = cp->GetOutputDir() + "/" + planName;
+
+    IO::CreateDirIfNotExits(outDir);
+
+    // =====================================================
+    // CT GRID (SOURCE OF TRUTH)
+    // =====================================================
+    auto cfg = BuildCtTubeConfig();
+    auto nav = CreateNavigator();
+
+    RUNSVC_INFO("ExportDoseToCsvCT [{}]: xRes={}, yRes={}, zRes={}",
+             cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
     
-  auto g4Navigator = std::make_unique<G4Navigator>();
-  auto worldInstance = Service<GeoSvc>()->World();
-  g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
+    const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
-  auto cp = Service<RunSvc>()->CurrentControlPoint();
-  auto run_id = std::to_string(runPtr->GetRunID());
-  auto plan_file_name = std::filesystem::path(cp->GetPlanFile()).stem().string();
-  auto path_to_output_dir = cp->GetOutputDir()+"/"+plan_file_name;
-  
-  IO::CreateDirIfNotExits(path_to_output_dir);
+    // Metadata
+    auto metaDataFile =  outDir+"/"+planName+"_ct_dose_series_metadata.csv";
+    WriteCtMetadata(metaDataFile, cfg);
 
-  G4String materialName;
-  G4ThreeVector currentPos;
+    // =====================================================
+    // MAPPINGS
+    // =====================================================
+    struct MappingEntry {
+        G4ThreeVector centre;
+        std::array<std::pair<size_t, size_t>, 3> ids; 
+        const VoxelHit* hit;
+    };
 
-  auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
-  auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
-  auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
+    std::vector<MappingEntry> voxelMappings;
+    std::vector<MappingEntry> cellMappings;
 
-  auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
+    std::unordered_set<std::string> voxelKeys;
+    std::unordered_set<std::string> cellKeys;
 
-  auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
-
-  auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
-
-
-  G4int xResolution = env_size_x / sizeX;
-  G4int yResolution = env_size_y / sizeY;
-  G4int zResolution = env_size_z / sizeZ;
-
-  INFO_GEO("ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
-
-  // DUMP METADATA TO FILE 
-  auto meta =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_series_metadata.csv";
-  std::ofstream metadata_file(meta.c_str(), std::ios::out);
-
-  metadata_file << "x_min," << ct_cube_init_x  << std::endl;
-  metadata_file << "y_min," << ct_cube_init_y  << std::endl;
-  metadata_file << "z_min," << ct_cube_init_z  << std::endl;
-
-  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+(env_size_x)),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+(env_size_y)),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+(env_size_z)),4) << std::endl;
-
-  metadata_file << "x_resolution," << xResolution << std::endl;
-  metadata_file << "y_resolution," << yResolution << std::endl;
-  metadata_file << "z_resolution," << zResolution << std::endl;
-
-  metadata_file << "x_step," << sizeX << std::endl;
-  metadata_file << "y_step," << sizeY << std::endl;
-  metadata_file << "z_step," << sizeZ << std::endl;
-
-  double source_to_isocentre = 1000;
-  double SSD = 1000;  // TODO: calc this to be generic from any patient!
-  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
-
-
-  const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
-
-
-  struct MappingEntry {
-      G4ThreeVector centre;
-      std::array<std::pair<size_t, size_t>, 3> ids; 
-      const VoxelHit* hit;
-  };
-
-  // Mapping for voxel
-  std::vector<MappingEntry> voxelMappings;
-  {
-      std::unordered_set<std::string> voxelKeys;
-      for (auto& scoring_map : scoring_maps) {
-          for (auto& scoring : scoring_map.second) {
-              if (scoring.first == Scoring::Type::Voxel) {
-                  for (auto& voxel : scoring.second) {
-                      auto& voxel_data = voxel.second;
-                      // Tworzymy unikalny klucz oparty na identyfikatorach
-                      std::string key = "X" + std::to_string(voxel_data.GetGlobalID(0)) + "V" + std::to_string(voxel_data.GetID(0)) +
-                                        "Y" + std::to_string(voxel_data.GetGlobalID(1)) + "V" + std::to_string(voxel_data.GetID(1)) +
-                                        "Z" + std::to_string(voxel_data.GetGlobalID(2)) + "V" + std::to_string(voxel_data.GetID(2));
-                      if (voxelKeys.find(key) == voxelKeys.end()) {
-                          voxelKeys.insert(key);
-                          MappingEntry entry;
-                          entry.centre = voxel_data.GetCentre();
-                          entry.ids[0] = {voxel_data.GetGlobalID(0), voxel_data.GetID(0)};
-                          entry.ids[1] = {voxel_data.GetGlobalID(1), voxel_data.GetID(1)};
-                          entry.ids[2] = {voxel_data.GetGlobalID(2), voxel_data.GetID(2)};
-                          entry.hit = &voxel_data;
-                          voxelMappings.push_back(entry);
-                      }
-                  }
-              }
+    for (auto& sm : scoring_maps) {
+      for (auto& scoring : sm.second) {
+        if (scoring.first == Scoring::Type::Voxel) {
+            for (auto& voxel : scoring.second) {
+              auto& voxel_data = voxel.second;
+              // Tworzymy unikalny klucz oparty na identyfikatorach
+              std::string key = "X" + std::to_string(voxel_data.GetGlobalID(0)) + "V" + std::to_string(voxel_data.GetID(0)) +
+                                "Y" + std::to_string(voxel_data.GetGlobalID(1)) + "V" + std::to_string(voxel_data.GetID(1)) +
+                                "Z" + std::to_string(voxel_data.GetGlobalID(2)) + "V" + std::to_string(voxel_data.GetID(2));
+              if (voxelKeys.find(key) == voxelKeys.end()) {
+                voxelKeys.insert(key);
+                MappingEntry entry;
+                entry.centre = voxel_data.GetCentre();
+                entry.ids[0] = {voxel_data.GetGlobalID(0), voxel_data.GetID(0)};
+                entry.ids[1] = {voxel_data.GetGlobalID(1), voxel_data.GetID(1)};
+                entry.ids[2] = {voxel_data.GetGlobalID(2), voxel_data.GetID(2)};
+                entry.hit = &voxel_data;
+                voxelMappings.push_back(entry);
+            }
           }
-      }
-  }
-
-  // Mapping for cell
-  std::vector<MappingEntry> cellMappings;
-  {
-      std::unordered_set<std::string> cellKeys;
-      for (auto& scoring_map : scoring_maps) {
-          for (auto& scoring : scoring_map.second) {
-              if (scoring.first == Scoring::Type::Cell) {
-                  for (auto& cell : scoring.second) {
-                      auto& cell_data = cell.second;
-                      std::string key = "X" + std::to_string(cell_data.GetGlobalID(0)) +
-                                        "Y" + std::to_string(cell_data.GetGlobalID(1)) +
-                                        "Z" + std::to_string(cell_data.GetGlobalID(2));
-                      if (cellKeys.find(key) == cellKeys.end()) {
-                          cellKeys.insert(key);
-                          MappingEntry entry;
-                          entry.centre = cell_data.GetCentre();
-                          entry.ids[0] = {cell_data.GetGlobalID(0), cell_data.GetGlobalID(0)};
-                          entry.ids[1] = {cell_data.GetGlobalID(1), cell_data.GetGlobalID(1)};
-                          entry.ids[2] = {cell_data.GetGlobalID(2), cell_data.GetGlobalID(2)};
-                          entry.hit = &cell_data;
-                          cellMappings.push_back(entry);
-                      }
-                  }
+        } else if (scoring.first == Scoring::Type::Cell) {
+            for (auto& cell : scoring.second) {
+              auto& cell_data = cell.second;
+              std::string key = "X" + std::to_string(cell_data.GetGlobalID(0)) +
+                                "Y" + std::to_string(cell_data.GetGlobalID(1)) +
+                                "Z" + std::to_string(cell_data.GetGlobalID(2));
+              if (cellKeys.find(key) == cellKeys.end()) {
+                cellKeys.insert(key);
+                MappingEntry entry;
+                entry.centre = cell_data.GetCentre();
+                entry.ids[0] = {cell_data.GetGlobalID(0), cell_data.GetGlobalID(0)};
+                entry.ids[1] = {cell_data.GetGlobalID(1), cell_data.GetGlobalID(1)};
+                entry.ids[2] = {cell_data.GetGlobalID(2), cell_data.GetGlobalID(2)};
+                entry.hit = &cell_data;
+                cellMappings.push_back(entry);
               }
+            }
           }
-      }
-  }
+        }
+     }
+     RUNSVC_INFO("VoxelMappings size = {}", voxelMappings.size());
+     RUNSVC_INFO("CellMappings  size = {}", cellMappings.size());
 
-  // Lambda – wyszukuje wpis (mapping) dla danej pozycji,
-  // zwracając wskaźnik do VoxelHit lub nullptr, jeśli nie znaleziono pasującego obiektu.
-  // tolerance odpowiada zadanej tolerancji (np. 0.5 dla voxel, 5 dla cell). (prostrza, mniej złożona lambda niż poprzednio...)
-  auto getMappingHit = [&](const std::vector<MappingEntry>& mappings, const G4ThreeVector& pos, double tolerance) -> const VoxelHit* {
-      const VoxelHit* bestHit = nullptr;
-      double bestDist2 = std::numeric_limits<double>::max();
-      for (const auto& entry : mappings) {
-          double dx = entry.centre.x() - pos.x();
-          double dy = entry.centre.y() - pos.y();
-          double dz = entry.centre.z() - pos.z();
-          // Sprawdzamy, czy różnice dla każdej osi mieszczą się w tolerancji
-          if (std::abs(dx) <= tolerance && std::abs(dy) <= tolerance && std::abs(dz) <= tolerance) {
-              double dist2 = dx*dx + dy*dy + dz*dz;
-              if (dist2 < bestDist2) {
-                  bestDist2 = dist2;
-                  bestHit = entry.hit;
-              }
-          }
-      }
-      return bestHit;
-  };
+     // =====================================================
+     // OUTPUT FILES
+     // =====================================================
+     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
+     RUNSVC_INFO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
+     std::ofstream doseFile(doseFileAbsPath);
+ 
+     std::string header =
+         "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
+ 
+     doseFile << header << "\n";
+    
+    // =====================================================
+    // LOOKUP
+    // =====================================================
+    auto makeLookup = [](const std::vector<MappingEntry>* map, double tol) {
+        return [map, tol](const G4ThreeVector& pos) -> const VoxelHit* {
+            const VoxelHit* bestVH = nullptr;
+            double bestDist2 = std::numeric_limits<double>::max();
+            for (const auto& e : *map) {
+                double dx = e.centre.x() - pos.x();
+                double dy = e.centre.y() - pos.y();
+                double dz = e.centre.z() - pos.z();
 
+                if (std::abs(dx) <= tol &&
+                    std::abs(dy) <= tol &&
+                    std::abs(dz) <= tol) {
+                    double d2 = dx*dx + dy*dy + dz*dz;
+                    if (d2 < bestDist2) {
+                        bestDist2 = d2;
+                        bestVH = e.hit;
+                    }
+                }
+            }
+            return bestVH;
+        };
+    };
 
-  auto v_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
-  std::ofstream v_outFile_merged(v_file_merged.c_str(), std::ios::out);
-  // Control Point Meta data:
-  v_outFile_merged << "# FieldArea: " + std::to_string(cp->GetRun()->GetBeamMaskArea()) << std::endl;
-  auto beam_grav_centre = cp->GetRun()->GetBeamMaskeGravCentre();
-  v_outFile_merged << "# FieldGravCentre: "+std::to_string(beam_grav_centre.first)+","+std::to_string (beam_grav_centre.second) << std::endl;
-  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
-  v_outFile_merged << header_merged << std::endl;
-  std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
-  IO::CreateDirIfNotExits(csv_slices_path);
-  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
-  double dose = 0.;
-  double fsf = 0.; 
-  double asf = 0.; 
-  int cellIdX = 0;
-  int cellIdY = 0;
-  int cellIdZ = 0;
-  for (int x = 0; x < xResolution; x++) {
-      std::ostringstream ss;
-      ss << std::setw(4) << std::setfill('0') << x+1;
-      std::string s2(ss.str());
-      auto file = csv_slices_path + "/img" + s2 + ".csv";
-      std::ofstream v_outFile(file.c_str(), std::ios::out);
-      v_outFile << header << std::endl;
-      for (int y = 0; y < yResolution; y++) {
-          for (int z = 0; z < zResolution; z++) {
-              currentPos.setX(ct_cube_init_x + sizeX * x);
-              currentPos.setY(ct_cube_init_y + sizeY * y);
-              currentPos.setZ(ct_cube_init_z + sizeZ * z);
-              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
-              // Szukamy voxel hit – z tolerancją 0.5 (Bo rozmiar woksela)
-              const VoxelHit* voxelHit = getMappingHit(voxelMappings, currentPos, 0.5);
-              if (voxelHit) {
-                  dose = voxelHit->GetDose();
-                  fsf = voxelHit->GetFieldScalingFactor();
-                  asf = voxelHit->GetAngleScalingFactor();
-                  cellIdX = voxelHit->GetGlobalID(0);
-                  cellIdY = voxelHit->GetGlobalID(1);
-                  cellIdZ = voxelHit->GetGlobalID(2);
-              } else {
-                  dose = 0.;
-                  fsf = 0.;
-                  asf = 0.;
-                  cellIdX = -1;
-                  cellIdY = -1;
-                  cellIdZ = -1;
-              }
-              v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
-                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
-                        << "," << dose << "," << fsf << "," << asf << std::endl;
-              v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
-                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
-                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
-          }
-      }
-      v_outFile.close();
-  }
-  v_outFile_merged.close();
+    double voxelTolerance = std::max({cfg.sizeX, cfg.sizeY, cfg.sizeZ}) * 0.5;
+    RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
+    auto getVoxelHit = makeLookup(&voxelMappings, voxelTolerance);
+    
+    double cellTolerance = 5; // TODO: Should be taken from half of the cell size or from configuration
+    RUNSVC_INFO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
+    auto getCellHit = makeLookup(&cellMappings, cellTolerance);
 
 
-  auto c_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
-  std::ofstream c_outFile_merged(c_file_merged.c_str(), std::ios::out);
-  c_outFile_merged << "# FieldArea: " + std::to_string(cp->GetRun()->GetBeamMaskArea()) << std::endl;
-  beam_grav_centre = cp->GetRun()->GetBeamMaskeGravCentre();
-  c_outFile_merged << "# FieldGravCentre: "+std::to_string(beam_grav_centre.first)+","+std::to_string (beam_grav_centre.second) << std::endl;
-  c_outFile_merged << header_merged << std::endl;
-  csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
-  IO::CreateDirIfNotExits(csv_slices_path);
-  for (int x = 0; x < xResolution; x++) {
-      std::ostringstream ss;
-      ss << std::setw(4) << std::setfill('0') << x+1;
-      std::string s2(ss.str());
-      auto file = csv_slices_path + "/img" + s2 + ".csv";
-      std::ofstream c_outFile(file.c_str(), std::ios::out);
-      c_outFile << header << std::endl;
-      for (int y = 0; y < yResolution; y++) {
-          for (int z = 0; z < zResolution; z++) {
-              currentPos.setX(ct_cube_init_x + sizeX * x);
-              currentPos.setY(ct_cube_init_y + sizeY * y);
-              currentPos.setZ(ct_cube_init_z + sizeZ * z);
-              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
-              // Szukamy cell hit – z tolerancją 5
-              const VoxelHit* cellHit = getMappingHit(cellMappings, currentPos, 5);
-              if (cellHit) {
-                  dose = cellHit->GetDose();
-                  fsf = cellHit->GetFieldScalingFactor();
-                  asf = cellHit->GetAngleScalingFactor();
-                  cellIdX = cellHit->GetGlobalID(0);
-                  cellIdY = cellHit->GetGlobalID(1);
-                  cellIdZ = cellHit->GetGlobalID(2);
-              } else {
-                  dose = 0.;
-                  fsf = 0.;
-                  asf = 0.;
-                  cellIdX = -1;
-                  cellIdY = -1;
-                  cellIdZ = -1;
-              }
-              c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
-                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
-                        << "," << dose << "," << fsf << "," << asf << std::endl;
-              c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
-                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
-                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
-          }
-      }
-      c_outFile.close();
-  }
-  c_outFile_merged.close();
+    // =====================================================
+    // CT Grid LOOP
+    // =====================================================
+    ForEachVoxel(cfg, [&](int x, int y, int z, const G4ThreeVector& pos) {
+        auto materialName = nav->LocateGlobalPointAndSetup(pos)
+                       ->GetLogicalVolume()
+                       ->GetMaterial()
+                       ->GetName();
+        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+        int idX = -1, idY = -1, idZ = -1;
+        double doseVoxel = 0.0;
+        double doseCell = 0.0;
+        double fsf = 0.0;
+        double asf = 0.0;
+
+        // ---------------- VOXEL ----------------
+        if (const auto& hit = getVoxelHit(pos)) {
+            idX = hit->GetGlobalID(0);
+            idY = hit->GetGlobalID(1);
+            idZ = hit->GetGlobalID(2);
+            doseVoxel = hit->GetDose();
+            fsf = hit->GetFieldScalingFactor();
+            asf = hit->GetAngleScalingFactor();
+        }
+
+        // ---------------- CELL ----------------
+        if (const auto& hit = getCellHit(pos)) {
+          doseCell = hit->GetDose();
+        }
+        
+        // ------------ write to file -----------
+        doseFile << pos.x() << "," << pos.y() << "," << pos.z()
+                 << "," << idX
+                 << "," << idY
+                 << "," << idZ
+                 << "," << materialHU
+                 << "," << doseCell
+                 << "," << doseVoxel
+                 << "," << fsf
+                 << "," << asf
+                 << "\n";
+    });
 }

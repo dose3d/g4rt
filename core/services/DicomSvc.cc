@@ -354,10 +354,26 @@ unsigned DicomSvc::GetRTPlanNumberOfControlPoints(const std::string& planFile,un
 ///
 void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const {
 
-    // PyGILState_Release(gstate);
-    m_ct_svc.set_paths(output_path);
-    m_ct_svc.create_ct_series(series_csv_path);
-  }
+    INFO_GEO("DicomSvc::ExportPatientToCT: requested");
+    INFO_GEO("DicomSvc::ExportPatientToCT: input CSV path={}", series_csv_path);
+    INFO_GEO("DicomSvc::ExportPatientToCT: output DICOM path={}", output_path);
+
+    try {
+        m_ct_svc.set_paths(output_path);
+        DEBUG_GEO("DicomSvc::ExportPatientToCT: CT service paths set");
+
+        m_ct_svc.create_ct_series(series_csv_path);
+        INFO_GEO("DicomSvc::ExportPatientToCT: DICOM CT series created successfully");
+    }
+    catch (const pybind11::error_already_set& e) {
+        ERROR_GEO("DicomSvc::ExportPatientToCT: Python exception during DICOM export: {}", e.what());
+        throw;
+    }
+    catch (const std::exception& e) {
+        ERROR_GEO("DicomSvc::ExportPatientToCT: exception during DICOM export: {}", e.what());
+        throw;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

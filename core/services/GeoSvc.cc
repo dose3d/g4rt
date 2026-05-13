@@ -14,6 +14,7 @@
 #include <TFile.h>
 #include "IO.hh"
 #include "G4GDMLParser.hh"
+#include "LogSvc.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -518,19 +519,44 @@ void GeoSvc::WriteWorldToTFile() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WritePatientToCsvCT(){
-  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
-  PatientGeometry::GetInstance()->ExportToCsvCT(output_dir);
+  auto output_dir = GetOutputDir() + "/dicom/ct_csv";
+
+  INFO_GEO("CT CSV export requested");
+  INFO_GEO("CT CSV output directory: {}", output_dir);
+
+  auto patientGeometry = PatientGeometry::GetInstance();
+  if (!patientGeometry) {
+    ERROR_GEO("CT CSV export failed: PatientGeometry instance is null");
+    return;
+  }
+
+  patientGeometry->ExportToCsvCT(output_dir);
+
+  INFO_GEO("CT CSV export finished: {}", output_dir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WritePatientToDicomCT(){
-  // NOTE: Currently this service is using the csv data, 
-  //       hence the GeoSvc::WritePatientToCsvCT has to be called!
-  auto output_dir = GetOutputDir()+"/dicom/ct_csv";
+  // NOTE: Currently this service is using the csv data,
+  //       hence GeoSvc::WritePatientToCsvCT has to be called first.
+
+  auto input_dir = GetOutputDir() + "/dicom/ct_csv";
+  auto dicom_dir = GetOutputDir() + "/dicom/ct_dcm";
+
+  INFO_GEO("DICOM CT export requested");
+  INFO_GEO("DICOM CT input CSV directory: {}", input_dir);
+  INFO_GEO("DICOM CT output directory: {}", dicom_dir);
+
   auto dicomSvc = Service<DicomSvc>();
-  auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";
-  dicomSvc->ExportPatientToCT(output_dir,dciom_dir);
+  if (!dicomSvc) {
+    ERROR_GEO("DICOM CT export failed: DicomSvc is null");
+    return;
+  }
+
+  dicomSvc->ExportPatientToCT(input_dir, dicom_dir);
+
+  INFO_GEO("DICOM CT export finished: {}", dicom_dir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

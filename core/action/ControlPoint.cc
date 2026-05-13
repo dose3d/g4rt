@@ -84,56 +84,108 @@ void ControlPointRun::InitializeScoringCollection(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
-    
-                LOGSVC_INFO("ControlPoint","Run-{} merging...",worker_run->GetRunID());
-    auto cell_volume = Service<GeoSvc>()->Patient()->GetCellVolume();
+
+    LOGSVC_INFO("ControlPoint","Run-{} merging...",worker_run->GetRunID());
+
+    const auto* worker_cp_run = dynamic_cast<const ControlPointRun*>(worker_run);
+    if (!worker_cp_run) {
+        LOGSVC_ERROR("ControlPoint", "Worker run is not ControlPointRun. Merge skipped.");
+        return;
+    }
+
+    G4double cell_volume = 1.0;
+    const bool has_patient = Service<GeoSvc>()->Patient() != nullptr;
+
+    if (has_patient) {
+        cell_volume = Service<GeoSvc>()->Patient()->GetCellVolume();
+    }
+    else {
+        LOGSVC_WARN(
+            "ControlPoint",
+            "No patient object registered in GeoSvc. Using direct dose accumulation without patient cell-volume correction."
+        );
+    }
+
     auto merge = [&](ScoringMap& left, const ScoringMap& right){
         for(auto& scoring : left){
             G4double total_dose(0);
             auto& type = scoring.first;
-            bool isVoxel = type == Scoring::Type::Voxel ? true : false;
-            // 
-                LOGSVC_INFO("ControlPoint","Scoring type: {}",Scoring::to_string(type));
+            bool isVoxel = type == Scoring::Type::Voxel;
+
+            LOGSVC_INFO("ControlPoint","Scoring type: {}",Scoring::to_string(type));
+
+            auto right_type_it = right.find(type);
+            if (right_type_it == right.end()) {
+                LOGSVC_WARN(
+                    "ControlPoint",
+                    "Worker run does not contain scoring type {}. Skipping.",
+                    Scoring::to_string(type)
+                );
+                continue;
+            }
+
             auto& hashed_scoring_left = scoring.second;
-            const auto& hashed_scoring_right = right.at(type);
+            const auto& hashed_scoring_right = right_type_it->second;
+
             for(auto& hashed_voxel : hashed_scoring_left){
-                hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
+                auto right_voxel_it = hashed_scoring_right.find(hashed_voxel.first);
+                if (right_voxel_it == hashed_scoring_right.end()) {
+                    LOGSVC_WARN(
+                        "ControlPoint",
+                        "Worker scoring map does not contain voxel/hash {}. Skipping.",
+                        hashed_voxel.first
+                    );
+                    continue;
+                }
+
+                hashed_voxel.second.Cumulate(right_voxel_it->second, isVoxel);
+
                 auto voxel_volume = hashed_voxel.second.GetVolume();
-                if(isVoxel && voxel_volume < cell_volume){
-                    //
-                    // LOGSVC_INFO("ControlPoint","Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
-                    total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
-                } else {
+
+                if(has_patient && isVoxel && voxel_volume < cell_volume){
+                    total_dose += hashed_voxel.second.GetDose() * voxel_volume / cell_volume;
+                }
+                else {
                     total_dose += hashed_voxel.second.GetDose();
                 }
             }
-            // 
-                LOGSVC_INFO("ControlPoint","Total dose: {}",total_dose);
-        } 
+
+            LOGSVC_INFO("ControlPoint","Total dose: {}",total_dose);
+        }
     };
 
     for(auto& scoring : m_hashed_scoring_map){
         auto scoring_name = scoring.first;
-        // 
-                LOGSVC_INFO("ControlPoint","Merging collection: {}",scoring_name);
+
+        LOGSVC_INFO("ControlPoint","Merging collection: {}",scoring_name);
+
         auto& master_scoring = scoring.second;
-        // 
-                LOGSVC_DEBUG("ControlPoint","Master scoring #types: {}",master_scoring.size());
-        const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
-        // 
-                LOGSVC_DEBUG("ControlPoint","Worker scoring #types: {}",worker_scoring.size());
-        merge(master_scoring,worker_scoring);
+        LOGSVC_DEBUG("ControlPoint","Master scoring #types: {}",master_scoring.size());
+
+        auto worker_collection_it = worker_cp_run->m_hashed_scoring_map.find(scoring_name);
+        if (worker_collection_it == worker_cp_run->m_hashed_scoring_map.end()) {
+            LOGSVC_WARN(
+                "ControlPoint",
+                "Worker run does not contain scoring collection {}. Skipping.",
+                scoring_name
+            );
+            continue;
+        }
+
+        const auto& worker_scoring = worker_collection_it->second;
+        LOGSVC_DEBUG("ControlPoint","Worker scoring #types: {}",worker_scoring.size());
+
+        merge(master_scoring, worker_scoring);
     }
 
-    // Realease memory after merging... we don't need this anymore.
-    dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.clear();
-    auto& w_sim_mask_points = dynamic_cast<const ControlPointRun*>(worker_run)->m_sim_mask_points;
+    worker_cp_run->m_hashed_scoring_map.clear();
+
+    auto& w_sim_mask_points = worker_cp_run->m_sim_mask_points;
     for(const auto& pos : w_sim_mask_points){
         m_sim_mask_points.push_back(pos);
     }
     w_sim_mask_points.clear();
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
@@ -510,25 +562,45 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const { // TODEL? 
+void ControlPoint::DumpVolumeMaskToFile(
+    std::string scoring_vol_name,
+    const std::map<std::size_t, VoxelHit>& volume_scoring
+) const {
     auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "OutputDir");
-    const std::string file = output_dir+"/cp-"+std::to_string(GetId())+"_scoring_volume"+scoring_vol_name+"mask.csv";
+    const std::string file =
+        output_dir + "/cp-" + std::to_string(GetId()) +
+        "_scoring_volume" + scoring_vol_name + "mask.csv";
+
+    INFO_GEO(
+        "Writing scoring volume mask CSV: scoring_volume={}, entries={}, file={}",
+        scoring_vol_name, volume_scoring.size(), file
+    );
+
     std::string header = "X [mm],Y [mm],Z [mm],mX [mm],mY [mm],mZ [mm],inFieldTag";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
+
+    if (!c_outFile.is_open()) {
+        ERROR_GEO("Failed to open scoring volume mask CSV file: {}", file);
+        return;
+    }
+
     c_outFile << header << std::endl;
+
     for(auto& vol : volume_scoring){
         auto pos = vol.second.GetCentre();
         auto trans_pos = VMlc::GetPositionInMaskPlane(pos);
         auto inFieldTag = vol.second.GetFieldScalingFactor();
-        // std::cout << "z: " << pos.getZ() << "  trans z: "<< trans_pos.getZ() << std::endl;
+
         c_outFile << pos.getX() << "," << pos.getY() << "," << pos.getZ();
-        c_outFile << "," << trans_pos.getX() << "," << trans_pos.getY() << "," << trans_pos.getZ() << "," << inFieldTag << std::endl;
-
+        c_outFile << "," << trans_pos.getX() << "," << trans_pos.getY() << "," << trans_pos.getZ()
+                  << "," << inFieldTag << std::endl;
     }
-    c_outFile.close();
-}
 
+    c_outFile.close();
+
+    INFO_GEO("Scoring volume mask CSV written: {}", file);
+}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) const {

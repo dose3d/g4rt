@@ -1,4 +1,5 @@
 #include "PatientGeometry.hh"
+#include "GenericPhantom.hh"
 #include "WaterPhantom.hh"
 #include "SciSlicePhantom.hh"
 #include "DishCubePhantom.hh"
@@ -26,9 +27,12 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 PatientGeometry::PatientGeometry()
-      :IPhysicalVolume("PatientGeometry"), Configurable("PatientGeometry"){
-    Configure();
-  }
+  : IPhysicalVolume("PatientGeometry"),
+    Configurable("PatientGeometry"),
+    m_patient(nullptr),
+    m_rotation(nullptr) {
+  Configure();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -167,42 +171,55 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
 ///
 bool PatientGeometry::design(void) {
   auto patientType = thisConfig()->GetValue<std::string>("Type");
-  G4cout << "I'm building " << patientType << "  patient geometry" << G4endl;
+  G4cout << "I'm building " << patientType << " patient geometry" << G4endl;
+
+  m_patient = nullptr;
 
   if (patientType == "WaterPhantom") {
     m_patient = new WaterPhantom();
     m_patient->TomlConfig(true);
   }
-  else if (patientType == "SciSlicePhantom"){
+  else if (patientType == "SciSlicePhantom") {
     m_patient = new SciSlicePhantom();
   }
-  else if (patientType == "DishCubePhantom"){
+  else if (patientType == "DishCubePhantom") {
     m_patient = new DishCubePhantom();
   }
   else if (patientType == "D3DDetector") {
     m_patient = new D3DDetector();
     m_patient->TomlConfig(true);
   }
-  else 
+  else if (patientType == "None" || patientType == "GenericPhantom") {
+    G4cout << "PatientGeometry: no VPatient object requested." << G4endl;
+  }
+  else {
+    WARN_GEO("Unknown patient type: {}", patientType);
     return false;
-
-  // TOML-like contextual configuration
-  if(m_patient->TomlConfig()){ 
-    auto configFile =thisConfig()->GetValue<std::string>("ConfigFile");
-    if(configFile.empty() || configFile=="None")
-      m_patient->SetTomlConfigFile(); // get the job main file
-    else{
-      std::string projectPath = PROJECT_LOCATION_PATH;
-      m_patient->SetTomlConfigFile(projectPath+configFile);
-    }
-    configFile = m_patient->GetTomlConfigFile();
-    G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""<< patientType <<"\" from: "<< configFile << "\n" << G4endl;
   }
 
-  if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
-    auto path = std::string(PROJECT_LOCATION_PATH) + "/submodules/" + thisConfig()->GetValue<std::string>("PatientDBPath");
+  if (m_patient && m_patient->TomlConfig()) {
+    auto configFile = thisConfig()->GetValue<std::string>("ConfigFile");
+    if (configFile.empty() || configFile == "None") {
+      m_patient->SetTomlConfigFile();
+    }
+    else {
+      std::string projectPath = PROJECT_LOCATION_PATH;
+      m_patient->SetTomlConfigFile(projectPath + configFile);
+    }
+
+    configFile = m_patient->GetTomlConfigFile();
+    G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""
+           << patientType << "\" from: " << configFile << "\n" << G4endl;
+  }
+
+  if (thisConfig()->GetValue<std::string>("PatientDBPath") != "None") {
+    auto path = std::string(PROJECT_LOCATION_PATH)
+              + "/submodules/"
+              + thisConfig()->GetValue<std::string>("PatientDBPath");
+
     GeometryDBReader::Instance().LoadDataBase(path);
   }
+
   return true;
 }
 
@@ -211,15 +228,19 @@ bool PatientGeometry::design(void) {
 void PatientGeometry::Destroy() {
   auto pv = GetPhysicalVolume();
   if (pv) {
-    if (m_patient) m_patient->Destroy();
+    if (m_patient) {
+      m_patient->Destroy();
+      delete m_patient;
+      m_patient = nullptr;
+    }
     delete pv;
     SetPhysicalVolume(nullptr);
   }
-  if (m_suplementary_volume){
+
+  if (m_suplementary_volume) {
     delete m_suplementary_volume;
     m_suplementary_volume = nullptr;
   }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,9 +300,26 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
     m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }
-  else{
-    m_patient->IPhysicalVolume::Construct(this);
-    m_patient->WriteInfo();
+  else if (envPatientEnvelop.compare("GenericPhantom_3mf") == 0) {
+    auto genericPhantom = GenericPhantom::GetInstance();
+    genericPhantom->SetRotation(m_rotation);
+    genericPhantom->IPhysicalVolume::Construct(this);
+    genericPhantom->WriteInfo();
+  
+    if (m_patient) {
+      m_patient->IPhysicalVolume::Construct(this);
+      m_patient->WriteInfo();
+    }
+  }
+  
+  else {
+    if (m_patient) {
+      m_patient->IPhysicalVolume::Construct(this);
+      m_patient->WriteInfo();
+    }
+    else {
+      G4cout << "PatientGeometry: no patient object constructed inside envelope." << G4endl;
+    }
   }
 
 
@@ -388,8 +426,23 @@ CtTubeConfig PatientGeometry::BuildCtTubeConfig(const std::string& name) const {
 /// - center_* values describe where data points exist
 /// - min/max values describe the physical extent of the volume
 /// - these must NOT be mixed or interpreted interchangeably
+
 void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfig& cfg) const {
+    INFO_GEO("Writing CT metadata: {}", path);
+    DEBUG_GEO(
+        "CT metadata [{}]: init=({}, {}, {}), size=({}, {}, {}), res=({}, {}, {})",
+        cfg.name,
+        cfg.initX, cfg.initY, cfg.initZ,
+        cfg.sizeX, cfg.sizeY, cfg.sizeZ,
+        cfg.xRes, cfg.yRes, cfg.zRes
+    );
+
     std::ofstream file(path, std::ios::out);
+
+    if (!file.is_open()) {
+        ERROR_GEO("Failed to open CT metadata file for writing: {}", path);
+        return;
+    }
 
     file << "name," << cfg.name << "\n";
 
@@ -405,7 +458,6 @@ void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfi
         return init + (res - 1) * step + step / 2.0;
     };
 
-    // centra
     file << "x_center_min," << cfg.initX << "\n";
     file << "y_center_min," << cfg.initY << "\n";
     file << "z_center_min," << cfg.initZ << "\n";
@@ -414,7 +466,6 @@ void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfi
     file << "y_center_max," << centerMax(cfg.initY, cfg.yRes, cfg.sizeY) << "\n";
     file << "z_center_max," << centerMax(cfg.initZ, cfg.zRes, cfg.sizeZ) << "\n";
 
-    // granice
     file << "x_min," << boundaryMin(cfg.initX, cfg.sizeX) << "\n";
     file << "y_min," << boundaryMin(cfg.initY, cfg.sizeY) << "\n";
     file << "z_min," << boundaryMin(cfg.initZ, cfg.sizeZ) << "\n";
@@ -433,6 +484,8 @@ void PatientGeometry::WriteCtMetadata(const std::string& path, const CtTubeConfi
 
     double SSD = 1000;
     file << "SSD," << svc::round_with_prec(SSD, 4) << "\n";
+
+    INFO_GEO("CT metadata written: {}", path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,35 +534,68 @@ void PatientGeometry::DefineSensitiveDetector() {
 /// the position and material of each voxel in the CSV format. The CSV files
 /// are saved in the specified output directory.
 ///
-void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
-    auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
-    if (!patientEnv) return;
 
+void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
+    INFO_GEO("ExportToCsvCT: requested");
+
+    auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
+    if (!patientEnv) {
+        WARN_GEO("ExportToCsvCT skipped: patient environment volume is null");
+        return;
+    }
+
+    INFO_GEO("ExportToCsvCT: creating output directory {}", path_to_output_dir);
     IO::CreateDirIfNotExits(path_to_output_dir);
 
     auto cfg = BuildCtTubeConfig();
     auto nav = CreateNavigator();
 
-    INFO_GEO("ExportToCsvCT [{}]: Resolution x={}, y={}, z={}",
-             cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
-    
-    INFO_GEO("ExportToCsvCT [{}]: Path={}", cfg.name, path_to_output_dir);
+    const long long nVoxels =
+        static_cast<long long>(cfg.xRes) *
+        static_cast<long long>(cfg.yRes) *
+        static_cast<long long>(cfg.zRes);
 
-    // ----------------------------
-    // Metadata
-    // ----------------------------
-    WriteCtMetadata(path_to_output_dir + "/ct_series_metadata.csv", cfg);
+    INFO_GEO(
+        "ExportToCsvCT [{}]: grid resolution x={}, y={}, z={} -> {} voxels",
+        cfg.name, cfg.xRes, cfg.yRes, cfg.zRes, nVoxels
+    );
 
-    // ----------------------------
-    // Slice-by-slice export (Y axis)
-    // ----------------------------
+    INFO_GEO(
+        "ExportToCsvCT [{}]: voxel size x={} mm, y={} mm, z={} mm",
+        cfg.name, cfg.sizeX, cfg.sizeY, cfg.sizeZ
+    );
+
+    INFO_GEO(
+        "ExportToCsvCT [{}]: grid origin/first centre x={} mm, y={} mm, z={} mm",
+        cfg.name, cfg.initX, cfg.initY, cfg.initZ
+    );
+
+    INFO_GEO("ExportToCsvCT [{}]: output path={}", cfg.name, path_to_output_dir);
+
+    const auto metadataPath = path_to_output_dir + "/ct_series_metadata.csv";
+    WriteCtMetadata(metadataPath, cfg);
+
+    int writtenSlices = 0;
+    long long writtenRows = 0;
+
     for (int y = 0; y < cfg.yRes; y++) {
 
         std::ostringstream ss;
         ss << std::setw(4) << std::setfill('0') << (y + 1);
 
         std::string filePath = path_to_output_dir + "/img" + ss.str() + ".csv";
+
+        DEBUG_GEO(
+            "ExportToCsvCT [{}]: writing slice {}/{} -> {}",
+            cfg.name, y + 1, cfg.yRes, filePath
+        );
+
         std::ofstream file(filePath, std::ios::out);
+
+        if (!file.is_open()) {
+            ERROR_GEO("ExportToCsvCT [{}]: failed to open slice file: {}", cfg.name, filePath);
+            continue;
+        }
 
         file << "X,Y,Z,Material\n";
 
@@ -522,17 +608,44 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
                 pos.setZ(cfg.initZ + cfg.sizeZ * z);
 
                 auto volume = nav->LocateGlobalPointAndSetup(pos);
+                if (!volume) {
+                    WARN_GEO(
+                        "ExportToCsvCT [{}]: navigator returned null volume at ({}, {}, {})",
+                        cfg.name, pos.x(), pos.y(), pos.z()
+                    );
+                    file << pos.x() << "," << pos.y() << "," << pos.z() << ",UNKNOWN\n";
+                    writtenRows++;
+                    continue;
+                }
+
                 auto material = volume->GetLogicalVolume()
-                                       ->GetMaterial()
-                                       ->GetName();
+                                      ->GetMaterial()
+                                      ->GetName();
 
                 file << pos.x() << ","
                      << pos.y() << ","
                      << pos.z() << ","
                      << material << "\n";
+
+                writtenRows++;
             }
         }
+
+        writtenSlices++;
+
+        const int progressStep = std::max(1, cfg.yRes / 10);
+        if ((y + 1) % progressStep == 0 || y + 1 == cfg.yRes) {
+            INFO_GEO(
+                "ExportToCsvCT [{}]: progress {}/{} slices, {} rows written",
+                cfg.name, y + 1, cfg.yRes, writtenRows
+            );
+        }
     }
+
+    INFO_GEO(
+        "ExportToCsvCT [{}]: finished. Written slices={}, rows={}, output={}",
+        cfg.name, writtenSlices, writtenRows, path_to_output_dir
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,7 +751,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     auto cfg = BuildCtTubeConfig();
     auto nav = CreateNavigator();
 
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: xRes={}, yRes={}, zRes={}",
+    INFO_GEO("ExportDoseToCsvCT [{}]: xRes={}, yRes={}, zRes={}",
              cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
     
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
@@ -702,14 +815,14 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           }
         }
      }
-     RUNSVC_INFO("VoxelMappings size = {}", voxelMappings.size());
-     RUNSVC_INFO("CellMappings  size = {}", cellMappings.size());
+     INFO_GEO("VoxelMappings size = {}", voxelMappings.size());
+     INFO_GEO("CellMappings  size = {}", cellMappings.size());
 
      // =====================================================
      // OUTPUT FILES
      // =====================================================
      std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
-     RUNSVC_INFO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
+     INFO_GEO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
      std::ofstream doseFile(doseFileAbsPath);
  
      std::string header =
@@ -744,11 +857,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     };
 
     double voxelTolerance = std::max({cfg.sizeX, cfg.sizeY, cfg.sizeZ}) * 0.5;
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
+    INFO_GEO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
     auto getVoxelHit = makeLookup(&voxelMappings, voxelTolerance);
     
     double cellTolerance = 5; // TODO: Should be taken from half of the cell size or from configuration
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
+    INFO_GEO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
     auto getCellHit = makeLookup(&cellMappings, cellTolerance);
 
 

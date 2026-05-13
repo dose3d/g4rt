@@ -55,12 +55,23 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
         // Center of mass 
         auto com_py = d["com"].cast<std::vector<double>>();
-        G4ThreeVector tranlation;
-        if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf"){
-            tranlation = G4ThreeVector(-95.0,90.0,90.0);
+        
+        const auto envelopeType =
+            ConfigSvc::GetInstance()->GetValue<std::string>(
+                "PatientGeometry",
+                "EnviromentPatientEnvelop"
+            );
+        
+        G4ThreeVector tranlation(0.0, 0.0, 0.0);
+        
+        if (envelopeType == "IbaImRT_3mf") {
+            tranlation = G4ThreeVector(-95.0 * mm, 90.0 * mm, 90.0 * mm);
         }
-        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
-            tranlation = G4ThreeVector(-271.0,275.0,225.0);
+        else if (envelopeType == "ModularWaterPhantom_3mf") {
+            tranlation = G4ThreeVector(-271.0 * mm, 275.0 * mm, 225.0 * mm);
+        }
+        else if (envelopeType == "GenericPhantom_3mf") {
+            tranlation = G4ThreeVector(0.0, 0.0, 0.0);
         }
         // gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
 

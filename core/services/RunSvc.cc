@@ -593,17 +593,37 @@ std::string RunSvc::GetJobNameLabel() {
 void RunSvc::WriteGeometryData() const {
 
   RUNSVC_DEBUG("Writing Geometry Data");
-  auto geoSvc = Service<GeoSvc>();
-  geoSvc->WriteWorldToGdml();
-  geoSvc->WriteWorldToTFile();
-  geoSvc->WriteScoringComponentsPositioningToCsv();
-  geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
-  if(thisConfig()->GetValue<bool>("GenerateCT")){
-    geoSvc->WritePatientToCsvCT();
-    // geoSvc->WritePatientToDicomCT();
-  }
-}
 
+  auto geoSvc = Service<GeoSvc>();
+
+  INFO_GEO("Geometry export started");
+  DEBUG_GEO("Geometry output directory: {}", GeoSvc::GetOutputDir());
+
+  INFO_GEO("Exporting world geometry to GDML...");
+  geoSvc->WriteWorldToGdml();
+
+  INFO_GEO("Exporting world geometry to ROOT/TGeo...");
+  geoSvc->WriteWorldToTFile();
+
+  INFO_GEO("Exporting scoring component positions to CSV...");
+  geoSvc->WriteScoringComponentsPositioningToCsv();
+
+  INFO_GEO("Exporting scoring component positions to ROOT/TFile...");
+  geoSvc->WriteScoringComponentsPositioningToTFile();
+
+  if(thisConfig()->GetValue<bool>("GenerateCT")){
+    INFO_GEO("CT export enabled. Exporting patient/environment geometry to CT CSV...");
+    geoSvc->WritePatientToCsvCT();
+
+    INFO_GEO("Converting CT CSV series to DICOM CT...");
+    geoSvc->WritePatientToDicomCT();
+  }
+  else {
+    INFO_GEO("CT export disabled: RunSvc.GenerateCT = false");
+  }
+
+  INFO_GEO("Geometry export finished");
+}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::MergeOutput(bool cleanUp) const {

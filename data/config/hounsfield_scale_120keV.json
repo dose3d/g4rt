@@ -1,14 +1,107 @@
 [
-    {
+  {
     "Usr_G4AIR20C": -995.0,
+    "G4_AIR": -1000.0,
     "G4_Galactic": -1000.0,
     "Vacuum": -1000.0,
 
-    "Lung":-650.00,
-    "RW3":6.30,
-    "G4_WATER": 0.00, 
-    "RMPS470":126.00,
-    "PLA": 142.40},
+    "G4_WATER": 0.0,
+    "Water": 0.0,
 
-    {"CT": "1.2.840.10008.5.1.4.1.1.2."}
+    "G4_Cu": 3071.0,
+    "G4_Zn": 2500.0,
+    "G4_Al": 1000.0,
+    "G4_W": 3071.0,
+    "G4_Be": 300.0,
+    "G4_Fe": 3071.0,
+
+    "G4_KAPTON": 250.0,
+    "G4_MYLAR": 180.0,
+    "G4_POLYACRYLONITRILE": 120.0,
+
+    "steel1": 3071.0,
+    "steel2": 3071.0,
+    "steel3": 3071.0,
+    "tungstenAlloy1": 3071.0,
+
+    "RW3": 6.3,
+
+    "PMMA": 120.0,
+    "PMMA03": -650.0,
+    "PMMA075": -250.0,
+
+    "PLA": 142.4,
+    "PLA05": -350.0,
+    "PLA075": -100.0,
+
+    "Z-FLEX": -250.0,
+    "Z-FLEX05": -650.0,
+    "Z-FLEX075": -450.0,
+
+    "LiF:Mg,Ti": 650.0,
+    "LiF:Cu,Mg,P": 450.0,
+
+    "RMPS470": 126.0,
+    "EPS": -950.0,
+    "Rubber": 100.0,
+
+    "TiO2": 3071.0,
+    "BaritesConcrete": 2500.0,
+
+    "Air": -1000.0,
+    "Lung": -650.0,
+    "LungInflated": -800.0,
+    "LungDeflated": -500.0,
+
+    "Adipose": -90.0,
+    "Fat": -90.0,
+    "Breast": -50.0,
+
+    "SoftTissue": 40.0,
+    "Muscle": 45.0,
+    "SkeletalMuscle": 45.0,
+    "Skin": 0.0,
+
+    "Brain": 35.0,
+    "WhiteMatter": 25.0,
+    "GrayMatter": 40.0,
+
+    "Blood": 40.0,
+    "Heart": 45.0,
+    "Liver": 60.0,
+    "Kidney": 35.0,
+    "Spleen": 50.0,
+    "Pancreas": 40.0,
+
+    "Prostate": 35.0,
+    "Bladder": 15.0,
+    "Urine": 15.0,
+
+    "Stomach": 20.0,
+    "Bowel": 20.0,
+    "Intestine": 20.0,
+
+    "Cartilage": 100.0,
+    "TrabecularBone": 250.0,
+    "Spongiosa": 250.0,
+    "CorticalBone": 1000.0,
+    "CompactBone": 1000.0,
+    "Bone": 700.0,
+
+    "Tooth": 1500.0,
+    "Enamel": 2500.0,
+    "Dentin": 1200.0,
+
+    "EyeLens": 80.0,
+    "Lens": 80.0,
+    "Eye": 20.0,
+
+    "Tumor": 45.0,
+    "GenericTissue": 40.0,
+    "Unknown": -1000.0,
+    "UNKNOWN": -1000.0
+  },
+  {
+    "CT": "1.2.840.10008.5.1.4.1.1.2."
+  }
 ]

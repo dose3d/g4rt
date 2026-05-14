@@ -138,10 +138,12 @@ for (const auto& vrtx : primary_vrtx){
     }
     
     auto momentum = (vrtx->GetPrimary()->GetMomentum());
-    if(m_rotation_matrix){
-        momentum = (*m_rotation_matrix) * (momentum);
+    if (m_rotation_matrix) {
+      for (auto p = vrtx->GetPrimary(); p != nullptr; p = p->GetNext()) {
+        auto mom = (*m_rotation_matrix) * p->GetMomentum();
+        p->SetMomentum(mom.x(), mom.y(), mom.z());
+     }
     }
-    vrtx->GetPrimary()->SetMomentum(momentum.x(), momentum.y(), momentum.z());
     if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) )
         anEvent->AddPrimaryVertex(vrtx);
 }

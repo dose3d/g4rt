@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-file = "/home/brachwal/workspace/g4rt/output/water_phantom_5/sim/cp10x10/cp10x10_watertank_voxel.csv"
+file = "/home/geant4/workspace/d3df_g4rt/output/srunet3d_4x4x2_64x64x64_tps_plan1/sim/tps_plan1/tps_plan1_d3ddetector_voxel.csv"
 # Load the CSV file
 data = pd.read_csv(file)
 print(data)

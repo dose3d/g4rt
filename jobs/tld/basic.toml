@@ -1,12 +1,20 @@
 [RunSvc]
-JobName = "tld_basic"
+JobName = "tld_basic_90_deg"
 BeamType = "gps"
-GpsMacFileName = "gps/gps_x_ray_tube_40_kev_molybdenum.mac" # BR AGH pc location
+GpsMacFileName = "gps/gps_x_ray_tube_80_kev_tungsten.mac" # BR AGH pc location
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 PrimariesAnalysis = false
 NTupleAnalysis = true
 RunAnalysis = true
+
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
+
 
 [GeoSvc]
 BuildLinac = true
@@ -17,17 +25,17 @@ MlcModel = "Simplified"
 [TLDTray]
 Position = [0.0,0.0,0.0] 
 Rotation = [0.0,0.0,0.0]
-World_Size = [250.0,250.0,20.0]
+World_Size = [150.0,150.0,150.0]
 TLDGrid = [1,1] # X, Y
-TLDVoxelization = [33,33,1]
+TLDVoxelization = [5,5,5]
 # TLDMedium = "LiF:Mg,Ti"
-TLDMedium = "LiF:Cu,Mg,P"
+TLDMedium = "G4_Fe"
 TLD_Geometry_File_Path = "tldGeometry/testBoard.stl"
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 100000
-BeamRotation = 80.0
-BeamSID = 100.0 # (Obecne pole naświetlania koło o średnicy 16 cm (x od -8 cm do +8 cm/ y od -8 cm do +8 cm)
+nParticles = 1000
+BeamRotation = 90.0 # in degrees, rotation of the beam around the Z axis (in the XY plane)
+BeamSID = 0.0 # (Obecne pole naświetlania koło o średnicy 16 cm (x od -8 cm do +8 cm/ y od -8 cm do +8 cm)
 PlanInputFile = [
     "plan/custom/cp10x10.dat"
 ]

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     sns.set_theme()
     
-    cell_df = pd.read_csv('/home/g4rt/workDir/develop/g4rt/app/Test/multiple_tray_run_test_11/sim/cp-0_d3ddetector_cell.csv')
+    cell_df = pd.read_csv('/home/geant4/workspace/d3df_g4rt/output/srunet3d_4x4x2_64x64x64_tps_plan1/sim/tps_plan1/tps_plan1_d3ddetector_voxel.csv')
     cell_df = cell_df.sort_values(by=['X [mm]', 'Y [mm]', 'Z [mm]'])
     # cell_df['Dose'] = cell_df['Dose']/cell_df['Dose'].max()
     # sns.scatterplot(data=cell_df, x='X [mm]', y='Dose')

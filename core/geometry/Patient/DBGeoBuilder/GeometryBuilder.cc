@@ -144,16 +144,25 @@ void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
 
       }
       
-    auto mat = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", std::string(obj.mat));
+      auto mat = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", std::string(obj.mat));
 
-    tessSolid->SetSolidClosed(true);
-    auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
-    G4ThreeVector tranlation;
+      tessSolid->SetSolidClosed(true);
+      auto* componentLV = new G4LogicalVolume(tessSolid, mat.get(), obj.component + "_Logic");
+      G4ThreeVector tranlation{0.0,0.0,0.0};
       if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "IbaImRT_3mf"){
         tranlation = G4ThreeVector(-95.0,90.0,90.0);
       }
       else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
         tranlation = G4ThreeVector(-271.0,275.0,225.0);
+      }
+      else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayPhantom_3mf"){
+        tranlation = G4ThreeVector(0,0.0,8.0); // Assuming EnviromentSizeZ=20
+      }
+      else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayStackPhantom_3mf"){
+        tranlation = G4ThreeVector(0,0.0,32.85); 
+      }
+      else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "AirTower_3mf"){
+        tranlation = G4ThreeVector(-19.75,-19.75,218.5); 
       }
       m_rot = G4RotationMatrix();
       m_rot.rotateX(m_phantomRotationX * deg);

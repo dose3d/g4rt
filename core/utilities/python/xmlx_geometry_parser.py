@@ -10,6 +10,17 @@ import csv
 logger.remove()
 logger.add(lambda msg: print(msg, end=''), level="INFO")
 
+def bump_csv_field_limit():
+    size = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(size)
+            return size
+        except OverflowError:
+            size //= 2
+
+bump_csv_field_limit()
+
 
 def parse_list(field_name: str, text: str, row_idx: int):
     """

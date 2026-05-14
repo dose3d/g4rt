@@ -62,6 +62,15 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_3mf"){
             tranlation = G4ThreeVector(-271.0,275.0,225.0);
         }
+        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayPhantom_3mf"){
+            tranlation = G4ThreeVector(0.0,0.0,8.0); // Z value is the bottom of the tray and Assuming EnviromentSizeZ=20
+        }
+        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "TrayStackPhantom_3mf"){
+            tranlation = G4ThreeVector(0,0.0,32.85); 
+        }
+        else if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "AirTower_3mf"){
+            tranlation = G4ThreeVector(-19.75,-19.75,218.5); 
+        }
         // gd.com = G4ThreeVector( com_py[0]*mm -95.0*mm , com_py[1]*mm -90.0*mm, com_py[2]*mm -90.0*mm );
 
         auto temp_vec = G4ThreeVector( com_py[0]*mm, com_py[1]*mm, com_py[2]*mm);
@@ -100,6 +109,9 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
     }
     m_parser = py::object(); 
 
-    std::cout<< "Got #" << m_db_cells_positioning.size() << " cell entries." << std::endl;
+    if(m_db_cells_positioning.size()<1)
+        ERROR_GEO("Couldn't fill cell positioning from DB source: {}",db_filename);
+    else
+        INFO_GEO("Got #{} cell entries.", m_db_cells_positioning.size());
 }
 

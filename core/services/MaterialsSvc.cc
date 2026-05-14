@@ -74,6 +74,7 @@ void MaterialsSvc::Configure() {
   DefineUnit<G4MaterialSPtr>("RMPS470");
   DefineUnit<G4MaterialSPtr>("EPS"); // Expanded Polystyrene
   DefineUnit<G4MaterialSPtr>("Rubber"); 
+  DefineUnit<G4MaterialSPtr>("Kauczuk"); 
   
   DefineUnit<G4MaterialSPtr>("TiO2");
 
@@ -265,15 +266,15 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
     const std::vector<G4int> natoms{8,8};
     auto eps = G4NISTManager->ConstructNewMaterial("EPS", elements, natoms, d, true, kStateSolid, 299.15);
     thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(eps));
-}
+  }
 
-if (unit.compare("Rubber") == 0) {
-  d = 1.22 * g / cm3;
-  const std::vector<G4String> elements{"H","C"};
-  const std::vector<G4int> natoms{8,5};
-  auto rubber = G4NISTManager->ConstructNewMaterial("Rubber", elements, natoms, d, true, kStateSolid, 299.15);
-  thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(rubber));
-}
+  if ((unit.compare("Rubber") == 0) || (unit.compare("Kauczuk") == 0)) {
+    d = 1.22 * g / cm3;
+    const std::vector<G4String> elements{"H","C"};
+    const std::vector<G4int> natoms{8,5};
+    auto rubber = G4NISTManager->ConstructNewMaterial(unit.c_str(), elements, natoms, d, true, kStateSolid, 299.15);
+    thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(rubber));
+  }
 
   if (unit.compare("BaritesConcrete") == 0) {
       d = 3.3 * g / cm3;

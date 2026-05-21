@@ -60,7 +60,7 @@ submodules/d3df-patients/patient/phantoms/<your_phantom_name>/
 
 and place the relevant `D3DF_bodies.csv`, `D3DF_bodies.xlsx`, optional `D3DF_components.csv`, and the source `.3mf` file there.
 
-## Prerequisites
+## Prerequisites (installed automatically by conda)
 
 Recommended environment:
 
@@ -91,6 +91,10 @@ git submodule update --init --recursive
 ## Enviroment 
 We recommend using Conda/Mamba for environment management: `g4rt_env.yml` provides the standard user environment, while `g4rt_dev_env.yml` contains the extended developer setup with additional tools and dependencies.
 
+```bash
+conda env create --name g4rt --file=g4rt_env.yml
+```
+
 ---
 ## Building G4RT
 
@@ -100,7 +104,7 @@ From the repository root:
 mkdir -p build
 cd build
 cmake .. -G Ninja
-ninja -j 6
+ninja -j XX
 ```
 
 The executable is expected at:

@@ -6,7 +6,7 @@ Typical Geant4-based application is being in the Linux OS. Hence, once you alrea
 ```
 wget https://raw.githubusercontent.com/dose3d/ppa/main/share/conda_env.yml
 ```  
-For Windows OS users the custom WSL with all `G4RT` prerequisities being installed is available, see [docs/wls-ubuntu-22.04.md](docs/wsl-ubuntu22.04-G4.md)
+For Windows OS users the custom WSL with all `G4RT` prerequisities being installed is available, see [docs/wsl-ubuntu-22.04.md](docs/wsl-ubuntu-22.04.md)
 
 ## Install on Debian-based Linux from PPA
 You can use package manager to install latest released version of this software (see [https://github.com/dose3d/ppa](https://github.com/dose3d/ppa)).

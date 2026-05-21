@@ -1,5 +1,5 @@
 ## TOML job structure
-The main job configuration of the G4RT utilizing the [TOML](https://toml.io/en/) standard (instead of the G4 macro files). See the basic structure of the job: [docs/toml_job_structure.md](docs/toml_job_structure.md)
+The main job configuration of the G4RT utilizing the [TOML](https://toml.io/en/) standard (instead of the G4 macro files). See the basic structure of the job: [toml_job_structure.md](toml_job_structure.md)
 
 ## Get IAEA phsp 
 Once the simulation conditions are defined for `BeamType = "IAEA"` in order to run the simulation you need to download these data.  
@@ -31,5 +31,5 @@ To print all available options for command line:
 
 ## Predefined Dose3D jobs
 
-* Default single module (4x4x4 cells). [See docs/Dose3D_single_module.md](docs/Dose3D_single_module.md)
-* May 2023 testbeam and related studies. [See docs/Testbeam_052023.md](docs/Testbeam_052023.md)
+* Default single module (4x4x4 cells). See [Dose3D_single_module.md](Dose3D_single_module.md)
+* May 2023 testbeam and related studies. See [Testbeam_052023.md](Testbeam_052023.md)

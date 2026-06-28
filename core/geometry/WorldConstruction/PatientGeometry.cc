@@ -613,17 +613,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
-
-    const double doseVoxelSizeX = cfg.sizeX;
-    const double doseVoxelSizeY = cfg.sizeY;
-    const double doseVoxelSizeZ = cfg.sizeZ;
-    
-    G4ThreeVector doseGridOrigin(
-        cfg.initX - (doseVoxelSizeX / 2.0),
-        cfg.initY - (doseVoxelSizeY / 2.0),
-        cfg.initZ - (doseVoxelSizeZ / 2.0)
-    );
-
+    auto start = std::chrono::steady_clock::now();
     // =====================================================
     // Hashing
     // =====================================================
@@ -639,8 +629,14 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         }
       }
       bool operator==(const VoxelKey& other) const {
-        return std::memcmp(this,&other, sizeof(VoxelKey)) == 0;
+          return globalID[0] == other.globalID[0] && globalID[1] == other.globalID[1] && globalID[2] == other.globalID[2] &&
+                  localID[0] == other.localID[0] && localID[1] == other.localID[1] && localID[2] == other.localID[2];
       }
+    };
+    struct MappingEntry {
+        G4ThreeVector centre;
+        std::array<std::pair<size_t, size_t>, 3> ids; 
+        const VoxelHit* hit;
     };
     struct VoxelKeyHasher {
       std::size_t operator()(const VoxelKey& k) const {
@@ -653,9 +649,12 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
       }
     };
 
-    using LookupMap = std::unordered_map<VoxelKey, const VoxelHit*, VoxelKeyHasher>;
-    LookupMap voxelLookupMap;
-    LookupMap cellLookupMap;
+    std::vector<MappingEntry> voxelMappings;
+    std::vector<MappingEntry> cellMappings;
+
+    std::unordered_set<VoxelKey, VoxelKeyHasher> seenVoxelKeys;
+    std::unordered_set<VoxelKey, VoxelKeyHasher> seenCellKeys;
+
 
     for (auto& sm : scoring_maps) {
       for (auto& scoring : sm.second) {
@@ -663,17 +662,33 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
           auto& hit_data = entry.second; 
           VoxelKey key(hit_data);
 
-          if(scoring.first == Scoring::Type::Voxel){
-            voxelLookupMap[key] = &hit_data;
+          if (scoring.first == Scoring::Type::Voxel) {
+            if (seenVoxelKeys.insert(key).second) {
+              MappingEntry e;
+              e.centre = hit_data.GetCentre();
+              e.ids[0] = {hit_data.GetGlobalID(0), hit_data.GetID(0)};
+              e.ids[1] = {hit_data.GetGlobalID(1), hit_data.GetID(1)};
+              e.ids[2] = {hit_data.GetGlobalID(2), hit_data.GetID(2)};
+              e.hit = &hit_data;
+              voxelMappings.push_back(e);
+            }
           }
-          else if(scoring.first == Scoring::Type::Cell){
-            cellLookupMap[key] = &hit_data;
+          else if (scoring.first == Scoring::Type::Cell) {
+            if (seenCellKeys.insert(key).second) {
+              MappingEntry e;
+              e.centre = hit_data.GetCentre();
+              e.ids[0] = {hit_data.GetGlobalID(0), hit_data.GetGlobalID(0)};
+              e.ids[1] = {hit_data.GetGlobalID(1), hit_data.GetGlobalID(1)};
+              e.ids[2] = {hit_data.GetGlobalID(2), hit_data.GetGlobalID(2)};
+              e.hit = &hit_data;
+              cellMappings.push_back(e);
+            }
           }
         }
       }
     }
-    RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
-    RUNSVC_INFO("CellLookupMap  size = {}", cellLookupMap.size());
+    RUNSVC_INFO("VoxelLookupMap size = {}", voxelMappings.size());
+    RUNSVC_INFO("CellLookupMap  size = {}", cellMappings.size());
 
     // =====================================================
     // OUTPUT FILES
@@ -690,15 +705,14 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     // =====================================================
     // LOOKUP
     // =====================================================
-    auto makeLookup = [](const LookupMap* map, double tol) {
+    auto makeLookup = [](const std::vector<MappingEntry>* map, double tol) {
         return [map, tol](const G4ThreeVector& pos) -> const VoxelHit* {
             const VoxelHit* bestVH = nullptr;
             double bestDist2 = std::numeric_limits<double>::max();
             for (const auto& e : *map) {
-                const auto& centre = e.second->GetCentre();
-                double dx = centre.x() - pos.x();
-                double dy = centre.y() - pos.y();
-                double dz = centre.z() - pos.z();
+                double dx = e.centre.x() - pos.x();
+                double dy = e.centre.y() - pos.y();
+                double dz = e.centre.z() - pos.z();
 
                 if (std::abs(dx) <= tol &&
                     std::abs(dy) <= tol &&
@@ -706,7 +720,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                     double d2 = dx*dx + dy*dy + dz*dz;
                     if (d2 < bestDist2) {
                         bestDist2 = d2;
-                        bestVH = e.second;
+                        bestVH = e.hit;
                     }
                 }
             }
@@ -717,11 +731,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     double voxelTolerance = std::max({cfg.sizeX, cfg.sizeY, cfg.sizeZ}) * 0.5;
     RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
-    auto getVoxelHit = makeLookup(&voxelLookupMap, voxelTolerance);
+    auto getVoxelHit = makeLookup(&voxelMappings, voxelTolerance);
     
     double cellTolerance = 5; // TODO: Should be taken from half of the cell size or from configuration
     RUNSVC_INFO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
-    auto getCellHit = makeLookup(&cellLookupMap, cellTolerance);
+    auto getCellHit = makeLookup(&cellMappings, cellTolerance);
 
 
     // =====================================================
@@ -778,4 +792,9 @@ E
                  << "," << asf
                  << "\n";
     });
+    auto end = std::chrono::steady_clock::now();
+
+    std::chrono::duration<double> elapsed = end - start;
+
+    RUNSVC_INFO("time elapsed: {}", elapsed.count());
 }

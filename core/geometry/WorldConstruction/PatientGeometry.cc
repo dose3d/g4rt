@@ -611,84 +611,76 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
-    auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
+    auto metaDataFile =  outDir+"/"+planName+"_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
     auto start = std::chrono::steady_clock::now();
     // =====================================================
     // Hashing
     // =====================================================
-    
-    struct VoxelKey{
-      G4int globalID[3];
-      G4int localID[3];
+    struct VoxelKey {
+        G4int id[3];
 
-      VoxelKey(const VoxelHit& v){
-        for(int i : {0,1,2}){
-          globalID[i]=v.GetGlobalID(i);
-          localID[i]=v.GetID(i);
+        VoxelKey(const VoxelHit& v) {
+            id[0] = v.GetGlobalID(0);
+            id[1] = v.GetGlobalID(1);
+            id[2] = v.GetGlobalID(2);
         }
-      }
-      bool operator==(const VoxelKey& other) const {
-          return globalID[0] == other.globalID[0] && globalID[1] == other.globalID[1] && globalID[2] == other.globalID[2] &&
-                  localID[0] == other.localID[0] && localID[1] == other.localID[1] && localID[2] == other.localID[2];
-      }
+
+        VoxelKey(int i, int j, int k) {
+            id[0] = i;
+            id[1] = j;
+            id[2] = k;
+        }
+
+        bool operator==(const VoxelKey& other) const {
+            return id[0] == other.id[0] && 
+                   id[1] == other.id[1] && 
+                   id[2] == other.id[2];
+        }
     };
-    struct MappingEntry {
-        G4ThreeVector centre;
-        std::array<std::pair<size_t, size_t>, 3> ids; 
-        const VoxelHit* hit;
-    };
+
     struct VoxelKeyHasher {
-      std::size_t operator()(const VoxelKey& k) const {
-        std::size_t h = 0;
-        for (int i : {0,1,2}) {
-          h ^= std::hash<int>{}(k.globalID[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
-          h ^= std::hash<int>{}(k.localID[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        std::size_t operator()(const VoxelKey& k) const {
+            std::size_t h = 0;
+            for (int i : {0, 1, 2}) {
+                h ^= std::hash<int>{}(k.id[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            }
+            return h;
         }
-        return h;
-      }
     };
 
-    std::vector<MappingEntry> voxelMappings;
-    std::vector<MappingEntry> cellMappings;
-
-    std::unordered_set<VoxelKey, VoxelKeyHasher> seenVoxelKeys;
-    std::unordered_set<VoxelKey, VoxelKeyHasher> seenCellKeys;
-
+    using LookupMap = std::unordered_map<VoxelKey, const VoxelHit*, VoxelKeyHasher>;
+    LookupMap voxelLookupMap;
+    LookupMap cellLookupMap;
 
     for (auto& sm : scoring_maps) {
-      for (auto& scoring : sm.second) {
-        for(auto& entry : scoring.second){
-          auto& hit_data = entry.second; 
-          VoxelKey key(hit_data);
+        for (auto& scoring : sm.second) {
+            for (auto& entry : scoring.second) {
+                auto& hit_data = entry.second; 
+                VoxelKey key(hit_data);
 
-          if (scoring.first == Scoring::Type::Voxel) {
-            if (seenVoxelKeys.insert(key).second) {
-              MappingEntry e;
-              e.centre = hit_data.GetCentre();
-              e.ids[0] = {hit_data.GetGlobalID(0), hit_data.GetID(0)};
-              e.ids[1] = {hit_data.GetGlobalID(1), hit_data.GetID(1)};
-              e.ids[2] = {hit_data.GetGlobalID(2), hit_data.GetID(2)};
-              e.hit = &hit_data;
-              voxelMappings.push_back(e);
+                if (scoring.first == Scoring::Type::Voxel) {
+                    voxelLookupMap[key] = &hit_data;
+                }
+                else if (scoring.first == Scoring::Type::Cell) {
+                    cellLookupMap[key] = &hit_data;
+                }
             }
-          }
-          else if (scoring.first == Scoring::Type::Cell) {
-            if (seenCellKeys.insert(key).second) {
-              MappingEntry e;
-              e.centre = hit_data.GetCentre();
-              e.ids[0] = {hit_data.GetGlobalID(0), hit_data.GetGlobalID(0)};
-              e.ids[1] = {hit_data.GetGlobalID(1), hit_data.GetGlobalID(1)};
-              e.ids[2] = {hit_data.GetGlobalID(2), hit_data.GetGlobalID(2)};
-              e.hit = &hit_data;
-              cellMappings.push_back(e);
-            }
-          }
         }
-      }
     }
-    RUNSVC_INFO("VoxelLookupMap size = {}", voxelMappings.size());
-    RUNSVC_INFO("CellLookupMap  size = {}", cellMappings.size());
+    RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
+    RUNSVC_INFO("CellLookupMap  size = {}", cellLookupMap.size());
+
+    // =====================================================
+
+    const double doseVoxelSizeX = cfg.sizeX;
+    const double doseVoxelSizeY = cfg.sizeY;
+    const double doseVoxelSizeZ = cfg.sizeZ;
+    G4ThreeVector doseGridOrigin(
+        cfg.initX - (doseVoxelSizeX / 2.0),
+        cfg.initY - (doseVoxelSizeY / 2.0),
+        cfg.initZ - (doseVoxelSizeZ / 2.0)
+    );
 
     // =====================================================
     // OUTPUT FILES
@@ -703,44 +695,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     doseFile << header << "\n";
     
     // =====================================================
-    // LOOKUP
-    // =====================================================
-    auto makeLookup = [](const std::vector<MappingEntry>* map, double tol) {
-        return [map, tol](const G4ThreeVector& pos) -> const VoxelHit* {
-            const VoxelHit* bestVH = nullptr;
-            double bestDist2 = std::numeric_limits<double>::max();
-            for (const auto& e : *map) {
-                double dx = e.centre.x() - pos.x();
-                double dy = e.centre.y() - pos.y();
-                double dz = e.centre.z() - pos.z();
-
-                if (std::abs(dx) <= tol &&
-                    std::abs(dy) <= tol &&
-                    std::abs(dz) <= tol) {
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < bestDist2) {
-                        bestDist2 = d2;
-                        bestVH = e.hit;
-                    }
-                }
-            }
-        }
-    }
-    RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
-    RUNSVC_INFO("CellHits vector size = {}", cellHits.size());
-
-    double voxelTolerance = std::max({cfg.sizeX, cfg.sizeY, cfg.sizeZ}) * 0.5;
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
-    auto getVoxelHit = makeLookup(&voxelMappings, voxelTolerance);
-    
-    double cellTolerance = 5; // TODO: Should be taken from half of the cell size or from configuration
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
-    auto getCellHit = makeLookup(&cellMappings, cellTolerance);
-
-
-    // =====================================================
-    // CT Grid LOOP
-    // =====================================================
     ForEachVoxel(cfg, [&](int x, int y, int z, const G4ThreeVector& pos) {
         auto materialName = nav->LocateGlobalPointAndSetup(pos)
                                ->GetLogicalVolume()
@@ -753,9 +707,17 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         double doseCell = 0.0;
         double fsf = 0.0;
         double asf = 0.0;
-E
-        // ---------------- VOXEL ----------------
-        if (const auto& hit = getVoxelHit(pos)) {
+
+        int target_i = static_cast<int>(std::floor((pos.x() - doseGridOrigin.x()) / doseVoxelSizeX));
+        int target_j = static_cast<int>(std::floor((pos.y() - doseGridOrigin.y()) / doseVoxelSizeY));
+        int target_k = static_cast<int>(std::floor((pos.z() - doseGridOrigin.z()) / doseVoxelSizeZ));
+
+        VoxelKey searchKey(target_i,target_j, target_k);
+
+        // --------------------------------
+        auto voxelIt = voxelLookupMap.find(searchKey);
+        if (voxelIt != voxelLookupMap.end()) {
+            const auto* hit = voxelIt->second;
             idX = hit->GetGlobalID(0);
             idY = hit->GetGlobalID(1);
             idZ = hit->GetGlobalID(2);
@@ -764,21 +726,9 @@ E
             asf = hit->GetAngleScalingFactor();
         }
 
-        double bestDist2 = std::numeric_limits<double>::max();
-        for (const auto* hit : cellHits) {
-            double dx = hit->GetCentre().x() - pos.x();
-            double dy = hit->GetCentre().y() - pos.y();
-            double dz = hit->GetCentre().z() - pos.z();
-            
-            if (std::abs(dx) <= cfg.sizeX/2 
-             && std::abs(dy) <= cfg.sizeX/2 
-             && std::abs(dz) <= cfg.sizeX/2) {
-                double d2 = dx*dx + dy*dy + dz*dz;
-                if (d2 < bestDist2) {
-                    bestDist2 = d2;
-                    doseCell = hit->GetDose();
-                }
-            }
+        auto cellIt = cellLookupMap.find(searchKey);
+        if (cellIt != cellLookupMap.end()) {
+            doseCell = cellIt->second->GetDose();
         }
         
         doseFile << pos.x() << "," << pos.y() << "," << pos.z()
@@ -792,8 +742,8 @@ E
                  << "," << asf
                  << "\n";
     });
+    
     auto end = std::chrono::steady_clock::now();
-
     std::chrono::duration<double> elapsed = end - start;
 
     RUNSVC_INFO("time elapsed: {}", elapsed.count());

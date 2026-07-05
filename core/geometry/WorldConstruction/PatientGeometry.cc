@@ -613,7 +613,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
-    auto start = std::chrono::steady_clock::now();
 
     const double doseVoxelSizeX = cfg.sizeX;
     const double doseVoxelSizeY = cfg.sizeY;
@@ -671,7 +670,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
     RUNSVC_INFO("CellHits vector size = {}", cellHits.size());
 
-    // =====================================================
     // OUTPUT FILES
     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
     std::ofstream doseFile(doseFileAbsPath);
@@ -739,9 +737,4 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                  << "," << asf
                  << "\n";
     });
-    
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-
-    RUNSVC_INFO("time elapsed: {}", elapsed.count());
 }

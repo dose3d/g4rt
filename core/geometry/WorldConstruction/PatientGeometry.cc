@@ -9,8 +9,6 @@
 #include "G4SystemOfUnits.hh"
 #include "Services.hh"
 #include "G4Box.hh"
-#include "G4Tubs.hh"
-#include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
@@ -550,21 +548,20 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 ///  - *_ct_dose.csv  → contains both Voxel and Cell dose evaluated at CT voxel centres
 ///  - *_ct_dose_series_metadata.csv → CT metadata
 ///
-/// ======= High-level workflow =======
+/// ======= High-level workflow =======  
 /// 1. Build CT grid definition (CtTubeConfig)
 /// 2. Extract scoring data from simulation (Voxel + Cell)
-/// 3. Build spatial mappings (centre-based, deduplicated)
-/// 4. Create lookup functions (nearest neighbour with tolerance)
-/// 5. Iterate over CT grid (ForEachVoxel)
-/// 6. Sample:
+/// 3. Map scoring data into optimized spatial lookup structures
+/// 4. Iterate over CT grid (ForEachVoxel)
+/// 5. Sample:
 ///      - material (via navigator)
 ///      - voxel dose (high resolution)
 ///      - cell dose (coarse resolution)
-/// 7. Export all values into a single CSV row per CT voxel
+/// 6. Export all values into a single CSV row per CT voxel
 ///
-/// ======= CT grid (reference space) =======
+/// ======= CT grid (reference space) =======  
 /// The CT grid is defined by CtTubeConfig and represents a regular 3D lattice:
-/// - origin: (x_min, y_min, z_min)
+/// - origin: (initX, initY, initZ) shifted by half-voxel sizes to define grid boundaries
 /// - spacing: (sizeX, sizeY, sizeZ)
 /// - resolution: (xRes, yRes, zRes)
 ///
@@ -573,57 +570,27 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 /// IMPORTANT:
 /// - Both Voxel and Cell scoring data are resampled onto this grid
 /// - This guarantees strict spatial alignment between datasets
-/// - No interpolation is performed (nearest neighbour sampling)
+/// - Nearest neighbour sampling is performed based on grid spatial alignment
 ///
-/// ======= Mapping (scoring → CT space) =======
-/// Two independent mappings of scoring data are constructed:
+/// ======= Lookup & Mapping strategy =======  
+/// To prevent massive performance bottlenecks during grid iteration, scoring 
+/// data is processed into two distinct layouts:
 ///
-/// - voxelMappings → dense, high-resolution scoring (VoxelHit)
-/// - cellMappings  → sparse, coarse scoring (CellHit)
+/// - Voxel Lookup (Dense, High-Resolution):
+///   Mapped into a `std::unordered_map` using a discrete 3D `SpatialKey` (i, j, k)
+///   computed relative to the grid origin.
+///     - Complexity: O(1) average lookup per CT voxel.
+///     - Yields precise, local mapping alongside structural IDs (IdX, IdY, IdZ) 
+///       and scaling factors (FSF, ASF).
+/// - Cell Lookup (Sparse, Coarse Resolution):
+///   Stored in a flat linear vector (`cellHits`).
+///   For each CT voxel, candidates are filtered using an axis-aligned boundary 
+///   tolerance window (half the CT voxel size: +-sizeX/2). The closest match 
+///   by Euclidean distance is selected.
 ///
-/// For deduplication purposes, each mapping entry stores:
-///   - geometric centre (in global coordinates)
-///   - unique identifier (ID)
-///   - pointer to scoring data (VoxelHit)
-///
-/// ======= Lookup strategy =======
-/// Dose values are retrieved using nearest neighbour search with axis-aligned tolerance.
-///
-/// For each CT voxel position:
-/// 1. Iterate over mapping entries
-/// 2. Select candidates satisfying:
-///      |dx| <= tol, |dy| <= tol, |dz| <= tol
-/// 3. Choose closest match (minimum Euclidean distance)
-///
-/// Separate lookup configurations:
-/// - Voxel lookup:
-///     tolerance ≈ 0.5 × CT voxel size
-///     → precise, local mapping
-///
-/// - Cell lookup:
-///     tolerance = larger constant (e.g. 5 mm)
-///     → coarse mapping (cell covers larger region)
-///
-/// ======= Coordinate system =======
+/// ======= Coordinate system ======= 
 /// - All coordinates are in global Geant4 space
-/// - CT grid is aligned with the simulation world
-/// - Sampling is performed strictly at voxel centres
-///
-/// ======= Performance considerations =======
-/// Current lookup complexity:
-///   O(N_ct_voxels × N_mapping)
-///
-/// Typical sizes:
-///   - voxelMappings → large (e.g. ~36k)
-///   - cellMappings  → small (e.g. ~36)
-///
-/// Bottleneck:
-///   - voxel lookup dominates runtime
-///
-/// Potential optimizations:
-///   - spatial hashing (recommended)
-///   - uniform grid indexing
-///   - direct ID-based mapping (if topology allows)
+/// - The CT grid is structurally aligned with the simulation world
 ///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
@@ -646,7 +613,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
-    auto start = std::chrono::steady_clock::now();
 
     const double doseVoxelSizeX = cfg.sizeX;
     const double doseVoxelSizeY = cfg.sizeY;
@@ -704,7 +670,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
     RUNSVC_INFO("CellHits vector size = {}", cellHits.size());
 
-    // =====================================================
     // OUTPUT FILES
     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
     std::ofstream doseFile(doseFileAbsPath);
@@ -772,9 +737,4 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                  << "," << asf
                  << "\n";
     });
-    
-    auto end = std::chrono::steady_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-
-    RUNSVC_INFO("time elapsed: {}", elapsed.count());
 }

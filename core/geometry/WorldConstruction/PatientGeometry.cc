@@ -1,4 +1,6 @@
 #include "PatientGeometry.hh"
+#include "Types.hh"
+#include "VoxelHit.hh"
 #include "WaterPhantom.hh"
 #include "SciSlicePhantom.hh"
 #include "DishCubePhantom.hh"
@@ -7,8 +9,6 @@
 #include "G4SystemOfUnits.hh"
 #include "Services.hh"
 #include "G4Box.hh"
-#include "G4Tubs.hh"
-#include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
@@ -548,21 +548,20 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 ///  - *_ct_dose.csv  → contains both Voxel and Cell dose evaluated at CT voxel centres
 ///  - *_ct_dose_series_metadata.csv → CT metadata
 ///
-/// ======= High-level workflow =======
+/// ======= High-level workflow =======  
 /// 1. Build CT grid definition (CtTubeConfig)
 /// 2. Extract scoring data from simulation (Voxel + Cell)
-/// 3. Build spatial mappings (centre-based, deduplicated)
-/// 4. Create lookup functions (nearest neighbour with tolerance)
-/// 5. Iterate over CT grid (ForEachVoxel)
-/// 6. Sample:
+/// 3. Map scoring data into optimized spatial lookup structures
+/// 4. Iterate over CT grid (ForEachVoxel)
+/// 5. Sample:
 ///      - material (via navigator)
 ///      - voxel dose (high resolution)
 ///      - cell dose (coarse resolution)
-/// 7. Export all values into a single CSV row per CT voxel
+/// 6. Export all values into a single CSV row per CT voxel
 ///
-/// ======= CT grid (reference space) =======
+/// ======= CT grid (reference space) =======  
 /// The CT grid is defined by CtTubeConfig and represents a regular 3D lattice:
-/// - origin: (x_min, y_min, z_min)
+/// - origin: (initX, initY, initZ) shifted by half-voxel sizes to define grid boundaries
 /// - spacing: (sizeX, sizeY, sizeZ)
 /// - resolution: (xRes, yRes, zRes)
 ///
@@ -571,57 +570,27 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 /// IMPORTANT:
 /// - Both Voxel and Cell scoring data are resampled onto this grid
 /// - This guarantees strict spatial alignment between datasets
-/// - No interpolation is performed (nearest neighbour sampling)
+/// - Nearest neighbour sampling is performed based on grid spatial alignment
 ///
-/// ======= Mapping (scoring → CT space) =======
-/// Two independent mappings of scoring data are constructed:
+/// ======= Lookup & Mapping strategy =======  
+/// To prevent massive performance bottlenecks during grid iteration, scoring 
+/// data is processed into two distinct layouts:
 ///
-/// - voxelMappings → dense, high-resolution scoring (VoxelHit)
-/// - cellMappings  → sparse, coarse scoring (CellHit)
+/// - Voxel Lookup (Dense, High-Resolution):
+///   Mapped into a `std::unordered_map` using a discrete 3D `SpatialKey` (i, j, k)
+///   computed relative to the grid origin.
+///     - Complexity: O(1) average lookup per CT voxel.
+///     - Yields precise, local mapping alongside structural IDs (IdX, IdY, IdZ) 
+///       and scaling factors (FSF, ASF).
+/// - Cell Lookup (Sparse, Coarse Resolution):
+///   Stored in a flat linear vector (`cellHits`).
+///   For each CT voxel, candidates are filtered using an axis-aligned boundary 
+///   tolerance window (half the CT voxel size: +-sizeX/2). The closest match 
+///   by Euclidean distance is selected.
 ///
-/// For deduplication purposes, each mapping entry stores:
-///   - geometric centre (in global coordinates)
-///   - unique identifier (ID)
-///   - pointer to scoring data (VoxelHit)
-///
-/// ======= Lookup strategy =======
-/// Dose values are retrieved using nearest neighbour search with axis-aligned tolerance.
-///
-/// For each CT voxel position:
-/// 1. Iterate over mapping entries
-/// 2. Select candidates satisfying:
-///      |dx| <= tol, |dy| <= tol, |dz| <= tol
-/// 3. Choose closest match (minimum Euclidean distance)
-///
-/// Separate lookup configurations:
-/// - Voxel lookup:
-///     tolerance ≈ 0.5 × CT voxel size
-///     → precise, local mapping
-///
-/// - Cell lookup:
-///     tolerance = larger constant (e.g. 5 mm)
-///     → coarse mapping (cell covers larger region)
-///
-/// ======= Coordinate system =======
+/// ======= Coordinate system ======= 
 /// - All coordinates are in global Geant4 space
-/// - CT grid is aligned with the simulation world
-/// - Sampling is performed strictly at voxel centres
-///
-/// ======= Performance considerations =======
-/// Current lookup complexity:
-///   O(N_ct_voxels × N_mapping)
-///
-/// Typical sizes:
-///   - voxelMappings → large (e.g. ~36k)
-///   - cellMappings  → small (e.g. ~36)
-///
-/// Bottleneck:
-///   - voxel lookup dominates runtime
-///
-/// Potential optimizations:
-///   - spatial hashing (recommended)
-///   - uniform grid indexing
-///   - direct ID-based mapping (if topology allows)
+/// - The CT grid is structurally aligned with the simulation world
 ///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
@@ -634,9 +603,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     IO::CreateDirIfNotExits(outDir);
 
-    // =====================================================
-    // CT GRID (SOURCE OF TRUTH)
-    // =====================================================
     auto cfg = BuildCtTubeConfig();
     auto nav = CreateNavigator();
 
@@ -645,133 +611,97 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
-    // Metadata
-    auto metaDataFile =  outDir+"/"+planName+"_ct_dose_series_metadata.csv";
+    auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
 
+    const double doseVoxelSizeX = cfg.sizeX;
+    const double doseVoxelSizeY = cfg.sizeY;
+    const double doseVoxelSizeZ = cfg.sizeZ;
+    
+    G4ThreeVector doseGridOrigin(
+        cfg.initX - (doseVoxelSizeX / 2.0),
+        cfg.initY - (doseVoxelSizeY / 2.0),
+        cfg.initZ - (doseVoxelSizeZ / 2.0)
+    );
+
     // =====================================================
-    // MAPPINGS
+    // HASHING
     // =====================================================
-    struct MappingEntry {
-        G4ThreeVector centre;
-        std::array<std::pair<size_t, size_t>, 3> ids; 
-        const VoxelHit* hit;
+    struct SpatialKey {
+        int i, j, k;
+        SpatialKey(int i, int j, int k) : i(i), j(j), k(k) {}
+        bool operator==(const SpatialKey& other) const {
+            return i == other.i && j == other.j && k == other.k;
+        }
     };
 
-    std::vector<MappingEntry> voxelMappings;
-    std::vector<MappingEntry> cellMappings;
+    struct SpatialKeyHasher {
+        std::size_t operator()(const SpatialKey& k) const {
+            std::size_t h = 0;
+            h ^= std::hash<int>{}(k.i) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= std::hash<int>{}(k.j) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= std::hash<int>{}(k.k) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
 
-    std::unordered_set<std::string> voxelKeys;
-    std::unordered_set<std::string> cellKeys;
+    std::unordered_map<SpatialKey, const VoxelHit*, SpatialKeyHasher> voxelLookupMap;
+    std::vector<const VoxelHit*> cellHits;
 
     for (auto& sm : scoring_maps) {
-      for (auto& scoring : sm.second) {
-        if (scoring.first == Scoring::Type::Voxel) {
-            for (auto& voxel : scoring.second) {
-              auto& voxel_data = voxel.second;
-              // Tworzymy unikalny klucz oparty na identyfikatorach
-              std::string key = "X" + std::to_string(voxel_data.GetGlobalID(0)) + "V" + std::to_string(voxel_data.GetID(0)) +
-                                "Y" + std::to_string(voxel_data.GetGlobalID(1)) + "V" + std::to_string(voxel_data.GetID(1)) +
-                                "Z" + std::to_string(voxel_data.GetGlobalID(2)) + "V" + std::to_string(voxel_data.GetID(2));
-              if (voxelKeys.find(key) == voxelKeys.end()) {
-                voxelKeys.insert(key);
-                MappingEntry entry;
-                entry.centre = voxel_data.GetCentre();
-                entry.ids[0] = {voxel_data.GetGlobalID(0), voxel_data.GetID(0)};
-                entry.ids[1] = {voxel_data.GetGlobalID(1), voxel_data.GetID(1)};
-                entry.ids[2] = {voxel_data.GetGlobalID(2), voxel_data.GetID(2)};
-                entry.hit = &voxel_data;
-                voxelMappings.push_back(entry);
-            }
-          }
-        } else if (scoring.first == Scoring::Type::Cell) {
-            for (auto& cell : scoring.second) {
-              auto& cell_data = cell.second;
-              std::string key = "X" + std::to_string(cell_data.GetGlobalID(0)) +
-                                "Y" + std::to_string(cell_data.GetGlobalID(1)) +
-                                "Z" + std::to_string(cell_data.GetGlobalID(2));
-              if (cellKeys.find(key) == cellKeys.end()) {
-                cellKeys.insert(key);
-                MappingEntry entry;
-                entry.centre = cell_data.GetCentre();
-                entry.ids[0] = {cell_data.GetGlobalID(0), cell_data.GetGlobalID(0)};
-                entry.ids[1] = {cell_data.GetGlobalID(1), cell_data.GetGlobalID(1)};
-                entry.ids[2] = {cell_data.GetGlobalID(2), cell_data.GetGlobalID(2)};
-                entry.hit = &cell_data;
-                cellMappings.push_back(entry);
-              }
-            }
-          }
-        }
-     }
-     RUNSVC_INFO("VoxelMappings size = {}", voxelMappings.size());
-     RUNSVC_INFO("CellMappings  size = {}", cellMappings.size());
+        for (auto& scoring : sm.second) {
+            for (auto& entry : scoring.second) {
+                auto& hit_data = entry.second; 
 
-     // =====================================================
-     // OUTPUT FILES
-     // =====================================================
-     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
-     RUNSVC_INFO("ExportDoseToCsvCT [{}]: File={}", cfg.name, doseFileAbsPath);
-     std::ofstream doseFile(doseFileAbsPath);
- 
-     std::string header =
-         "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
- 
-     doseFile << header << "\n";
-    
-    // =====================================================
-    // LOOKUP
-    // =====================================================
-    auto makeLookup = [](const std::vector<MappingEntry>* map, double tol) {
-        return [map, tol](const G4ThreeVector& pos) -> const VoxelHit* {
-            const VoxelHit* bestVH = nullptr;
-            double bestDist2 = std::numeric_limits<double>::max();
-            for (const auto& e : *map) {
-                double dx = e.centre.x() - pos.x();
-                double dy = e.centre.y() - pos.y();
-                double dz = e.centre.z() - pos.z();
-
-                if (std::abs(dx) <= tol &&
-                    std::abs(dy) <= tol &&
-                    std::abs(dz) <= tol) {
-                    double d2 = dx*dx + dy*dy + dz*dz;
-                    if (d2 < bestDist2) {
-                        bestDist2 = d2;
-                        bestVH = e.hit;
-                    }
+                if (scoring.first == Scoring::Type::Voxel) {
+                    int i = static_cast<int>(std::floor((hit_data.GetCentre().x() - doseGridOrigin.x()) / doseVoxelSizeX));
+                    int j = static_cast<int>(std::floor((hit_data.GetCentre().y() - doseGridOrigin.y()) / doseVoxelSizeY));
+                    int k = static_cast<int>(std::floor((hit_data.GetCentre().z() - doseGridOrigin.z()) / doseVoxelSizeZ));
+                    
+                    SpatialKey key(i, j, k);
+                    voxelLookupMap[key] = &hit_data;
+                }
+                else if (scoring.first == Scoring::Type::Cell) {
+                    cellHits.push_back(&hit_data);
                 }
             }
-            return bestVH;
-        };
-    };
+        }
+    }
+    RUNSVC_INFO("VoxelLookupMap size = {}", voxelLookupMap.size());
+    RUNSVC_INFO("CellHits vector size = {}", cellHits.size());
 
-    double voxelTolerance = std::max({cfg.sizeX, cfg.sizeY, cfg.sizeZ}) * 0.5;
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: VoxelMappings tolerance = {}", cfg.name, voxelTolerance);
-    auto getVoxelHit = makeLookup(&voxelMappings, voxelTolerance);
+    // OUTPUT FILES
+    std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
+    std::ofstream doseFile(doseFileAbsPath);
+ 
+    std::string header =
+        "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
+    doseFile << header << "\n";
     
-    double cellTolerance = 5; // TODO: Should be taken from half of the cell size or from configuration
-    RUNSVC_INFO("ExportDoseToCsvCT [{}]: CellMappings tolerance = {}", cfg.name, cellTolerance);
-    auto getCellHit = makeLookup(&cellMappings, cellTolerance);
-
-
-    // =====================================================
-    // CT Grid LOOP
     // =====================================================
     ForEachVoxel(cfg, [&](int x, int y, int z, const G4ThreeVector& pos) {
         auto materialName = nav->LocateGlobalPointAndSetup(pos)
-                       ->GetLogicalVolume()
-                       ->GetMaterial()
-                       ->GetName();
+                               ->GetLogicalVolume()
+                               ->GetMaterial()
+                               ->GetName();
         auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+        
         int idX = -1, idY = -1, idZ = -1;
         double doseVoxel = 0.0;
         double doseCell = 0.0;
         double fsf = 0.0;
         double asf = 0.0;
 
-        // ---------------- VOXEL ----------------
-        if (const auto& hit = getVoxelHit(pos)) {
-            idX = hit->GetGlobalID(0);
+        int target_i = static_cast<int>(std::floor((pos.x() - doseGridOrigin.x()) / doseVoxelSizeX));
+        int target_j = static_cast<int>(std::floor((pos.y() - doseGridOrigin.y()) / doseVoxelSizeY));
+        int target_k = static_cast<int>(std::floor((pos.z() - doseGridOrigin.z()) / doseVoxelSizeZ));
+
+        SpatialKey searchKey(target_i, target_j, target_k);
+        auto voxelIt = voxelLookupMap.find(searchKey);
+        
+        if (voxelIt != voxelLookupMap.end()) {
+            const auto* hit = voxelIt->second;
+            idX = hit->GetGlobalID(0); 
             idY = hit->GetGlobalID(1);
             idZ = hit->GetGlobalID(2);
             doseVoxel = hit->GetDose();
@@ -779,12 +709,23 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
             asf = hit->GetAngleScalingFactor();
         }
 
-        // ---------------- CELL ----------------
-        if (const auto& hit = getCellHit(pos)) {
-          doseCell = hit->GetDose();
+        double bestDist2 = std::numeric_limits<double>::max();
+        for (const auto* hit : cellHits) {
+            double dx = hit->GetCentre().x() - pos.x();
+            double dy = hit->GetCentre().y() - pos.y();
+            double dz = hit->GetCentre().z() - pos.z();
+            
+            if (std::abs(dx) <= cfg.sizeX/2 
+             && std::abs(dy) <= cfg.sizeX/2 
+             && std::abs(dz) <= cfg.sizeX/2) {
+                double d2 = dx*dx + dy*dy + dz*dz;
+                if (d2 < bestDist2) {
+                    bestDist2 = d2;
+                    doseCell = hit->GetDose();
+                }
+            }
         }
         
-        // ------------ write to file -----------
         doseFile << pos.x() << "," << pos.y() << "," << pos.z()
                  << "," << idX
                  << "," << idY

@@ -96,6 +96,7 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   void ExportToCsvCT(const std::string& path_to_output_dir) const;
   void ExportDoseToCsvCT(const G4Run* runPtr) const;
+  void ExportToRTDose(const G4Run* runPtr) const;
 
   private:
   ///

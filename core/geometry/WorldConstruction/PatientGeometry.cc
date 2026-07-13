@@ -18,6 +18,12 @@
 #include "GeometryDBReader.hh"
 #include "ModularWaterPhantom.hh"
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>
+
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -737,4 +743,34 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                  << "," << asf
                  << "\n";
     });
+}
+void PatientGeometry::ExportToRTDose(const G4Run* runPtr) const{
+    py::scoped_interpreter guard{};
+    try{
+        py::module_ rtdose_writer = py::module::import("write_to_RTDose");
+        py::dict metadata;
+
+        auto cfg = BuildCtTubeConfig();
+        auto nav = CreateNavigator();
+
+        //TODO
+        metadata["PatientName"] = "Kowalski^Jan";
+        metadata["PatientID"] = "123456789";
+        metadata["PixelSpacing"] = std::vector<double>{1,1};
+        metadata["SliceThickness"] = 3.0;
+
+        // TODO data from voxels (probably form other method or calculating here)
+        size_t frames = 10, rows = 512, cols = 512;
+        std::vector<size_t> shape = {frames, rows, cols};
+        std::vector<double> dose_data(frames * rows * cols, 2.5);
+        py::array_t<double> dose_grid(shape, dose_data.data());
+        std::string output_file = "output_rtdose.dcm";
+
+        //export
+        rtdose_writer.attr("write_rtdose")(metadata, dose_grid, output_file);
+
+    }
+    catch (py::error_already_set& e) {
+        std::cerr << "Errors: " << e.what() << std::endl;
+    }
 }

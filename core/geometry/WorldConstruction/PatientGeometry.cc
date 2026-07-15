@@ -23,7 +23,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
-
+#include <pybind11/embed.h>
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -685,6 +685,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     doseFile << header << "\n";
     
     // =====================================================
+    std::vector<double> rtdose_data(cfg.zRes * cfg.yRes * cfg.xRes, 0.0);
     ForEachVoxel(cfg, [&](int x, int y, int z, const G4ThreeVector& pos) {
         auto materialName = nav->LocateGlobalPointAndSetup(pos)
                                ->GetLogicalVolume()
@@ -742,35 +743,44 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                  << "," << fsf
                  << "," << asf
                  << "\n";
-    });
+
+        size_t flat_index = z * (cfg.yRes * cfg.xRes) + y * cfg.xRes + x;
+        rtdose_data[flat_index] = doseVoxel;
+      });
+      std::string dcmOutputFile = outDir + "/" + planName + "_rtdose.dcm";
+      ExportToRTDose(cfg, rtdose_data, dcmOutputFile);
 }
-void PatientGeometry::ExportToRTDose(const G4Run* runPtr) const{
-    py::scoped_interpreter guard{};
-    try{
+void PatientGeometry::ExportToRTDose(const CtTubeConfig& cfg, const std::vector<double>& dose_data, const std::string& output_file) const {
+try {
         py::module_ rtdose_writer = py::module::import("write_to_RTDose");
         py::dict metadata;
 
-        auto cfg = BuildCtTubeConfig();
-        auto nav = CreateNavigator();
+        std::vector<double> x_u, y_u, z_u;
+        for (int i = 0; i < cfg.xRes; ++i) x_u.push_back(cfg.initX + i * cfg.sizeX);
+        for (int j = 0; j < cfg.yRes; ++j) y_u.push_back(cfg.initY + j * cfg.sizeY);
+        for (int k = 0; k < cfg.zRes; ++k) z_u.push_back(cfg.initZ + k * cfg.sizeZ);
 
-        //TODO
+        metadata["x_unique"] = x_u;
+        metadata["y_unique"] = y_u;
+        metadata["z_unique"] = z_u;
         metadata["PatientName"] = "Kowalski^Jan";
         metadata["PatientID"] = "123456789";
-        metadata["PixelSpacing"] = std::vector<double>{1,1};
-        metadata["SliceThickness"] = 3.0;
-
-        // TODO data from voxels (probably form other method or calculating here)
-        size_t frames = 10, rows = 512, cols = 512;
+        
+        size_t frames = cfg.zRes;
+        size_t rows = cfg.yRes;
+        size_t cols = cfg.xRes;
+        
         std::vector<size_t> shape = {frames, rows, cols};
-        std::vector<double> dose_data(frames * rows * cols, 2.5);
-        py::array_t<double> dose_grid(shape, dose_data.data());
-        std::string output_file = "output_rtdose.dcm";
+        std::vector<size_t> strides = {rows * cols * sizeof(double), cols * sizeof(double), sizeof(double)};
 
-        //export
+        py::array_t<double> dose_grid(shape, strides, dose_data.data());
         rtdose_writer.attr("write_rtdose")(metadata, dose_grid, output_file);
 
-    }
-    catch (py::error_already_set& e) {
-        std::cerr << "Errors: " << e.what() << std::endl;
+    } catch (const py::error_already_set& e) {
+        G4String errorMsg = "Python script failed during RTDose Generation:\n" + G4String(e.what());
+        G4Exception("PatientGeometry::ExportToRTDose", "RTDose_PyError", JustWarning, errorMsg);
+    } catch (const std::exception& e) {
+        G4String errorMsg = "C++ Exception during RTDose Generation:\n" + G4String(e.what());
+        G4Exception("PatientGeometry::ExportToRTDose", "RTDose_CppError", JustWarning, errorMsg);
     }
 }

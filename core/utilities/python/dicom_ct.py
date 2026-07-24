@@ -18,15 +18,15 @@ from pathlib import Path
 
 # def create_ct_series():
 #     logger.info("Initializing CT series.")
-    
+
 # def set_output_path():
 #     logger.info("Setting path for CT series.")
-    
+
 
 class CtSvc():
     __output_path = None
     __project_path = None
-    
+
 # -------------------------------- Init -----------------------------------------
     def __init__(self, label="CT_"):
         print("Initializing CT scaner.")
@@ -35,8 +35,8 @@ class CtSvc():
         self.__generate_CT = True # Did I Need that?
         self.__output_array = np.zeros((1, 1, 1))
         self.__data_path = ""
-        self.__plain_data = np.zeros(shape = (1*1*1, 3, )) 
-        self.__data_array  = pd.DataFrame(self.__plain_data,columns=['x','y','z']) 
+        self.__plain_data = np.zeros(shape = (1*1*1, 3, ))
+        self.__data_array  = pd.DataFrame(self.__plain_data,columns=['x','y','z'])
         self.__x_min = 0
         self.__x_max = 0
         self.__y_min = 0
@@ -55,7 +55,7 @@ class CtSvc():
 
     @classmethod
     def set_output_path(cls, output_path):
-        
+
         cls.__output_path = output_path
         if cls.__output_path[-1] != "/":
             cls.__output_path=cls.__output_path+"/"
@@ -84,23 +84,23 @@ class CtSvc():
             self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
 # ------------------------------- Priv Class Methods ----------------------------
 
-    
+
     def __get_metadata_from_file(self):
-        data = pd.read_csv(f'{self.__data_path}/../ct_series_metadata.csv',header=None,index_col=0)
+        data = pd.read_csv(f'{self.__data_path}/ct_series_metadata.csv',header=None,index_col=0)
         data_dict = data.to_dict(orient='dict')[1]
-        self.__x_min = round(data_dict["x_min"],4)
-        self.__x_max = round(data_dict["x_max"],4)
-        self.__y_min = round(data_dict["y_min"],4)
-        self.__y_max = round(data_dict["y_max"],4)
-        self.__z_min = round(data_dict["z_min"],4)
-        self.__z_max = round(data_dict["z_max"],4)
-        self.__pixel_in_x = round(data_dict["x_resolution"],4)
-        self.__pixel_in_y = round(data_dict["y_resolution"],4)
-        self.__pixel_in_z = round(data_dict["z_resolution"],4)
-        self.__step_x = round(data_dict["x_step"],4)
-        self.__step_y = round(data_dict["y_step"],4)
-        self.__step_z = round(data_dict["z_step"],4)
-        self.__SSD = round(data_dict["SSD"],4)
+        self.__x_min = round(float(data_dict["x_min"]),4)
+        self.__x_max = round(float(data_dict["x_max"]),4)
+        self.__y_min = round(float(data_dict["y_min"]),4)
+        self.__y_max = round(float(data_dict["y_max"]),4)
+        self.__z_min = round(float(data_dict["z_min"]),4)
+        self.__z_max = round(float(data_dict["z_max"]),4)
+        self.__pixel_in_x = round(float(data_dict["x_resolution"]),4)
+        self.__pixel_in_y = round(float(data_dict["y_resolution"]),4)
+        self.__pixel_in_z = round(float(data_dict["z_resolution"]),4)
+        self.__step_x = round(float(data_dict["x_step"]),4)
+        self.__step_y = round(float(data_dict["y_step"]),4)
+        self.__step_z = round(float(data_dict["z_step"]),4)
+        self.__SSD = round(float(data_dict["SSD"]),4)
 
     def __set_image_properties(self, data_path):
         self.__data_path = data_path
@@ -113,13 +113,13 @@ class CtSvc():
         self.__set_hounsfield_dictiobnary()
         name = f"{self.__project_path}config/ct_slice_template.dcm"
         ds = pydicom.dcmread(name)
-        
+
         # --------------- overwrite metadata ----------------
         ds.file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid(prefix="1.2.826.0.1.3680043.8.498.997.")
         ds.file_meta.ImplementationClassUID = "1.2.826.0.1.3680043.8.498.997"
         ds.file_meta.ImplementationVersionName = "pydicom 3.0.1"
         ds.file_meta.SourceApplicationEntityTitle = "Dose-3D"
-        
+
         # -------------- overwrite flesh ------------------
         ds.SOPClassUID = ds.file_meta.MediaStorageSOPClassUID
         ds.SOPInstanceUID = ds.file_meta.MediaStorageSOPInstanceUID
@@ -164,9 +164,9 @@ class CtSvc():
         ds.WindowWidth = r"600.0"
         ds.RescaleIntercept = r"0.0"
         return ds
-    
-    
-    
+
+
+
     def __write_Dicom_ct_slice(self, rawdata, sliceNumber):
         image2d = rawdata.astype(np.uint16)
         ds = self.series
@@ -176,15 +176,15 @@ class CtSvc():
         ds.Columns = image2d.shape[1]
 
         ds.SliceThickness = f"{self.__step_y}"
-        
+
         ds.PixelSpacing = f"{self.__step_x}\{self.__step_z}"
-            
+
 
         ds.ImagePositionPatient = f"{self.__x_min}\{self.__z_min}\{round(self.__y_min+sliceNumber*self.__step_y,4)}"
-        
+
 
         ds.SliceLocation = f"{round(self.__y_min+sliceNumber*self.__step_y,4)}"
-        
+
         ds.InstanceCreationTime = datetime.datetime.now().strftime("%H%M%S.%f")[:-3]
         ds.ContentTime = datetime.datetime.now().strftime("%H%M%S")
         ds.InstanceNumber = sliceNumber
@@ -197,24 +197,26 @@ class CtSvc():
         # logger.debug("Writing the whole DICOM CT")
         self.series = self.__start_Dicom_series()
         self.instance_UID = self.series.SOPInstanceUID
-        images_path_string = self.__data_path
-        images_paths = Path(images_path_string)
-        ser = pd.Series(np.zeros(int(self.__pixel_in_y)))
-        iterator = 0
-        print(f"Start iteration over images")
-        for path in images_paths.iterdir():
-            ser.iat[iterator] = (path.name)
-            iterator +=1
-        list = ser.sort_values(ignore_index=True).to_list()
-        
-        iterator = 0
-        for element in list:
-            iterator +=1
-            self.__write_Dicom_ct_slice((pd.read_csv(f"{images_path_string}/{element}")
-                                        ["Material"]).map(self.__hounsfield_units_dictionary)
-                                        .values.reshape(int(self.__pixel_in_z),int(self.__pixel_in_x), order="F"), iterator)
-
-
+        images_path = Path(self.__data_path)
+        print("Start iteration over images")
+        # Collect only CT slice files, excluding metadata and other CSV files
+        images = sorted([
+            path
+            for path in images_path.glob("img*.csv")
+        ])
+        print(f"Found {len(images)} CT slices")
+        for iterator, image_path in enumerate(images, start=1):
+            image_data = (
+                pd.read_csv(image_path)["Material"]
+                .map(self.__hounsfield_units_dictionary)
+                .values
+                .reshape(
+                    int(self.__pixel_in_z),
+                    int(self.__pixel_in_x),
+                    order="F"
+                )
+            )
+            self.__write_Dicom_ct_slice(image_data, iterator)
 
 # -------------------------------- Public Methods --------------------------------
 

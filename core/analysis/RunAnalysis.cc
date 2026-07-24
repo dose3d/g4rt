@@ -20,7 +20,7 @@ RunAnalysis::RunAnalysis(){
   if(!m_is_initialized){
     if(!m_csv_run_analysis) // TODO: && RUN_CSV_ANALYSIS
         m_csv_run_analysis = CsvRunAnalysis::GetInstance();
-    if(!m_ntuple_run_analysis) // TODO: && RUN_NTUPLE_ANALYSIS
+    if(!m_ntuple_run_analysis && Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) // TODO: && RUN_NTUPLE_ANALYSIS
         m_ntuple_run_analysis = NTupleRunAnalysis::GetInstance();
     // TODO: RUN_HDF5_ANALYSIS
   }

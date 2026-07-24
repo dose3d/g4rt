@@ -115,11 +115,11 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
   if (unit.compare("EnviromentSizeZ") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
- 
+
  if (unit.compare("EnviromentMedium") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
-  
+
   if (unit.compare("EnviromentPatientEnvelop")==0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
   }
@@ -189,11 +189,11 @@ bool PatientGeometry::design(void) {
     m_patient = new D3DDetector();
     m_patient->TomlConfig(true);
   }
-  else 
+  else
     return false;
 
   // TOML-like contextual configuration
-  if(m_patient->TomlConfig()){ 
+  if(m_patient->TomlConfig()){
     auto configFile =thisConfig()->GetValue<std::string>("ConfigFile");
     if(configFile.empty() || configFile=="None")
       m_patient->SetTomlConfigFile(); // get the job main file
@@ -234,7 +234,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   PrintConfig();
   design(); // a call to select the right phantom
   auto envPatientEnvelop = thisConfig()->GetValue<std::string>("EnviromentPatientEnvelop");
-  G4cout << "EnvPatientEnvelop: " << envPatientEnvelop << G4endl; 
+  G4cout << "EnvPatientEnvelop: " << envPatientEnvelop << G4endl;
 
   auto mediumName = thisConfig()->GetValue<std::string>("EnviromentMedium");
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", mediumName);
@@ -281,7 +281,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
     auto modularWaterPhantom = ModularWaterPhantom::GetInstance();
     modularWaterPhantom->SetRotation(m_rotation);
     modularWaterPhantom->IPhysicalVolume::Construct(this);
-    modularWaterPhantom->WriteInfo(); 
+    modularWaterPhantom->WriteInfo();
     m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }
@@ -311,13 +311,13 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryGeometryPositionX");
   auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryGeometryPositionY");
   auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryGeometryPositionZ");
-  
+
   auto mesh = CADMesh::TessellatedMesh::FromSTL(supplementaryGeometryPath);
   G4VSolid* solid = mesh->GetSolid();
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", supplementaryGeometryMaterial);
   auto supplementaryGeometryLV = new G4LogicalVolume(solid, Medium.get(), "LVStl_Supplementary");
   m_suplementary_volume = new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0);
-  
+
 }
 
 }
@@ -460,7 +460,7 @@ void PatientGeometry::WriteInfo() {
   auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
   auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
   auto centre = G4ThreeVector(envPosX,envPosY,envPosZ);
-  G4cout << "Phantom centre: " << centre / cm << " [cm] " << G4endl; 
+  G4cout << "Phantom centre: " << centre / cm << " [cm] " << G4endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
     INFO_GEO("ExportToCsvCT [{}]: Resolution x={}, y={}, z={}",
              cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
-    
+
     INFO_GEO("ExportToCsvCT [{}]: Path={}", cfg.name, path_to_output_dir);
 
     // ----------------------------
@@ -547,14 +547,14 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 /// Export dose distribution mapped onto a unified CT grid.
 ///
 /// Projection of the simulation scoring data (Voxel and Cell) onto a regular
-/// CT grid and exports results into a single CSV file. 
+/// CT grid and exports results into a single CSV file.
 /// The CT grid acts as the single source of truth for spatial sampling.
 ///
 /// Output:
 ///  - *_ct_dose.csv  → contains both Voxel and Cell dose evaluated at CT voxel centres
 ///  - *_ct_dose_series_metadata.csv → CT metadata
 ///
-/// ======= High-level workflow =======  
+/// ======= High-level workflow =======
 /// 1. Build CT grid definition (CtTubeConfig)
 /// 2. Extract scoring data from simulation (Voxel + Cell)
 /// 3. Map scoring data into optimized spatial lookup structures
@@ -565,7 +565,7 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 ///      - cell dose (coarse resolution)
 /// 6. Export all values into a single CSV row per CT voxel
 ///
-/// ======= CT grid (reference space) =======  
+/// ======= CT grid (reference space) =======
 /// The CT grid is defined by CtTubeConfig and represents a regular 3D lattice:
 /// - origin: (initX, initY, initZ) shifted by half-voxel sizes to define grid boundaries
 /// - spacing: (sizeX, sizeY, sizeZ)
@@ -578,23 +578,23 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 /// - This guarantees strict spatial alignment between datasets
 /// - Nearest neighbour sampling is performed based on grid spatial alignment
 ///
-/// ======= Lookup & Mapping strategy =======  
-/// To prevent massive performance bottlenecks during grid iteration, scoring 
+/// ======= Lookup & Mapping strategy =======
+/// To prevent massive performance bottlenecks during grid iteration, scoring
 /// data is processed into two distinct layouts:
 ///
 /// - Voxel Lookup (Dense, High-Resolution):
 ///   Mapped into a `std::unordered_map` using a discrete 3D `SpatialKey` (i, j, k)
 ///   computed relative to the grid origin.
 ///     - Complexity: O(1) average lookup per CT voxel.
-///     - Yields precise, local mapping alongside structural IDs (IdX, IdY, IdZ) 
+///     - Yields precise, local mapping alongside structural IDs (IdX, IdY, IdZ)
 ///       and scaling factors (FSF, ASF).
 /// - Cell Lookup (Sparse, Coarse Resolution):
 ///   Stored in a flat linear vector (`cellHits`).
-///   For each CT voxel, candidates are filtered using an axis-aligned boundary 
-///   tolerance window (half the CT voxel size: +-sizeX/2). The closest match 
+///   For each CT voxel, candidates are filtered using an axis-aligned boundary
+///   tolerance window (half the CT voxel size: +-sizeX/2). The closest match
 ///   by Euclidean distance is selected.
 ///
-/// ======= Coordinate system ======= 
+/// ======= Coordinate system =======
 /// - All coordinates are in global Geant4 space
 /// - The CT grid is structurally aligned with the simulation world
 ///
@@ -614,7 +614,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     RUNSVC_INFO("ExportDoseToCsvCT [{}]: xRes={}, yRes={}, zRes={}",
              cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
-    
+
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
     auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
@@ -623,7 +623,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     const double doseVoxelSizeX = cfg.sizeX;
     const double doseVoxelSizeY = cfg.sizeY;
     const double doseVoxelSizeZ = cfg.sizeZ;
-    
+
     G4ThreeVector doseGridOrigin(
         cfg.initX - (doseVoxelSizeX / 2.0),
         cfg.initY - (doseVoxelSizeY / 2.0),
@@ -657,13 +657,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     for (auto& sm : scoring_maps) {
         for (auto& scoring : sm.second) {
             for (auto& entry : scoring.second) {
-                auto& hit_data = entry.second; 
+                auto& hit_data = entry.second;
 
                 if (scoring.first == Scoring::Type::Voxel) {
                     int i = static_cast<int>(std::floor((hit_data.GetCentre().x() - doseGridOrigin.x()) / doseVoxelSizeX));
                     int j = static_cast<int>(std::floor((hit_data.GetCentre().y() - doseGridOrigin.y()) / doseVoxelSizeY));
                     int k = static_cast<int>(std::floor((hit_data.GetCentre().z() - doseGridOrigin.z()) / doseVoxelSizeZ));
-                    
+
                     SpatialKey key(i, j, k);
                     voxelLookupMap[key] = &hit_data;
                 }
@@ -679,11 +679,11 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     // OUTPUT FILES
     std::string doseFileAbsPath = outDir + "/" + planName + "_ct_dose.csv";
     std::ofstream doseFile(doseFileAbsPath);
- 
+
     std::string header =
         "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material [HU],Dose Cell [Gy],Dose Voxel [Gy],FSF,ASF";
     doseFile << header << "\n";
-    
+
     // =====================================================
     std::vector<double> rtdose_data(cfg.zRes * cfg.yRes * cfg.xRes, 0.0);
     ForEachVoxel(cfg, [&](int x, int y, int z, const G4ThreeVector& pos) {
@@ -692,7 +692,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                                ->GetMaterial()
                                ->GetName();
         auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
-        
+
         int idX = -1, idY = -1, idZ = -1;
         double doseVoxel = 0.0;
         double doseCell = 0.0;
@@ -705,10 +705,10 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
         SpatialKey searchKey(target_i, target_j, target_k);
         auto voxelIt = voxelLookupMap.find(searchKey);
-        
+
         if (voxelIt != voxelLookupMap.end()) {
             const auto* hit = voxelIt->second;
-            idX = hit->GetGlobalID(0); 
+            idX = hit->GetGlobalID(0);
             idY = hit->GetGlobalID(1);
             idZ = hit->GetGlobalID(2);
             doseVoxel = hit->GetDose();
@@ -721,9 +721,9 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
             double dx = hit->GetCentre().x() - pos.x();
             double dy = hit->GetCentre().y() - pos.y();
             double dz = hit->GetCentre().z() - pos.z();
-            
-            if (std::abs(dx) <= cfg.sizeX/2 
-             && std::abs(dy) <= cfg.sizeX/2 
+
+            if (std::abs(dx) <= cfg.sizeX/2
+             && std::abs(dy) <= cfg.sizeX/2
              && std::abs(dz) <= cfg.sizeX/2) {
                 double d2 = dx*dx + dy*dy + dz*dz;
                 if (d2 < bestDist2) {
@@ -732,7 +732,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
                 }
             }
         }
-        
+
         doseFile << pos.x() << "," << pos.y() << "," << pos.z()
                  << "," << idX
                  << "," << idY
@@ -751,36 +751,29 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
       ExportToRTDose(cfg, rtdose_data, dcmOutputFile);
 }
 void PatientGeometry::ExportToRTDose(const CtTubeConfig& cfg, const std::vector<double>& dose_data, const std::string& output_file) const {
-try {
-        py::module_ rtdose_writer = py::module::import("write_to_RTDose");
-        py::dict metadata;
+    RUNSVC_INFO("ExportToRTDose [{}]: xRes={}, yRes={}, zRes={}",
+    cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);
+    py::module_ dicom_rtdose = py::module::import("dicom_rtdose");
+    py::dict metadata;
 
-        std::vector<double> x_u, y_u, z_u;
-        for (int i = 0; i < cfg.xRes; ++i) x_u.push_back(cfg.initX + i * cfg.sizeX);
-        for (int j = 0; j < cfg.yRes; ++j) y_u.push_back(cfg.initY + j * cfg.sizeY);
-        for (int k = 0; k < cfg.zRes; ++k) z_u.push_back(cfg.initZ + k * cfg.sizeZ);
+    std::vector<double> x_u, y_u, z_u;
+    for (int i = 0; i < cfg.xRes; ++i) x_u.push_back(cfg.initX + i * cfg.sizeX);
+    for (int j = 0; j < cfg.yRes; ++j) y_u.push_back(cfg.initY + j * cfg.sizeY);
+    for (int k = 0; k < cfg.zRes; ++k) z_u.push_back(cfg.initZ + k * cfg.sizeZ);
 
-        metadata["x_unique"] = x_u;
-        metadata["y_unique"] = y_u;
-        metadata["z_unique"] = z_u;
-        metadata["PatientName"] = "Kowalski^Jan";
-        metadata["PatientID"] = "123456789";
-        
-        size_t frames = cfg.zRes;
-        size_t rows = cfg.yRes;
-        size_t cols = cfg.xRes;
-        
-        std::vector<size_t> shape = {frames, rows, cols};
-        std::vector<size_t> strides = {rows * cols * sizeof(double), cols * sizeof(double), sizeof(double)};
+    metadata["x_unique"] = x_u;
+    metadata["y_unique"] = y_u;
+    metadata["z_unique"] = z_u;
+    metadata["PatientName"] = "Kowalski^Jan";
+    metadata["PatientID"] = "123456789";
 
-        py::array_t<double> dose_grid(shape, strides, dose_data.data());
-        rtdose_writer.attr("write_rtdose")(metadata, dose_grid, output_file);
+    size_t frames = cfg.zRes;
+    size_t rows = cfg.yRes;
+    size_t cols = cfg.xRes;
 
-    } catch (const py::error_already_set& e) {
-        G4String errorMsg = "Python script failed during RTDose Generation:\n" + G4String(e.what());
-        G4Exception("PatientGeometry::ExportToRTDose", "RTDose_PyError", JustWarning, errorMsg);
-    } catch (const std::exception& e) {
-        G4String errorMsg = "C++ Exception during RTDose Generation:\n" + G4String(e.what());
-        G4Exception("PatientGeometry::ExportToRTDose", "RTDose_CppError", JustWarning, errorMsg);
-    }
+    std::vector<size_t> shape = {frames, rows, cols};
+    std::vector<size_t> strides = {rows * cols * sizeof(double), cols * sizeof(double), sizeof(double)};
+
+    py::array_t<double> dose_grid(shape, strides, dose_data.data());
+    dicom_rtdose.attr("write_rtdose")(metadata, dose_grid, output_file);
 }

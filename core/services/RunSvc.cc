@@ -26,6 +26,7 @@
 #include <pybind11/embed.h>
 #include "GeometryDBReader.hh"
 #include "LinacGeometry.hh"
+#include "IO.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -634,10 +635,10 @@ void RunSvc::MergeOutput(bool cleanUp) const {
   RUNSVC_INFO("Merging to file: {} - done!",output_file);
 
   if(cleanUp){
-
-  RUNSVC_INFO("Clean-up....");
+    RUNSVC_INFO("Clean-up....");
     for(const auto& file : files_to_merge){
       svc::deleteFileIfExists(file);
     }
+    IO::DeleteDirectory(sim_dir+"/subjobs");
   }
 }

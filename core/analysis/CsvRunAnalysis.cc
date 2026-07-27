@@ -79,7 +79,7 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
 void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     const auto& planFile = cp->GetPlanFile();
-    const auto& simInputDirData = cp->GetOutputFileName()+"/../input"; //TODO::Unfortunately, this logic needs to be refactored!
+    const auto& simInputDirData = cp->GetPlanOutputDir()+"/input";
     IO::CreateDirIfNotExits(simInputDirData);
     IO::CopyFile(simInputDirData,planFile);
 
@@ -106,7 +106,6 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
             IO::MoveFile(simInputDirData,file+".png");
             // TODO: For now, simply cleanup, but in future refac this to func: WriteFieldMask, w/ spec to store csv, png
             IO::DeleteFile(file_csv);
-            IO::DeleteDirectory(cp->GetOutputFileName()); // See above TODO note
         }
     }
 }

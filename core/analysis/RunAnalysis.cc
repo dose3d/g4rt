@@ -15,6 +15,11 @@
   #include "G4MTRunManager.hh"
 #endif
 #include "PatientGeometry.hh"
+#include <pybind11/embed.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+using namespace py::literals;
 
 RunAnalysis::RunAnalysis(){
   if(!m_is_initialized){
@@ -70,4 +75,23 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
         m_ntuple_run_analysis->WriteDoseToTFile(runPtr);
         m_ntuple_run_analysis->WriteFieldMaskToTFile(runPtr);
     }
+
+    auto Mask2Matrix = [](const std::string& input_dir){
+        std::string command =
+            "python3 "+std::string(PROJECT_LOCATION_PATH)+"/submodules/d3df-nn3dsr/utils/mask2matrix.py "
+            "-d " + input_dir +
+            " -o " + input_dir +
+            " --num_leaves 26" +
+            " --no_pickle";
+
+        int status = std::system(command.c_str());
+
+        ANA_INFO(command.c_str());
+
+        if (status != 0) {
+            throw std::runtime_error("mask2matrix.py execution failed");
+        }
+    };
+
+    Mask2Matrix(m_current_cp->GetPlanOutputDir()+"/input");
 }

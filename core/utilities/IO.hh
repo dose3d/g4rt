@@ -57,6 +57,9 @@ class IO {
 
   ///
   void DeleteFile(const std::string &file_path);
+
+  ///
+  void DeleteDirectory(const std::string &dir_path);
 };
 
 #endif //Dose3D_IO_H

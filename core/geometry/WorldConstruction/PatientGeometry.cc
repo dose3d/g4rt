@@ -617,7 +617,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
 
-    auto metaDataFile = outDir + "/" + planName + "_ct_dose_series_metadata.csv";
+    auto metaDataFile = outDir + "/" + planName + "_ct_series_metadata.csv";
     WriteCtMetadata(metaDataFile, cfg);
 
     const double doseVoxelSizeX = cfg.sizeX;
@@ -747,9 +747,10 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         size_t flat_index = z * (cfg.yRes * cfg.xRes) + y * cfg.xRes + x;
         rtdose_data[flat_index] = doseVoxel;
       });
-      std::string dcmOutputFile = outDir + "/" + planName + "_rtdose.dcm";
+      std::string dcmOutputFile = outDir + "/" + planName + "_ct_rtdose.dcm";
       ExportToRTDose(cfg, rtdose_data, dcmOutputFile);
 }
+
 void PatientGeometry::ExportToRTDose(const CtTubeConfig& cfg, const std::vector<double>& dose_data, const std::string& output_file) const {
     RUNSVC_INFO("ExportToRTDose [{}]: xRes={}, yRes={}, zRes={}",
     cfg.name, cfg.xRes, cfg.yRes, cfg.zRes);

@@ -141,10 +141,21 @@ void IO::DeleteFile(const std::string &file_path) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void IO::DeleteDirectory(const std::string &dir_path) {
+  fs::path dp = dir_path;
+  if (fs::exists(dp) && fs::is_directory(dp)) {
+    std::cout << "[INFO]:: Remove existing directory:\n"
+                 "[INFO]:: " << dir_path << std::endl;
+
+    fs::remove_all(dp);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<TFile> IO::CreateOutputTFile(const std::string& name, const std::string& dir){
   auto output_tfile = std::make_unique<TFile>(name.c_str(),"RECREATE");
   if(!dir.empty()){
-    std::string tmp; 
+    std::string tmp;
     std::stringstream ss(dir);
     std::vector<std::string> dirs;
     while(getline(ss, tmp, '/')){
@@ -161,4 +172,3 @@ std::unique_ptr<TFile> IO::CreateOutputTFile(const std::string& name, const std:
   }
   return std::move(output_tfile);
 }
-

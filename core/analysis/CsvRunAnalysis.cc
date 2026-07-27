@@ -78,27 +78,35 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
 ///
 void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
+    const auto& planFile = cp->GetPlanFile();
+    const auto& simInputDirData = cp->GetOutputFileName()+"/../input"; //TODO::Unfortunately, this logic needs to be refactored!
+    IO::CreateDirIfNotExits(simInputDirData);
+    IO::CopyFile(simInputDirData,planFile);
+
     auto data_types = cp->DataTypes();
     for(const auto& type : data_types){
 
         ANA_INFO("Writing field mask (type={}) to CSV...",type);
         const auto& field_mask = cp->GetFieldMask(type);
         if(field_mask.size()>0){
-            auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type)+".csv";
+            auto file = cp->GetOutputFileName()+"_field_mask_"+svc::tolower(type);
+            auto file_csv = file+".csv";
             std::string header = "X [mm],Y [mm],Z [mm]";
             std::ofstream c_outFile;
-            c_outFile.open(file.c_str(), std::ios::out);
+            c_outFile.open(file_csv.c_str(), std::ios::out);
             c_outFile << header << std::endl;
             for(auto& mp : field_mask)
                 c_outFile << mp.getX() << "," << mp.getY() << "," << mp.getZ() << std::endl;
             c_outFile.close();
 
-            ANA_INFO("Writing Field Mask to file {} - done!",file);
+            ANA_INFO("Writing Field Mask to file {} - done!",file_csv);
             auto writePngCopy = py::module::import("field_mask_png");
-            writePngCopy.attr("save_mask_as_png")(file);
+            writePngCopy.attr("save_mask_as_png")(file_csv);
 
+            IO::MoveFile(simInputDirData,file+".png");
             // TODO: For now, simply cleanup, but in future refac this to func: WriteFieldMask, w/ spec to store csv, png
-            IO::DeleteFile(file);
+            IO::DeleteFile(file_csv);
+            IO::DeleteDirectory(cp->GetOutputFileName()); // See above TODO note
         }
     }
 }

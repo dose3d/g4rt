@@ -152,6 +152,55 @@ void IO::DeleteDirectory(const std::string &dir_path) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void IO::MoveFile(const std::string &dest_dir_path, const std::string &file_path) {
+  fs::path src = file_path;
+  fs::path dest_dir = dest_dir_path;
+
+  if (!fs::exists(src)) {
+    std::cerr << "[WARNING]:: Source file does not exist:\n"
+                 "[WARNING]:: " << file_path << std::endl;
+    return;
+  }
+
+  if (!fs::exists(dest_dir)) {
+    fs::create_directories(dest_dir);
+  }
+
+  fs::path dest = dest_dir / src.filename();
+
+  std::cout << "[INFO]:: Move file:\n"
+               "[INFO]:: " << src << "\n"
+               "[INFO]:: -> " << dest << std::endl;
+
+  fs::rename(src, dest);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void IO::CopyFile(const std::string &dest_dir_path,
+                  const std::string &src_file_path) {
+  fs::path src = src_file_path;
+  fs::path dest_dir = dest_dir_path;
+
+  if (!fs::exists(src)) {
+    std::cerr << "[WARNING]:: Source file does not exist:\n"
+                 "[WARNING]:: " << src_file_path << std::endl;
+    return;
+  }
+
+  if (!fs::exists(dest_dir)) {
+    fs::create_directories(dest_dir);
+  }
+
+  fs::path dest = dest_dir / src.filename();
+
+  std::cout << "[INFO]:: Copy file:\n"
+               "[INFO]:: " << src << "\n"
+               "[INFO]:: -> " << dest << std::endl;
+
+  fs::copy_file(src, dest, fs::copy_options::overwrite_existing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<TFile> IO::CreateOutputTFile(const std::string& name, const std::string& dir){
   auto output_tfile = std::make_unique<TFile>(name.c_str(),"RECREATE");
   if(!dir.empty()){

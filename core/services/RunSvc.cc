@@ -9,7 +9,7 @@
 #include "G4UImanager.hh"
 #include "G4PhysicalConstants.hh"
 #include "CLHEP/Random/RanecuEngine.h"
-#include "CLHEP/Random/RandomEngine.h" 
+#include "CLHEP/Random/RandomEngine.h"
 #include "colors.hh"
 #include "G4RotationMatrix.hh"
 #include "TFileMerger.h"
@@ -26,6 +26,7 @@
 #include <pybind11/embed.h>
 #include "GeometryDBReader.hh"
 #include "LinacGeometry.hh"
+#include "IO.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -56,7 +57,7 @@ void RunSvc::RegisterRunComponent(RunComponet* element) { m_run_components.empla
 ///
 void RunSvc::Configure() {
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
-  
+
   RUNSVC_INFO("Service default configuration ");
   DefineUnit<std::string>("JobName");
 
@@ -235,7 +236,7 @@ void RunSvc::Initialize(WorldConstruction* world) {
   // LogSvc::AddModuleLogFile("Physic", output_dir + "/logs/physic.log", loguru::Verbosity_INFO);
   // LogSvc::Configure();
   // m_logger = LogSvc::RecreateLogger("RunSvc");
-  
+
   RUNSVC_INFO("Logger recreated.");
   // build a geometry
   world->Configure();
@@ -245,7 +246,7 @@ void RunSvc::Initialize(WorldConstruction* world) {
   if (m_application_mode == OperationalMode::BuildGeometry) return;
 
   if (!m_isInitialized) {
-    
+
   RUNSVC_INFO("Service initialization...");
 
     Configurable::ValidateConfig();
@@ -273,11 +274,11 @@ void RunSvc::Initialize(WorldConstruction* world) {
     auto numberOfThreads = m_configSvc->GetValue<int>("RunSvc", "NumberOfThreads");
     auto physics = m_configSvc->GetValue<std::string>("RunSvc", "Physics");
     auto numberOfControlPoints = m_control_points.size();
-    
+
   RUNSVC_INFO("Launching {} thread(s)", numberOfThreads);
-    
+
   RUNSVC_INFO("Launching {} physics model", physics);
-    
+
   RUNSVC_INFO("Launching {} control points", numberOfControlPoints);
 
 #ifdef G4MULTITHREADED
@@ -328,7 +329,7 @@ void RunSvc::Finalize() {
     runWorld->Destroy();
   }
 
-  
+
   RUNSVC_INFO("Goodbye from G4RT!");
   // LogSvc::ShutDown();
 
@@ -341,7 +342,7 @@ void RunSvc::UserG4Initialization() {
   if (!m_isUsrG4Initialized) {
     G4Timer timer;
     timer.Start();
-    
+
   RUNSVC_INFO("UserG4Initialization...");
     m_g4RunManager->SetUserInitialization(Service<GeoSvc>()->World());
     m_g4RunManager->SetUserInitialization(new PhysicsList());
@@ -349,7 +350,7 @@ void RunSvc::UserG4Initialization() {
 
     // measure initialization time
     timer.Stop();
-    
+
   RUNSVC_INFO("Initialisation elapsed time [s]: {}", timer.GetRealElapsed());
     m_isUsrG4Initialized = true;
   }
@@ -380,7 +381,7 @@ void RunSvc::ParseTomlConfig() {
 
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
-  
+
   RUNSVC_INFO("Importing configuration from: {}", configFile);
   std::string configObj("Plan");
   if (!configPrefix.empty() || configPrefix == "None") {  // It shouldn't be empty!
@@ -406,20 +407,20 @@ void RunSvc::ParseTomlConfig() {
         criticalError("CP#" + std::to_string(i) + " File not found: " + planFile);
       }
       // Define the new control point configuration
-      
+
   RUNSVC_INFO("Importing control point from plan file: {}", planFile);
       m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i, planFile));
     }
   }
   // __________________________________________________________________________
   // Reading the plan from custom TOML inteface is defined with the highest priority
-  
+
   RUNSVC_INFO("Verifying control point configuration from file: {}", configFile);
   auto n_beam_rot = config[configObj]["BeamRotation"].value_or(0.0);
   LinacGeometry::SetIsocentreDistance(config[configObj]["BeamSID"].value_or(0.0));
   if (n_beam_rot >= 0) {
     if (m_control_points_config.size() > 0) {  // configs already exist from plan files
-      
+
   RUNSVC_INFO("Putting beam rotation to: {} degrees...", n_beam_rot);
       for (auto& config : m_control_points_config) {
         config.RotationInDeg = n_beam_rot;
@@ -434,7 +435,7 @@ void RunSvc::ParseTomlConfig() {
   auto n_stat = config[configObj]["nParticles"].value_or(-1);
   if (n_stat >= 0) {
     if (m_control_points_config.size() > 0) {  // configs already exist from plan files
-      
+
   RUNSVC_INFO("Putting simulation statistic to: {} particles...", n_stat);
       for (auto& config : m_control_points_config) {
         config.NEvts = n_stat;
@@ -497,7 +498,7 @@ void RunSvc::DefineSimDefaultConfig() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::LoadSimulationPlan() {
-  
+
   RUNSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ", m_current_control_point->GetId());
   for (auto& rcomponent : m_run_components) {
     rcomponent->SetRunConfiguration(m_current_control_point);
@@ -510,7 +511,7 @@ void RunSvc::LoadSimulationPlan() {
 ///
 /// TODO: implement methods for exporting particular world volumes
 void RunSvc::BuildGeometryMode() {
-  
+
   RUNSVC_INFO("Building World Geometry...");
   // m_logger->flush();
   Service<GeoSvc>()->Build();
@@ -519,7 +520,7 @@ void RunSvc::BuildGeometryMode() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::FullSimulationMode() {
-  
+
   RUNSVC_INFO("FullSimulationMode");
   auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
   if (sourceName.compare("gps") == 0) {
@@ -538,7 +539,7 @@ void RunSvc::FullSimulationMode() {
     G4Random::setTheSeeds(seeds);
   }
 
-  
+
   RUNSVC_INFO("RNG Seed: {} ", G4Random::getTheSeed());
 
 #ifdef G4MULTITHREADED
@@ -600,7 +601,7 @@ void RunSvc::WriteGeometryData() const {
   geoSvc->WriteScoringComponentsPositioningToTFile(); // TODO
   if(thisConfig()->GetValue<bool>("GenerateCT")){
     geoSvc->WritePatientToCsvCT();
-    // geoSvc->WritePatientToDicomCT();
+    geoSvc->WritePatientToDicomCT();
   }
 }
 
@@ -608,7 +609,7 @@ void RunSvc::WriteGeometryData() const {
 ///
 void RunSvc::MergeOutput(bool cleanUp) const {
   auto output_dir = thisConfig()->GetValue<std::string>("OutputDir");
-  
+
   RUNSVC_INFO("Job output dir: {}",output_dir);
   auto output_file = output_dir+"/"+GetJobNameLabel()+".root";
   TFileMerger fm(kFALSE);
@@ -630,14 +631,14 @@ void RunSvc::MergeOutput(bool cleanUp) const {
     fm.AddFile((file).c_str());
   }
   fm.Merge();
-  
+
   RUNSVC_INFO("Merging to file: {} - done!",output_file);
 
   if(cleanUp){
-    
-  RUNSVC_INFO("Clean-up....");
+    RUNSVC_INFO("Clean-up....");
     for(const auto& file : files_to_merge){
       svc::deleteFileIfExists(file);
     }
+    IO::DeleteDirectory(sim_dir+"/subjobs");
   }
 }

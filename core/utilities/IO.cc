@@ -141,10 +141,70 @@ void IO::DeleteFile(const std::string &file_path) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void IO::DeleteDirectory(const std::string &dir_path) {
+  fs::path dp = dir_path;
+  if (fs::exists(dp) && fs::is_directory(dp)) {
+    std::cout << "[INFO]:: Remove existing directory:\n"
+                 "[INFO]:: " << dir_path << std::endl;
+
+    fs::remove_all(dp);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void IO::MoveFile(const std::string &dest_dir_path, const std::string &file_path) {
+  fs::path src = file_path;
+  fs::path dest_dir = dest_dir_path;
+
+  if (!fs::exists(src)) {
+    std::cerr << "[WARNING]:: Source file does not exist:\n"
+                 "[WARNING]:: " << file_path << std::endl;
+    return;
+  }
+
+  if (!fs::exists(dest_dir)) {
+    fs::create_directories(dest_dir);
+  }
+
+  fs::path dest = dest_dir / src.filename();
+
+  std::cout << "[INFO]:: Move file:\n"
+               "[INFO]:: " << src << "\n"
+               "[INFO]:: -> " << dest << std::endl;
+
+  fs::rename(src, dest);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void IO::CopyFile(const std::string &dest_dir_path,
+                  const std::string &src_file_path) {
+  fs::path src = src_file_path;
+  fs::path dest_dir = dest_dir_path;
+
+  if (!fs::exists(src)) {
+    std::cerr << "[WARNING]:: Source file does not exist:\n"
+                 "[WARNING]:: " << src_file_path << std::endl;
+    return;
+  }
+
+  if (!fs::exists(dest_dir)) {
+    fs::create_directories(dest_dir);
+  }
+
+  fs::path dest = dest_dir / src.filename();
+
+  std::cout << "[INFO]:: Copy file:\n"
+               "[INFO]:: " << src << "\n"
+               "[INFO]:: -> " << dest << std::endl;
+
+  fs::copy_file(src, dest, fs::copy_options::overwrite_existing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<TFile> IO::CreateOutputTFile(const std::string& name, const std::string& dir){
   auto output_tfile = std::make_unique<TFile>(name.c_str(),"RECREATE");
   if(!dir.empty()){
-    std::string tmp; 
+    std::string tmp;
     std::stringstream ss(dir);
     std::vector<std::string> dirs;
     while(getline(ss, tmp, '/')){
@@ -161,4 +221,3 @@ std::unique_ptr<TFile> IO::CreateOutputTFile(const std::string& name, const std:
   }
   return std::move(output_tfile);
 }
-

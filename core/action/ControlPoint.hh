@@ -16,6 +16,7 @@
 #include "G4Run.hh"
 #include "VoxelHit.hh"
 #include "G4Threading.hh"
+#include <filesystem>
 
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
@@ -98,6 +99,7 @@ class ControlPoint {
     ~ControlPoint();
     int GetId() const { return m_config.Id; }
     std::string GetPlanFile() const { return m_config.PlanFile; }
+    std::string GetPlanName() const { return std::filesystem::path(m_config.PlanFile).stem().string(); }
     int GetNEvts() const { return m_config.NEvts; }
     G4RotationMatrix* GetRotation() const { return m_rotation; }
     G4double GetDegreeRotation() const {return m_config.RotationInDeg;}

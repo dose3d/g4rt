@@ -93,5 +93,26 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
         }
     };
 
-    Mask2Matrix(m_current_cp->GetPlanOutputDir()+"/input");
+    auto DataAugmentation = [](const std::string& simCtDoseFile, const std::string& planDatFile, const std::string& augmDir){
+        std::string command =
+            "python3 "+std::string(PROJECT_LOCATION_PATH)+"/submodules/d3df-nn3dsr/utils/run_augm.py "
+            "--data " + simCtDoseFile +
+            " --mlc " + planDatFile +
+            " --outdir " + augmDir;
+
+        int status = std::system(command.c_str());
+
+        ANA_INFO(command.c_str());
+
+        if (status != 0) {
+            throw std::runtime_error("run_augm.py execution failed");
+        }
+    };
+
+    auto outputDir = m_current_cp->GetPlanOutputDir();
+    Mask2Matrix(outputDir+"/input");
+
+    auto planDatFile = m_current_cp->GetPlanFile();
+    auto planName = m_current_cp->GetPlanName();
+    DataAugmentation(outputDir+"/"+planName+"_ct_dose.csv",planDatFile,outputDir+"/augm");
 }

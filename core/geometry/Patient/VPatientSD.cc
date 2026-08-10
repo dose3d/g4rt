@@ -545,10 +545,12 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
       if (scoringVolumePtr->m_channelHCollectionIndex[voxelId] == -1) { // This is new hit within given volume/channel
 
       auto voxelHit = new VoxelHit();
+      voxelHit->SetStepWiseDose(m_step_wise_dose);
       voxelHit->SetVolume(scoringVolumePtr->GetVoxelVolume());
       voxelHit->SetCentre(scoringVolumePtr->GetVoxelCentre(voxelId));
       voxelHit->SetId(voxelIdX, voxelIdY, voxelIdZ);
       voxelHit->SetGlobalId(m_id_x, m_id_y, m_id_z);
+      voxelHit->SetLabel(scoringVolumePtr->m_run_collection);
       voxelHit->SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
       voxelHit->SetGlobalCentre(GetSDCentre());
       voxelHit->Fill(aStep);

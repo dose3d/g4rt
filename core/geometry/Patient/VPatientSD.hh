@@ -122,6 +122,9 @@ class VPatientSD : public G4VSensitiveDetector{
       /// 
           
   protected:
+      /// Use the material density of every individual mass-world step. This is
+      /// intended for overlay grids that may cross material boundaries.
+      G4bool m_step_wise_dose = false;
       /// Centre of SensitiveDetector
       /// NOTE: In global frame!
       G4ThreeVector m_sd_centre;
@@ -191,6 +194,8 @@ class VPatientSD : public G4VSensitiveDetector{
 
       ///
       void ProcessHitsCollection(const G4String& hitsCollectionName, G4Step* aStep);
+
+      void SetStepWiseDose(G4bool value) { m_step_wise_dose = value; }
 
 };
 

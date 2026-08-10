@@ -7,23 +7,23 @@ PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
 
-PhspEvtVrtxMultiplicityTreshold = 20
-PrintProgressFrequency = 0.05
+PhspEvtVrtxMultiplicityTreshold = 30
+PrintProgressFrequency = 0.01
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = false
+NTupleAnalysis = true
 RunAnalysis = true
 
 WriteFieldMaskToCsv = true
 
-StoreTracks= false
-StorePositions= false
-StoreEnergies = false
-StorePrimaries = false
-StoreRunInfo= false
-MinimalMode= true
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
 
 [GeoSvc]
 BuildLinac = true
@@ -40,6 +40,22 @@ EnviromentSizeY = 64.0
 EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
+# Optional dose grid overlaying the complete patient environment, including
+# D3D cells and every other daughter volume. Zero Size values derive the
+# extent and centre from [PatientGeometry].
+[ParallelWorldDoseScorer]
+Enabled = true
+SizeX = 0.0
+SizeY = 0.0
+SizeZ = 0.0
+CentreX = 0.0
+CentreY = 0.0
+CentreZ = 0.0
+VoxelSizeX = 1.0
+VoxelSizeY = 1.0
+VoxelSizeZ = 1.0
+CollectionName = "ParentWorldDose"
+
 [D3DDetector_Detector]
 TranslationInLocalFrame = [0.0,0.0,-44.0]
 Voxelization = [4,4,4]
@@ -51,7 +67,7 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
-nParticles = 500000  
+nParticles = 50000  
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
 ]

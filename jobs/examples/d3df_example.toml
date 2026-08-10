@@ -1,29 +1,30 @@
 [RunSvc]
 JobName = "d3df example job"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
+PhspInputFileName = "/mnt/data/PHSP/TNSIM157_10x10s2-f0"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
 
-PhspEvtVrtxMultiplicityTreshold = 30
+PhspEvtVrtxMultiplicityTreshold = 45
 PrintProgressFrequency = 0.01
-Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+Physics = "LowE_Polar_Livermore" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+EnableExtraProcesses = true
 
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = true
+NTupleAnalysis = false
 RunAnalysis = true
 
 WriteFieldMaskToCsv = true
 
-StoreTracks= true
-StorePositions= true
-StoreEnergies = true
-StorePrimaries = true
-StoreRunInfo= true
-MinimalMode= false
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
 
 [GeoSvc]
 BuildLinac = true
@@ -51,9 +52,9 @@ SizeZ = 0.0
 CentreX = 0.0
 CentreY = 0.0
 CentreZ = 0.0
-VoxelSizeX = 1.0
-VoxelSizeY = 1.0
-VoxelSizeZ = 1.0
+VoxelSizeX = 0.5
+VoxelSizeY = 0.5
+VoxelSizeZ = 4.0
 CollectionName = "ParentWorldDose"
 
 [D3DDetector_Detector]
@@ -67,7 +68,7 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
-nParticles = 50000  
+nParticles = 10000000
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
 ]

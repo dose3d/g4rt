@@ -67,3 +67,8 @@ than one scoring voxel.
 
 The parallel world has no material of its own and does not replace or modify
 the simulation mass geometry.
+
+## Visualization
+
+See [parallel_world_visualization.md](parallel_world_visualization.md) for the
+Python slice/profile tool and ROOT dose and energy QA macros.

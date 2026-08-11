@@ -1,46 +1,226 @@
-// Usage: root -l -q 'scripts/root/parallel_world_dose.C("dose.csv","z",0.,"dose_qa.pdf")'
+// Quick visual QA for a G4RT parallel-world dose CSV.
+//
+// Interactive use (the canvas stays open):
+//   root -l
+//   root [0] .x scripts/root/parallel_world_dose.C("dose.csv", "z", 0.0, "dose_qa.pdf")
+
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TPad.h>
 #include <TStyle.h>
+
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-#include <limits>
-#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
-namespace {
-struct DoseRow { double x,y,z,dose; };
-std::vector<DoseRow> readDose(const char* name) {
-  std::ifstream in(name); if (!in) throw std::runtime_error(std::string("Cannot open ")+name);
-  std::vector<DoseRow> rows; std::string line;
-  while (std::getline(in,line)) { if(line.empty()||line[0]=='#'||line.rfind("Label,",0)==0) continue;
-    std::stringstream ss(line); std::vector<std::string> f; std::string v; while(std::getline(ss,v,',')) f.push_back(v);
-    if(f.size()>=13) rows.push_back({std::stod(f[7]),std::stod(f[8]),std::stod(f[9]),std::stod(f[10])}); }
+
+namespace ParallelWorldDosePlot {
+
+struct DoseRow {
+  double x;
+  double y;
+  double z;
+  double dose;
+};
+
+// These objects intentionally outlive the macro function. ROOT therefore keeps
+// the canvas responsive at its prompt after the image has been saved.
+TCanvas* canvas = nullptr;
+TH2D* doseSlice = nullptr;
+TH1D* doseDistribution = nullptr;
+TGraph* centralProfile = nullptr;
+
+double coordinate(const DoseRow& row, int axis) {
+  if (axis == 0) return row.x;
+  if (axis == 1) return row.y;
+  return row.z;
+}
+
+int axisIndex(const char* axis) {
+  if (axis[0] == 'x' || axis[0] == 'X') return 0;
+  if (axis[0] == 'y' || axis[0] == 'Y') return 1;
+  if (axis[0] == 'z' || axis[0] == 'Z') return 2;
+  throw std::runtime_error("Axis must be x, y, or z");
+}
+
+std::vector<DoseRow> readDoseCsv(const char* filename) {
+  std::ifstream input(filename);
+  if (!input) {
+    throw std::runtime_error(std::string("Cannot open dose CSV: ") + filename);
+  }
+
+  std::vector<DoseRow> rows;
+  std::string line;
+
+  while (std::getline(input, line)) {
+    if (line.empty() || line[0] == '#' || line.rfind("Label,", 0) == 0) {
+      continue;
+    }
+
+    std::stringstream lineStream(line);
+    std::vector<std::string> fields;
+    std::string field;
+    while (std::getline(lineStream, field, ',')) {
+      fields.push_back(field);
+    }
+
+    // Voxel CSV columns 7--10 contain X, Y, Z, and Dose.
+    if (fields.size() >= 13) {
+      rows.push_back({std::stod(fields[7]), std::stod(fields[8]),
+                      std::stod(fields[9]), std::stod(fields[10])});
+    }
+  }
+
+  if (rows.empty()) {
+    throw std::runtime_error("Dose CSV contains no voxel rows");
+  }
   return rows;
 }
-std::vector<double> uniqueSorted(std::vector<double> v) { std::sort(v.begin(),v.end()); v.erase(std::unique(v.begin(),v.end()),v.end()); return v; }
+
+std::vector<double> sortedUnique(std::vector<double> values) {
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
+  return values;
 }
-void parallel_world_dose(const char* filename, const char* axis="z", double coordinate_mm=0., const char* output="parallel_world_dose_qa.pdf") {
-  auto rows=readDose(filename); if(rows.empty()) throw std::runtime_error("Dose CSV has no rows");
-  int n=axis[0]=='x'?0:axis[0]=='y'?1:2, h=n==0?1:0, v=n==2?1:2;
-  auto at=[](const DoseRow&r,int i){return i==0?r.x:i==1?r.y:r.z;};
-  double selected=at(rows[0],n); for(auto&r:rows) if(std::abs(at(r,n)-coordinate_mm)<std::abs(selected-coordinate_mm)) selected=at(r,n);
-  std::vector<double> xs,ys; for(auto&r:rows) if(std::abs(at(r,n)-selected)<1e-9){xs.push_back(at(r,h));ys.push_back(at(r,v));}
-  auto ux=uniqueSorted(xs),uy=uniqueSorted(ys); if(ux.empty()||uy.empty()) throw std::runtime_error("Selected slice empty");
-  double dx=ux.size()>1?ux[1]-ux[0]:1,dy=uy.size()>1?uy[1]-uy[0]:1;
-  auto slice=new TH2D("doseSlice",Form("Dose slice, %c = %.3g mm;%c [mm];%c [mm]",axis[0],selected,"xyz"[h],"xyz"[v]),128,ux.front()-dx/2,ux.back()+dx/2,128,uy.front()-dy/2,uy.back()+dy/2);
-  double maxDose=std::max_element(rows.begin(),rows.end(),[](auto&a,auto&b){return a.dose<b.dose;})->dose;
-  auto spectrum=new TH1D("doseDistribution","Scored voxel dose distribution;Dose [Gy];Voxels",80,0,maxDose>0?maxDose*1.001:1.);
-  for(auto&r:rows){spectrum->Fill(r.dose);if(std::abs(at(r,n)-selected)<1e-9)slice->Fill(at(r,h),at(r,v),r.dose);}
-  double c1=at(rows[0],h),c2=at(rows[0],v); for(auto&r:rows){if(std::abs(at(r,h))<std::abs(c1))c1=at(r,h);if(std::abs(at(r,v))<std::abs(c2))c2=at(r,v);}
-  std::vector<std::pair<double,double>> points; for(auto&r:rows)if(std::abs(at(r,h)-c1)<1e-9&&std::abs(at(r,v)-c2)<1e-9)points.push_back({at(r,n),r.dose});
-  std::sort(points.begin(),points.end()); std::vector<double> px,py;for(auto&p:points){px.push_back(p.first);py.push_back(p.second);}
-  auto profile=new TGraph(px.size(),px.data(),py.data());profile->SetTitle(Form("Central profile;%c [mm];Dose [Gy]",axis[0]));profile->SetMarkerStyle(20);
-  gStyle->SetOptStat(1110);auto canvas=new TCanvas("parallelWorldDoseQA","Parallel-world dose QA",1500,500);canvas->Divide(3,1);
-  canvas->cd(1);slice->Draw("COLZ");canvas->cd(2);profile->Draw("APL");canvas->cd(3);gPad->SetLogy();spectrum->Draw();canvas->SaveAs(output);
+
+double nearestPlane(const std::vector<DoseRow>& rows, int normalAxis,
+                    double requestedCoordinate) {
+  double selected = coordinate(rows.front(), normalAxis);
+  for (const auto& row : rows) {
+    const double candidate = coordinate(row, normalAxis);
+    if (std::abs(candidate - requestedCoordinate) <
+        std::abs(selected - requestedCoordinate)) {
+      selected = candidate;
+    }
+  }
+  return selected;
+}
+
+}  // namespace ParallelWorldDosePlot
+
+void parallel_world_dose(const char* filename, const char* axis = "z",
+                         double coordinate_mm = 0.0,
+                         const char* output = "parallel_world_dose_qa.pdf") {
+  using namespace ParallelWorldDosePlot;
+
+  const auto rows = readDoseCsv(filename);
+  const int normalAxis = axisIndex(axis);
+  const int horizontalAxis = normalAxis == 0 ? 1 : 0;
+  const int verticalAxis = normalAxis == 2 ? 1 : 2;
+  const double selectedPlane = nearestPlane(rows, normalAxis, coordinate_mm);
+
+  std::vector<double> horizontalCoordinates;
+  std::vector<double> verticalCoordinates;
+  for (const auto& row : rows) {
+    if (std::abs(coordinate(row, normalAxis) - selectedPlane) < 1e-9) {
+      horizontalCoordinates.push_back(coordinate(row, horizontalAxis));
+      verticalCoordinates.push_back(coordinate(row, verticalAxis));
+    }
+  }
+
+  const auto uniqueHorizontal = sortedUnique(horizontalCoordinates);
+  const auto uniqueVertical = sortedUnique(verticalCoordinates);
+  if (uniqueHorizontal.empty() || uniqueVertical.empty()) {
+    throw std::runtime_error("The selected dose slice is empty");
+  }
+
+  const double voxelWidth = uniqueHorizontal.size() > 1
+                                ? uniqueHorizontal[1] - uniqueHorizontal[0]
+                                : 1.0;
+  const double voxelHeight = uniqueVertical.size() > 1
+                                 ? uniqueVertical[1] - uniqueVertical[0]
+                                 : 1.0;
+
+  doseSlice = new TH2D(
+      "parallelWorldDoseSlice",
+      Form("Dose slice, %c = %.3g mm;%c [mm];%c [mm]", "XYZ"[normalAxis],
+           selectedPlane, "XYZ"[horizontalAxis], "XYZ"[verticalAxis]),
+      uniqueHorizontal.size(), uniqueHorizontal.front() - voxelWidth / 2.0,
+      uniqueHorizontal.back() + voxelWidth / 2.0, uniqueVertical.size(),
+      uniqueVertical.front() - voxelHeight / 2.0,
+      uniqueVertical.back() + voxelHeight / 2.0);
+
+  const auto maximumDoseRow = std::max_element(
+      rows.begin(), rows.end(),
+      [](const DoseRow& left, const DoseRow& right) {
+        return left.dose < right.dose;
+      });
+  const double histogramMaximum =
+      maximumDoseRow->dose > 0.0 ? maximumDoseRow->dose * 1.001 : 1.0;
+  doseDistribution = new TH1D(
+      "parallelWorldDoseDistribution",
+      "Scored-voxel dose distribution;Dose [Gy];Voxels", 80, 0.0,
+      histogramMaximum);
+
+  for (const auto& row : rows) {
+    doseDistribution->Fill(row.dose);
+    if (std::abs(coordinate(row, normalAxis) - selectedPlane) < 1e-9) {
+      doseSlice->Fill(coordinate(row, horizontalAxis),
+                      coordinate(row, verticalAxis), row.dose);
+    }
+  }
+
+  // Pick the scored line closest to the origin for a quick central profile.
+  double centralHorizontal = coordinate(rows.front(), horizontalAxis);
+  double centralVertical = coordinate(rows.front(), verticalAxis);
+  for (const auto& row : rows) {
+    if (std::abs(coordinate(row, horizontalAxis)) <
+        std::abs(centralHorizontal)) {
+      centralHorizontal = coordinate(row, horizontalAxis);
+    }
+    if (std::abs(coordinate(row, verticalAxis)) < std::abs(centralVertical)) {
+      centralVertical = coordinate(row, verticalAxis);
+    }
+  }
+
+  std::vector<std::pair<double, double>> profilePoints;
+  for (const auto& row : rows) {
+    const bool onCentralLine =
+        std::abs(coordinate(row, horizontalAxis) - centralHorizontal) < 1e-9 &&
+        std::abs(coordinate(row, verticalAxis) - centralVertical) < 1e-9;
+    if (onCentralLine) {
+      profilePoints.emplace_back(coordinate(row, normalAxis), row.dose);
+    }
+  }
+  std::sort(profilePoints.begin(), profilePoints.end());
+
+  std::vector<double> profileCoordinates;
+  std::vector<double> profileDoses;
+  for (const auto& [profileCoordinate, dose] : profilePoints) {
+    profileCoordinates.push_back(profileCoordinate);
+    profileDoses.push_back(dose);
+  }
+
+  centralProfile = new TGraph(profileCoordinates.size(),
+                              profileCoordinates.data(), profileDoses.data());
+  centralProfile->SetTitle(
+      Form("Central profile;%c [mm];Dose [Gy]", "XYZ"[normalAxis]));
+  centralProfile->SetMarkerStyle(20);
+
+  gStyle->SetOptStat(1110);
+  canvas = new TCanvas("parallelWorldDoseCanvas", "Parallel-world dose QA",
+                       1500, 500);
+  canvas->Divide(3, 1);
+
+  canvas->cd(1);
+  doseSlice->Draw("COLZ");
+  canvas->cd(2);
+  centralProfile->Draw("APL");
+  canvas->cd(3);
+  gPad->SetLogy();
+  doseDistribution->Draw();
+
+  canvas->SaveAs(output);
+  canvas->Modified();
+  canvas->Update();
+
+  std::cout << "Saved " << output << '\n'
+            << "Canvas remains open. Close ROOT or the window when finished."
+            << std::endl;
 }

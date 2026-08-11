@@ -25,15 +25,22 @@ uses `--at Y Z`. The nearest available voxel centres are selected.
 Sparse, unvisited voxels remain transparent unless `--fill-missing 0` is used.
 An absent voxel is not necessarily a voxel with a recorded zero-dose hit.
 
+The plot window remains open after saving. Add `--no-show` for batch jobs and
+CI where only the output image is needed.
+
 ## ROOT dose QA
 
 This produces a requested 2D slice, central line profile, and log-scale voxel
 dose distribution:
 
-```bash
-mamba run -n g4rt_devel root -l -q \
-  'scripts/root/parallel_world_dose.C("output/job/sim/cp/cp_parentworlddose_voxel.csv","z",0.,"dose_qa.pdf")'
+```text
+mamba run -n g4rt_devel root -l
+root [0] .x scripts/root/parallel_world_dose.C("output/job/sim/cp/cp_parentworlddose_voxel.csv", "z", 0.0, "dose_qa.pdf")
 ```
+
+Do not add ROOT's `-q` option when working interactively: `-q` explicitly tells
+ROOT to exit after running the macro. The canvas and its objects are retained
+by the macro and remain usable at the ROOT prompt.
 
 ## ROOT event-energy QA
 
@@ -41,9 +48,9 @@ This plots each supported branch present in the event TTree: deposited energy,
 mean deposited energy, track energy, and primary energy. Availability follows
 the TOML `NTupleAnalysis`, `StoreEnergies`, and `StorePrimaries` options.
 
-```bash
-mamba run -n g4rt_devel root -l -q \
-  'scripts/root/ntuple_energy.C("output/job/job.root","ParentWorldDoseTTree","energy_qa.pdf")'
+```text
+mamba run -n g4rt_devel root -l
+root [0] .x scripts/root/ntuple_energy.C("output/job/job.root", "ParentWorldDoseTTree", "energy_qa.pdf")
 ```
 
 These energy plots are simulation QA rather than dose comparison. They are

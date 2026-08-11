@@ -20,13 +20,13 @@ def nearest(df, axis, requested):
     values = np.sort(df[AXES[axis][0]].dropna().unique())
     return float(values[np.argmin(abs(values - requested))])
 
-def finish(fig, output):
+def finish(fig, output, no_show):
     fig.tight_layout()
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(output, dpi=180, bbox_inches="tight")
         print(f"Saved {output}")
-    else:
+    if not no_show:
         plt.show()
 
 def plot_slice(args, df):
@@ -51,7 +51,7 @@ def plot_slice(args, df):
     im = ax.imshow(values, origin="lower", extent=extent, aspect="equal", interpolation="nearest", cmap=args.cmap)
     fig.colorbar(im, ax=ax, label="% of slice maximum" if args.normalize else "Dose [Gy]")
     ax.set(xlabel=xcol, ylabel=ycol, title=f"Dose slice: {args.axis.upper()} = {selected:g} mm ({note})")
-    finish(fig, args.output)
+    finish(fig, args.output, args.no_show)
 
 def plot_profile(args, df):
     fixed_axes = [a for a in "xyz" if a != args.axis]
@@ -68,7 +68,8 @@ def plot_profile(args, df):
     fixed = ", ".join(f"{a.upper()}={v:g} mm" for a, v in selected.items())
     ax.set(xlabel=coord, ylabel="Dose [% of profile maximum]" if args.normalize else "Dose [Gy]",
            title=f"Dose profile along {args.axis.upper()} at {fixed}")
-    ax.grid(alpha=.3); finish(fig, args.output)
+    ax.grid(alpha=.3)
+    finish(fig, args.output, args.no_show)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -81,10 +82,12 @@ def main():
     selection.add_argument("--index", type=int, help="exact voxel index")
     ps.add_argument("--fill-missing", type=float, metavar="DOSE", help="fill sparse/unvisited voxels, commonly 0")
     ps.add_argument("--cmap", default="inferno"); ps.add_argument("--normalize", action="store_true"); ps.add_argument("--output", type=Path)
+    ps.add_argument("--no-show", action="store_true", help="save without opening an interactive window")
     pp = commands.add_parser("profile", help="plot a line along an axis")
     pp.add_argument("--axis", choices=AXES, default="z")
     pp.add_argument("--at", nargs=2, type=float, default=(0., 0.), metavar=("C1", "C2"), help="coordinates on remaining axes in XYZ order")
     pp.add_argument("--normalize", action="store_true"); pp.add_argument("--output", type=Path)
+    pp.add_argument("--no-show", action="store_true", help="save without opening an interactive window")
     args = parser.parse_args(); df = load(args.csv)
     plot_slice(args, df) if args.command == "slice" else plot_profile(args, df)
 

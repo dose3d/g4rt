@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "d3df example job"
+JobName = "Missalighment Analysis"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/data/PHSP/TNSIM157_10x10s2-f0"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
@@ -8,9 +8,9 @@ PhspInputFileName = "/mnt/data/PHSP/TNSIM157_10x10s2-f0"
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
 
 PhspEvtVrtxMultiplicityTreshold = 45
-PrintProgressFrequency = 0.01
-Physics = "LowE_Polar_Livermore" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
-EnableExtraProcesses = true
+PrintProgressFrequency = 0.001
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+EnableExtraProcesses = false
 
 GenerateCT = false
 PrimariesAnalysis = false
@@ -54,7 +54,7 @@ CentreY = 0.0
 CentreZ = 0.0
 VoxelSizeX = 0.5
 VoxelSizeY = 0.5
-VoxelSizeZ = 4.0
+VoxelSizeZ = 1.0
 CollectionName = "ParentWorldDose"
 
 [D3DDetector_Detector]
@@ -68,7 +68,7 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan]
-nParticles = 10000000
+nParticles = 2000000
 PlanInputFile = [
         "plan/custom/cp10x10.dat"
 ]

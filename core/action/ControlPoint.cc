@@ -16,7 +16,7 @@
 #include "VMlc.hh"
 #include "Services.hh"
 #include "LogSvc.hh"
-#include <numeric> 
+#include <numeric>
 #include <cmath>
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
@@ -37,8 +37,8 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 ///
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
-    auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
-    auto run_collections = ControlPoint::m_run_collections.Get(); 
+    auto scoring_types = Service<RunSvc>()->GetScoringTypes();
+    auto run_collections = ControlPoint::m_run_collections.Get();
     LOGSVC_INFO("ControlPoint","Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& run_collection : run_collections){
         auto run_collection_name = run_collection.first;
@@ -69,7 +69,7 @@ void ControlPointRun::InitializeScoringCollection(){
                 LOGSVC_WARN("ControlPoint","Couldn't get scoring collection for {}/{}",run_collection_name,Scoring::to_string(scoring_type));
                 continue;
             }
-            // 
+            //
                 LOGSVC_INFO("ControlPoint","Added scoring collection type: {}",Scoring::to_string(scoring_type));
             scoring_collection[scoring_type] = sc;
             if(scoring_collection[scoring_type].empty())
@@ -84,7 +84,7 @@ void ControlPointRun::InitializeScoringCollection(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
-    
+
                 LOGSVC_INFO("ControlPoint","Run-{} merging...",worker_run->GetRunID());
     auto cell_volume = Service<GeoSvc>()->Patient()->GetCellVolume();
     auto merge = [&](ScoringMap& left, const ScoringMap& right){
@@ -92,7 +92,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
             G4double total_dose(0);
             auto& type = scoring.first;
             bool isVoxel = type == Scoring::Type::Voxel ? true : false;
-            // 
+            //
                 LOGSVC_INFO("ControlPoint","Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             auto right_type = right.find(type);
@@ -117,20 +117,20 @@ void ControlPointRun::Merge(const G4Run* worker_run){
                     total_dose += hashed_voxel.second.GetDose();
                 }
             }
-            // 
+            //
                 LOGSVC_INFO("ControlPoint","Total dose: {}",total_dose);
-        } 
+        }
     };
 
     for(auto& scoring : m_hashed_scoring_map){
         auto scoring_name = scoring.first;
-        // 
+        //
                 LOGSVC_INFO("ControlPoint","Merging collection: {}",scoring_name);
         auto& master_scoring = scoring.second;
-        // 
+        //
                 LOGSVC_DEBUG("ControlPoint","Master scoring #types: {}",master_scoring.size());
         const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
-        // 
+        //
                 LOGSVC_DEBUG("ControlPoint","Worker scoring #types: {}",worker_scoring.size());
         merge(master_scoring,worker_scoring);
     }
@@ -156,7 +156,7 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 ///
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
-        
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun::EndOfRun...");
         if(Service<ConfigSvc>()->GetValue<std::string>("GeoSvc", "MlcModel").compare("None") != 0 ){
             FillMlcFieldScalingFactor();
@@ -164,7 +164,7 @@ void ControlPointRun::EndOfRun(){
         }
     }
     else {
-        
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun::EndOfRun:: Nothing to do.");
         return;
     }
@@ -176,12 +176,12 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
 
     for(auto& scoring_map: m_hashed_scoring_map){
-        
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
-        
+
         for(auto& scoring: scoring_map.second){
-            
-                LOGSVC_INFO("ControlPoint","ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+
+                LOGSVC_INFO("ControlPoint","ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size());
             G4double max_fsf = -10000.;
             G4double min_fsf =  10000.;
             G4double max_asf = max_fsf;
@@ -195,8 +195,8 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 hit.second.SetAngleScalingFactor(asf);
                 if (asf > max_asf) max_asf = asf;
                 if (asf < min_asf) min_asf = asf;
-            } 
-            
+            }
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: Performing min-max normalization...");
             // Normalization (min-max scaling):
             G4double max_new = 0.98;
@@ -209,10 +209,10 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 auto hit_asf = hit.second.GetAngleScalingFactor();
                 auto new_asf = (hit_asf-min_asf)/(max_asf-min_asf) * (max_new-min_new) + min_new;
                 hit.second.SetAngleScalingFactor(new_asf);
-            } 
+            }
         }
     }
-    
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: Field Scaling Factor processing - done!");
 }
 
@@ -224,7 +224,7 @@ void ControlPointRun::FillParameterization(){
     auto mlc_positioning_y2 = current_cp->MLC()->GetMlcPositioning("Y2");
 
     // Keep only open leafs
-    
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: MLC #leafs {}",mlc_positioning_y1.size());
     std::vector<size_t> indices_to_remove;
     for(size_t idx = 0; idx < mlc_positioning_y1.size(); idx++){
@@ -240,7 +240,7 @@ void ControlPointRun::FillParameterization(){
         mlc_positioning_y2.erase(mlc_positioning_y2.begin() + *it);
     }
 
-    
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: Filtered MLC #leafs {}",mlc_positioning_y1.size());
 
     double total_area = 0.0;
@@ -259,13 +259,13 @@ void ControlPointRun::FillParameterization(){
 
     }
     m_beam_mask_area = svc::round_with_prec(total_area,3);
-    
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: Field Area: {}",m_beam_mask_area);
 
     double cx = svc::round_with_prec(moment_x / mlc_positioning_y1.size(),3);
     double cy = svc::round_with_prec(moment_y / mlc_positioning_y1.size(),3);
     m_beam_mask_gravity_centre = std::make_pair(cx,cy);
-    
+
                 LOGSVC_INFO("ControlPoint","ControlPointRun:: Field Centre Of Gravity: {},{}",cx,cy);
 
 }
@@ -334,9 +334,9 @@ G4Run* ControlPoint::GenerateRun(bool scoring){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::SetRotation(double rotationInDegree) { 
+void ControlPoint::SetRotation(double rotationInDegree) {
     m_config.RotationInDeg = rotationInDegree;
-    if(m_rotation) 
+    if(m_rotation)
         delete m_rotation;
     G4ThreeVector AxisOfRotation = G4ThreeVector(0.,1.,0.).unit();
     m_rotation = new G4RotationMatrix();
@@ -360,7 +360,16 @@ std::string ControlPoint::GetOutputFileName() const {
     auto job = Service<RunSvc>()->GetJobNameLabel();
     auto plan_file_name = std::filesystem::path(GetPlanFile()).stem().string();
     IO::CreateDirIfNotExits(GetOutputDir()+"/"+plan_file_name);
-    return GetOutputDir()+"/"+plan_file_name+"/"+plan_file_name; // No extension here!  
+    return GetOutputDir()+"/"+plan_file_name+"/"+plan_file_name; // No extension here!
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::string ControlPoint::GetPlanOutputDir() const {
+    auto job = Service<RunSvc>()->GetJobNameLabel();
+    auto plan_file_name = std::filesystem::path(GetPlanFile()).stem().string();
+    IO::CreateDirIfNotExits(GetOutputDir()+"/"+plan_file_name);
+    return GetOutputDir()+"/"+plan_file_name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +382,7 @@ std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
         IO::CreateDirIfNotExits(subjob_dir);
         return subjob_dir+"/cp-"+std::to_string(GetId())+postfix;
     }
-    
+
     return GetOutputFileName()+postfix;
 }
 
@@ -416,13 +425,13 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 void ControlPoint::FillPlanFieldMask(){
     // It should happen once for single control point at the time
     // when the current control point is set, see RunSvc::CurrentControlPoint
     // NOTE: The field mask is formed at the isocentre Z position!
     if(m_plan_mask_points.empty()){
-        
+
                 LOGSVC_DEBUG("ControlPoint", "Filling the field mask points");
     }
     else{
@@ -431,11 +440,11 @@ void ControlPoint::FillPlanFieldMask(){
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
     auto configSvc = Service<ConfigSvc>();
-    
+
                 LOGSVC_DEBUG("ControlPoint", "Using the {} field shape and {} deg rotation",m_config.FieldType,GetDegreeRotation());
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
-    
+
     // NOTE: The MLC instance takes care for being set for the current
     //       control point configuration!
 
@@ -451,7 +460,7 @@ void ControlPoint::FillPlanFieldMask(){
         LOGSVC_FATAL("ControlPoint",msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
-    
+
                 LOGSVC_DEBUG("ControlPoint", "Filled with {} number of points",m_plan_mask_points.size());
 }
 
@@ -488,7 +497,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
             if(m_config.FieldType.compare("Elipsoidal")==0){
                 if ((pow(current_x,2)/ pow((x_range / 2.),2) + pow(current_y,2)/pow((y_range / 2.),2)) < 1 ){
                     m_plan_mask_points.push_back(rotate(G4ThreeVector(current_x,current_y,current_z)));
-                } 
+                }
             } else { // Rectangular
                 m_plan_mask_points.push_back(rotate(G4ThreeVector(current_x,current_y,current_z)));
             }
@@ -520,7 +529,7 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const { // TODEL? 
+void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const { // TODEL?
     auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "OutputDir");
     const std::string file = output_dir+"/cp-"+std::to_string(GetId())+"_scoring_volume"+scoring_vol_name+"mask.csv";
     std::string header = "X [mm],Y [mm],Z [mm],mX [mm],mY [mm],mZ [mm],inFieldTag";
@@ -554,7 +563,7 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
     auto getInfluenceFactor = [&](
         const std::vector<G4ThreeVector>& mlc_positioning_1,
         const std::vector<G4ThreeVector>& mlc_positioning_2) -> G4double {
-        G4double influence_factor = 0; 
+        G4double influence_factor = 0;
         for(size_t idx=0; idx < mlc_positioning_1.size(); idx++ ){
             auto leaf_position = mlc_positioning_1.at(idx);
             auto leaf_position_pair = mlc_positioning_2.at(idx);
@@ -572,7 +581,7 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
         // std::cout << "position = " << position <<"  influence_factor = " << influence_factor << std::endl;
         return influence_factor;
     };
-    
+
     auto influence_factor_y1 = getInfluenceFactor(mlc_positioning_y1,mlc_positioning_y2);
     // std::cout << std::endl;
     auto influence_factor_y2 = getInfluenceFactor(mlc_positioning_y2,mlc_positioning_y1);
@@ -587,7 +596,7 @@ G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector
     if (angle==180) // Edge case, not to divide by 0
         angle+=0.01;
     double angleInRadians = angle * M_PI / 180.0;
-    
+
     // Make the angle symmetric [-M_PI,M_PI] insted of [0,2M_PI]
     angleInRadians = angleInRadians - M_PI;
 
@@ -604,7 +613,7 @@ G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector
     double distance = crossProduct.mag() / beamDirection.mag();
 
     // Modified sigmoid function:
-    auto sig = [](double x){ 
+    auto sig = [](double x){
         return -2./(1 + std::exp(-x))+1;
     };
 
@@ -612,10 +621,10 @@ G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
     for(const auto& run_collection: ControlPoint::m_run_collections.Get()){
-        // 
+        //
                 // LOGSVC_INFO("ControlPoint","RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
                 // LOGSVC_WARN("ControlPoint","RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
                 // LOGSVC_DEBUG("ControlPoint","RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
@@ -625,7 +634,7 @@ void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
             // collID==-1 the collection is not found
             // collID==-2 the collection name is ambiguous
             if(collID<0){
-                
+
                 LOGSVC_INFO("ControlPoint","ControlPoint::FillEventCollections: HC: {} / G4SDManager Err: {}", hc, collID);
             }
             else {
@@ -678,7 +687,7 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
     if(m_run_collections.Get().find( run_collection_name ) == m_run_collections.Get().end()){
         m_run_collections.Get()[run_collection_name] = std::vector<G4String>();
-        
+
                 LOGSVC_INFO("ControlPoint","Register new run collection:  {} ", run_collection_name);
     }
     m_run_collections.Get().at(run_collection_name).emplace_back(hc_name);

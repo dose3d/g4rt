@@ -56,7 +56,17 @@ class IO {
   static std::unique_ptr<TFile> CreateOutputTFile(const std::string& name, const std::string& dir=std::string());
 
   ///
-  void DeleteFile(const std::string &file_path);
+  static void DeleteFile(const std::string &file_path);
+
+  ///
+  static void DeleteDirectory(const std::string &dir_path);
+
+  ///
+  static void MoveFile(const std::string &dest_dir_path, const std::string &file_path);
+
+  ///
+  static void CopyFile(const std::string &dest_dir_path, const std::string &src_file_path);
+
 };
 
 #endif //Dose3D_IO_H

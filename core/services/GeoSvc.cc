@@ -84,8 +84,8 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
-    // m_config->SetValue(unit, G4String("Varian-HD120")); 
-    thisConfig()->SetTValue<std::string>(unit, std::string("None")); 
+    // m_config->SetValue(unit, G4String("Varian-HD120"));
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -148,11 +148,11 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 ///
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
-    
+
       INFO_GEO("Service initialization...");
     PrintConfig();
 
-    if (m_configSvc->GetValue<bool>("RunSvc", "SavePhSp")) 
+    if (m_configSvc->GetValue<bool>("RunSvc", "SavePhSp"))
       ParseSavePhspPlaneRequest();
 
     GetHeadModel(); // verify the specified head model
@@ -166,7 +166,7 @@ void GeoSvc::Initialize() {
 ///
 WorldConstruction *GeoSvc::Update(int runId) {
   G4cout << "[INFO]:: GeoSvc :: Geometry world is already existing - Updating.." << G4endl;
-  if (my_world->Update(runId)) 
+  if (my_world->Update(runId))
     return my_world;
   else {
     G4cout << "[ERROR]:: GeoSvc :: Failed with geometry update" << G4endl;
@@ -370,7 +370,7 @@ std::vector<VPatient*> GeoSvc::CustomDetectors(){
 VMlc* GeoSvc::MLC(){
   if(thisConfig()->GetValue<G4String>("HeadModel")){
     return BeamCollimation::GetInstance()->GetMlc();
-  } 
+  }
   return nullptr; // this should never happen, but prevent warning
 }
 
@@ -415,7 +415,7 @@ void GeoSvc::ExportToGateGenericRepeater() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
-  
+
       INFO_GEO("Writing Scroing Components to CSV...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
@@ -429,11 +429,11 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
-  
+
       INFO_GEO("Writing Scroing Components to TFile...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
-      
+
       INFO_GEO("Implement me ...");
       // gc->ExportPositioningToTFile(output_dir); to be repaired to new scoring maps scheme
   }
@@ -442,7 +442,7 @@ void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Write geometry as TGeometry object in TFile
 void GeoSvc::WriteWorldToTFile() {
-  
+
       DEBUG_GEO("Writing World Geometry To TFile...");
   auto output_dir = GetOutputDir();
   if(!m_is_gdml_exported){
@@ -503,14 +503,14 @@ void GeoSvc::WriteWorldToTFile() {
   setNodesVisByMaterial("RW3",83,30);
   setNodesVisByMaterial("Rubber",156,30);
 
-  // Dose3D visibility 
+  // Dose3D visibility
   setNodesVisByName("D3D",49);
   setNodesVisByName("Stl",12,10);
 
   // Final export
   geo_dir->WriteTObject(tgeom,"World_Geometry");
   tgeom->UnlockGeometry();
-  
+
       INFO_GEO("Writing to {} - done!",geo_tfile);
   m_is_tfile_exported = true;
 }
@@ -525,18 +525,19 @@ void GeoSvc::WritePatientToCsvCT(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WritePatientToDicomCT(){
-  // NOTE: Currently this service is using the csv data, 
+  // NOTE: Currently this service is using the csv data,
   //       hence the GeoSvc::WritePatientToCsvCT has to be called!
   auto output_dir = GetOutputDir()+"/dicom/ct_csv";
   auto dicomSvc = Service<DicomSvc>();
   auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";
   dicomSvc->ExportPatientToCT(output_dir,dciom_dir);
+  IO::DeleteDirectory(output_dir); // TODO: It will be not necessery once dcm export will be independent from csv generation.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteWorldToGdml(){
-  
+
       DEBUG_GEO("Writing World Geometry To GDML...");
   World()->ExportToGDML(GetOutputDir(),m_world_file_name+".gdml");
   m_is_gdml_exported = true;

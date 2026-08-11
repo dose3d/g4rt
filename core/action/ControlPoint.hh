@@ -15,7 +15,8 @@
 #include "VPatient.hh"
 #include "G4Run.hh"
 #include "VoxelHit.hh"
-#include "G4Threading.hh" 
+#include "G4Threading.hh"
+#include <filesystem>
 
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
@@ -42,7 +43,7 @@ class ControlPointRun : public G4Run {
     mutable std::map<G4String,ScoringMap> m_hashed_scoring_map;
 
     mutable std::vector<G4ThreeVector> m_sim_mask_points;
-    
+
     ///
     void InitializeScoringCollection();
 
@@ -55,7 +56,7 @@ class ControlPointRun : public G4Run {
     ///
     double m_beam_mask_area = 1;
     std::pair<double, double> m_beam_mask_gravity_centre = {1,1};
-    
+
 
   public:
     ControlPointRun(bool scoring=false) {
@@ -98,6 +99,7 @@ class ControlPoint {
     ~ControlPoint();
     int GetId() const { return m_config.Id; }
     std::string GetPlanFile() const { return m_config.PlanFile; }
+    std::string GetPlanName() const { return std::filesystem::path(m_config.PlanFile).stem().string(); }
     int GetNEvts() const { return m_config.NEvts; }
     G4RotationMatrix* GetRotation() const { return m_rotation; }
     G4double GetDegreeRotation() const {return m_config.RotationInDeg;}
@@ -107,7 +109,7 @@ class ControlPoint {
     G4double GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const;
 
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
-    
+
     void DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const;
     std::string GetSimOutputTFileName(bool workerMT = false) const;
 
@@ -118,15 +120,16 @@ class ControlPoint {
     ControlPointRun* GetRun() {return m_cp_run.Get();}
     const ControlPointRun* GetRun() const {return m_cp_run.Get();}
 
-    std::string GetFieldType() const { return m_config.FieldType; } 
+    std::string GetFieldType() const { return m_config.FieldType; }
 
     G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 
     G4double GetFieldSizeB() const { return m_config.FieldSizeB; }
-    
+
     int Id() const { return m_config.Id; }
 
     std::string GetOutputFileName() const;
+    std::string GetPlanOutputDir() const;
 
     const std::vector<std::string>& DataTypes() const { return m_data_types; }
 
@@ -172,7 +175,7 @@ class ControlPoint {
     /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
 
-    /// Many HitsCollections can be associated to given run collection name 
+    /// Many HitsCollections can be associated to given run collection name
     // (e.g. when many sensitive detectors constituting a single detection unit a.k.a ROI)
     static G4Cache<std::map<G4String,std::vector<G4String>>> m_run_collections;
     static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);

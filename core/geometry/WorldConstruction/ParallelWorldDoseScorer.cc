@@ -6,44 +6,14 @@
 #include "ControlPoint.hh"
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
-#include "G4PVParameterised.hh"
+#include "G4PVPlacement.hh"
+#include "G4PVReplica.hh"
 #include "G4SDManager.hh"
-#include "G4VPVParameterisation.hh"
 #include "Services.hh"
 #include "VPatientSD.hh"
 
 namespace {
 const G4String kParallelWorldName = "DoseGridParallelWorld";
-
-class DoseGridParameterisation final : public G4VPVParameterisation {
- public:
-  DoseGridParameterisation(G4int nx, G4int ny, G4int nz,
-                           const G4ThreeVector& voxelSize,
-                           const G4ThreeVector& centre)
-      : m_nX(nx), m_nY(ny), m_nZ(nz), m_voxelSize(voxelSize), m_centre(centre) {}
-
-  void ComputeTransformation(const G4int copyNo,
-                             G4VPhysicalVolume* physicalVolume) const override {
-    const G4int iz = copyNo % m_nZ;
-    const G4int iy = (copyNo / m_nZ) % m_nY;
-    const G4int ix = copyNo / (m_nY * m_nZ);
-    const G4ThreeVector gridSize(m_nX * m_voxelSize.x(),
-                                 m_nY * m_voxelSize.y(),
-                                 m_nZ * m_voxelSize.z());
-    physicalVolume->SetTranslation(
-        m_centre + G4ThreeVector(-0.5 * gridSize.x() + (ix + 0.5) * m_voxelSize.x(),
-                                 -0.5 * gridSize.y() + (iy + 0.5) * m_voxelSize.y(),
-                                 -0.5 * gridSize.z() + (iz + 0.5) * m_voxelSize.z()));
-    physicalVolume->SetRotation(nullptr);
-  }
-
- private:
-  G4int m_nX;
-  G4int m_nY;
-  G4int m_nZ;
-  G4ThreeVector m_voxelSize;
-  G4ThreeVector m_centre;
-};
 
 class ParallelWorldDoseSD final : public VPatientSD {
  public:
@@ -55,10 +25,14 @@ class ParallelWorldDoseSD final : public VPatientSD {
     m_id_y = 0;
     m_id_z = 0;
     SetStepWiseDose(true);
-    AddScoringVolume(runCollection, hitsCollection, scoringBox, nx, ny, nz);
+    AddScoringVolume(runCollection, hitsCollection, scoringBox, nx, ny, nz,
+                     G4ThreeVector(), true);
   }
 
   G4bool ProcessHits(G4Step* step, G4TouchableHistory*) override {
+    // Parallel navigation also produces boundary-only steps. They carry no
+    // dose and previously dominated the scoring cost for fine grids.
+    if (step->GetTotalEnergyDeposit() <= 0.) return false;
     ProcessHitsCollection(m_hitsCollection, step);
     return true;
   }
@@ -162,13 +136,52 @@ void ParallelWorldDoseScorer::Construct() {
 
   auto ghostWorld = GetWorld();
   auto ghostWorldLogical = ghostWorld->GetLogicalVolume();
+
+  // Follow Geant4's native scoring-box layout: three nested replicas divide the
+  // container along X, Y, and Z. This keeps O(1) geometry objects, exposes every
+  // scoring boundary, and avoids activating mass-world score splitting.
+  auto containerSolid = new G4Box("ParallelDoseGridBox", 0.5 * m_actualSize.x(),
+                                  0.5 * m_actualSize.y(), 0.5 * m_actualSize.z());
+  auto containerLogical =
+      new G4LogicalVolume(containerSolid, nullptr, "ParallelDoseGridLV");
+  new G4PVPlacement(nullptr, m_centre, containerLogical, "ParallelDoseGridPV",
+                    ghostWorldLogical, false, 0, false);
+
+  auto xSliceSolid = new G4Box("ParallelDoseXSliceBox", 0.5 * m_voxelSize.x(),
+                               0.5 * m_actualSize.y(), 0.5 * m_actualSize.z());
+  auto xSliceLogical =
+      new G4LogicalVolume(xSliceSolid, nullptr, "ParallelDoseXSliceLV");
+  if (m_nX > 1) {
+    new G4PVReplica("ParallelDoseXSlicePV", xSliceLogical, containerLogical,
+                    kXAxis, m_nX, m_voxelSize.x());
+  } else {
+    new G4PVPlacement(nullptr, G4ThreeVector(), xSliceLogical,
+                      "ParallelDoseXSlicePV", containerLogical, false, 0, false);
+  }
+
+  auto ySliceSolid = new G4Box("ParallelDoseYSliceBox", 0.5 * m_voxelSize.x(),
+                               0.5 * m_voxelSize.y(), 0.5 * m_actualSize.z());
+  auto ySliceLogical =
+      new G4LogicalVolume(ySliceSolid, nullptr, "ParallelDoseYSliceLV");
+  if (m_nY > 1) {
+    new G4PVReplica("ParallelDoseYSlicePV", ySliceLogical, xSliceLogical,
+                    kYAxis, m_nY, m_voxelSize.y());
+  } else {
+    new G4PVPlacement(nullptr, G4ThreeVector(), ySliceLogical,
+                      "ParallelDoseYSlicePV", xSliceLogical, false, 0, false);
+  }
+
   auto voxelSolid = new G4Box("ParallelDoseVoxelBox", 0.5 * m_voxelSize.x(),
                               0.5 * m_voxelSize.y(), 0.5 * m_voxelSize.z());
-  m_voxelLogical = new G4LogicalVolume(voxelSolid, nullptr, "ParallelDoseVoxelLV");
-  auto parameterisation = new DoseGridParameterisation(m_nX, m_nY, m_nZ, m_voxelSize, m_centre);
-  const auto count = static_cast<G4int>(static_cast<long long>(m_nX) * m_nY * m_nZ);
-  new G4PVParameterised("ParallelDoseVoxelPV", m_voxelLogical, ghostWorldLogical,
-                        kUndefined, count, parameterisation, false);
+  m_voxelLogical =
+      new G4LogicalVolume(voxelSolid, nullptr, "ParallelDoseVoxelLV");
+  if (m_nZ > 1) {
+    new G4PVReplica("ParallelDoseVoxelPV", m_voxelLogical, ySliceLogical,
+                    kZAxis, m_nZ, m_voxelSize.z());
+  } else {
+    new G4PVPlacement(nullptr, G4ThreeVector(), m_voxelLogical,
+                      "ParallelDoseVoxelPV", ySliceLogical, false, 0, false);
+  }
   WriteInfo();
 }
 

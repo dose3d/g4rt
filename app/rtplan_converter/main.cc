@@ -7,6 +7,10 @@
 #include <pybind11/embed.h>
 #include "LogSvc.hh"
 #include <locale.h>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <random>
 // Helper functions to parse a pair from a string
 std::pair<float, float> convertPair(const std::pair<std::string, std::string>& input) {
     try {
@@ -59,7 +63,9 @@ int main(int argc, const char *argv[]) {
         ("c,nCtrlPts", "Number of control points (default value ALL)", cxxopts::value<int>(), "N")
         ("nParticles", "Number of particles to be set in the plan (default value 1e3)", cxxopts::value<int>()->default_value("1000"), "N")
         ("f,File", "Specify RT-Plan file", cxxopts::value<std::string>(), "FILE")
-        ("fieldCentre", "Perform Field centralization in AB sides", cxxopts::value<bool>()->default_value("false"))
+        ("fieldCentre",
+         "Move the open-field centroid to a random point within +/-30 mm",
+         cxxopts::value<bool>()->default_value("false"))
         ("o,OutputDir", "Specify output directory", cxxopts::value<std::string>(), "PATH")
         ("fieldConstrain", "Input pair ([mm] in format: value1,value2)", cxxopts::value<std::string>());
         ;
@@ -123,57 +129,189 @@ int main(int argc, const char *argv[]) {
       // --------------------------------------------------------------------
       auto fieldCentre = cmdopts["fieldCentre"].as<bool>();
       int nParticles = cmdopts["nParticles"].as<int>();
-      auto centralize_ab = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
-        G4double min_a = 10000, min_b = 0;
-        G4double max_a = 0, max_b = -10000;
-        int min_leaf_y = -1, max_leaf_y = -1;
-        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
-          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) != 0){ // check if mlc is not closed
-            if(mlc_a.at(i_leaf) < min_a) min_a = mlc_a.at(i_leaf);
-            if(mlc_b.at(i_leaf) < min_b) min_b = mlc_b.at(i_leaf);
-            if(mlc_a.at(i_leaf) > max_a) max_a = mlc_a.at(i_leaf);
-            if(mlc_b.at(i_leaf) > max_b) max_b = mlc_b.at(i_leaf);
-          }
+
+      // When field centralization is enabled, the target centroid is sampled
+      // independently for both axes. This keeps the converted plans varied,
+      // while guaranteeing that neither centroid coordinate exceeds 30 mm.
+      constexpr G4double max_centre_offset = 30.0; // mm
+      std::mt19937 centre_rng(std::random_device{}());
+      std::uniform_real_distribution<G4double> centre_distribution(
+          -max_centre_offset, max_centre_offset);
+
+      /**
+       * Return the physical boundaries of all leaf rows at the isocentre plane.
+       *
+       * The 60-row layout mirrors MlcSimplified: 14 outer rows of 5 mm,
+       * 32 inner rows of 2.5 mm, and another 14 outer rows of 5 mm. Other
+       * layouts use a uniform 2.5 mm pitch, which is the converter's fallback
+       * geometry.
+       */
+      auto leaf_boundaries = [](size_t leaf_count) {
+        std::vector<G4double> boundaries(leaf_count + 1, 0.0);
+
+        // Geometry used by MlcSimplified: 14 x 5 mm, 32 x 2.5 mm,
+        // 14 x 5 mm. For other MLC sizes use the central 2.5 mm pitch.
+        G4double total_width = 2.5 * leaf_count;
+        if (leaf_count == 60)
+          total_width = 220.0;
+
+        boundaries.front() = -total_width / 2.0;
+        for (size_t leaf = 0; leaf < leaf_count; ++leaf) {
+          const G4double width =
+              leaf_count == 60 && (leaf < 14 || leaf >= 46) ? 5.0 : 2.5;
+          boundaries.at(leaf + 1) = boundaries.at(leaf) + width;
         }
-        double shift_ab = 0;
-        if (min_a<0 && max_b>0){
-          shift_ab = -(max_b + min_a)/2;
-        } else if (min_a<0 && max_b<=0) {
-          shift_ab = -min_a/2;
-        } else if (min_a>=0 && max_b>0) {
-          shift_ab = -max_b/2;
-        }
-        std::cout << "Shift A-B: " << shift_ab << std::endl;
-        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
-          mlc_a.at(i_leaf) = mlc_a.at(i_leaf) + shift_ab;
-          mlc_b.at(i_leaf) = mlc_b.at(i_leaf) + shift_ab;
-        }
+        return boundaries;
       };
-      int not_x_cetral{0};
-      auto centralize_x = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
-        int start_x_closed = 0, end_x_closed = 0;
-        bool got_open = false;
-        for(size_t i_leaf=0; i_leaf < mlc_a.size(); i_leaf++){
-          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) == 0 && !got_open){ // check if mlc is closed
-            ++start_x_closed;
-          } else {
-            got_open=true;
+
+      /**
+       * Move the geometric centroid of an open MLC field near (0, 0).
+       *
+       * The open field is treated as a union of rectangular leaf apertures.
+       * Each rectangle has area:
+       *
+       *     leaf-row width * abs(mlc_a - mlc_b)
+       *
+       * Its area-weighted centre is used to calculate the field centroid.
+       *
+       * Along the leaf-travel (A-B) axis, all leaf endpoints can be translated
+       * continuously, so the requested random centroid is reached exactly.
+       * Along the leaf-row axis, the field can only be moved by complete rows.
+       * Every valid row shift is evaluated and the one closest to the sampled
+       * target is selected, provided the resulting centroid stays within
+       * +/- max_centre_offset.
+       *
+       * Closed fields and inconsistent MLC banks are left unchanged.
+       */
+      auto centralize_field = [&](std::vector<G4double>& mlc_a,
+                                  std::vector<G4double>& mlc_b) {
+        if (mlc_a.size() != mlc_b.size() || mlc_a.empty()) {
+          LOG_ERROR("Cannot centralize field: inconsistent or empty MLC data");
+          return;
+        }
+
+        auto is_open = [&](size_t leaf) {
+          return std::abs(mlc_a.at(leaf) - mlc_b.at(leaf)) > 1e-6;
+        };
+
+        const auto boundaries = leaf_boundaries(mlc_a.size());
+        size_t first_open = mlc_a.size();
+        size_t last_open = 0;
+        G4double total_area = 0.0;
+        G4double weighted_ab = 0.0;
+
+        // Calculate the area-weighted centroid in the leaf-travel direction
+        // and remember the outermost open rows for valid shift bounds.
+        for (size_t leaf = 0; leaf < mlc_a.size(); ++leaf) {
+          if (!is_open(leaf))
+            continue;
+          first_open = std::min(first_open, leaf);
+          last_open = leaf;
+          const G4double aperture =
+              std::abs(mlc_a.at(leaf) - mlc_b.at(leaf));
+          const G4double leaf_width =
+              boundaries.at(leaf + 1) - boundaries.at(leaf);
+          const G4double area = aperture * leaf_width;
+          total_area += area;
+          weighted_ab +=
+              area * (mlc_a.at(leaf) + mlc_b.at(leaf)) / 2.0;
+        }
+
+        if (first_open == mlc_a.size() || total_area <= 0.0) {
+          LOG_WARN("Cannot centralize a closed MLC field");
+          return;
+        }
+
+        const G4double target_ab = centre_distribution(centre_rng);
+        const G4double centre_ab = weighted_ab / total_area;
+        const G4double shift_ab = target_ab - centre_ab;
+
+        // A common endpoint translation preserves every aperture width and
+        // therefore preserves the field shape and area.
+        for (size_t leaf = 0; leaf < mlc_a.size(); ++leaf) {
+          mlc_a.at(leaf) += shift_ab;
+          mlc_b.at(leaf) += shift_ab;
+        }
+
+        // Perpendicular to leaf travel, movement is discrete. Test all shifts
+        // that keep the complete open pattern inside the available MLC rows.
+        const G4double target_rows = centre_distribution(centre_rng);
+        int best_shift = 0;
+        G4double best_error = std::numeric_limits<G4double>::max();
+        const int min_shift = -static_cast<int>(first_open);
+        const int max_shift =
+            static_cast<int>(mlc_a.size() - 1 - last_open);
+        for (int shift = min_shift; shift <= max_shift; ++shift) {
+          G4double shifted_area = 0.0;
+          G4double shifted_weighted_rows = 0.0;
+          for (size_t leaf = first_open; leaf <= last_open; ++leaf) {
+            if (!is_open(leaf))
+              continue;
+            const auto destination =
+                static_cast<size_t>(static_cast<int>(leaf) + shift);
+            const G4double aperture =
+                std::abs(mlc_a.at(leaf) - mlc_b.at(leaf));
+            const G4double destination_width =
+                boundaries.at(destination + 1) - boundaries.at(destination);
+            const G4double area = aperture * destination_width;
+            const G4double destination_centre =
+                (boundaries.at(destination) +
+                 boundaries.at(destination + 1)) /
+                2.0;
+            shifted_area += area;
+            shifted_weighted_rows += area * destination_centre;
+          }
+          const G4double shifted_centre =
+              shifted_weighted_rows / shifted_area;
+          if (std::abs(shifted_centre) > max_centre_offset)
+            continue;
+          const G4double error = std::abs(shifted_centre - target_rows);
+          if (error < best_error) {
+            best_error = error;
+            best_shift = shift;
           }
         }
-        got_open = false;
-        for(int i_leaf=mlc_a.size()-1; i_leaf >=0; i_leaf--){
-          if(mlc_a.at(i_leaf) - mlc_b.at(i_leaf) == 0 && !got_open){ // check if mlc is closed
-            ++end_x_closed;
-          } else {
-            got_open=true;
+
+        if (best_error == std::numeric_limits<G4double>::max()) {
+          LOG_WARN("Field cannot be moved within +/- {} mm in leaf-row axis",
+                   max_centre_offset);
+        } else if (best_shift != 0) {
+          // Newly exposed rows are closed at 0,0. Rows discarded at an edge
+          // are guaranteed to be closed because of the shift bounds above.
+          auto shifted_a = std::vector<G4double>(mlc_a.size(), 0.0);
+          auto shifted_b = std::vector<G4double>(mlc_b.size(), 0.0);
+          for (size_t leaf = 0; leaf < mlc_a.size(); ++leaf) {
+            const int destination = static_cast<int>(leaf) + best_shift;
+            if (destination >= 0 &&
+                destination < static_cast<int>(mlc_a.size())) {
+              shifted_a.at(destination) = mlc_a.at(leaf);
+              shifted_b.at(destination) = mlc_b.at(leaf);
+            }
           }
+          mlc_a = std::move(shifted_a);
+          mlc_b = std::move(shifted_b);
         }
-        if(start_x_closed != end_x_closed){
-          std::cout << "NOT X CENTRAL" << start_x_closed << std::endl;
-          ++not_x_cetral;
+
+        // Recalculate and report the resulting centroid. This is also useful
+        // for quickly validating converted plans from command output.
+        G4double centered_area = 0.0;
+        G4double centered_weighted_rows = 0.0;
+        for (size_t leaf = 0; leaf < mlc_a.size(); ++leaf) {
+          if (!is_open(leaf))
+            continue;
+          const G4double aperture =
+              std::abs(mlc_a.at(leaf) - mlc_b.at(leaf));
+          const G4double width =
+              boundaries.at(leaf + 1) - boundaries.at(leaf);
+          const G4double area = aperture * width;
+          centered_area += area;
+          centered_weighted_rows +=
+              area * (boundaries.at(leaf) + boundaries.at(leaf + 1)) / 2.0;
         }
-        // std::cout << "Start #leafs closed: " << start_x_closed << std::endl;
-        // std::cout << "End   #leafs closed: " << end_x_closed << std::endl;
+        const G4double centre_rows =
+            centered_weighted_rows / centered_area;
+        std::cout << "Field geometric centre [mm]: " << centre_rows << ","
+                  << target_ab << std::endl;
       };
       
       auto isPassingFieldConstrain = [&](std::vector<G4double>& mlc_a,
@@ -236,8 +374,7 @@ int main(int argc, const char *argv[]) {
           outFile.close();
           LOG_INFO("Plan data written into file: {}", dat_plan_file);
 
-      } else std::cout << "Unable to open file: " << dat_plan_file << std::endl;
-          LOG_ERROR("Unable to open file: {}", dat_plan_file);
+      } else LOG_ERROR("Unable to open file: {}", dat_plan_file);
       };
 
 
@@ -265,10 +402,9 @@ int main(int argc, const char *argv[]) {
           std::cout << "MLC B: " << mlc_b.size() << std::endl;
 
           std::string dat_plan_file = svc::getFileName(rtplan_file);
-          dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
+          dat_plan_file = output_dir + "/Beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
           if (fieldCentre){
-            centralize_ab(mlc_a, mlc_b);
-            centralize_x(mlc_a, mlc_b);
+            centralize_field(mlc_a, mlc_b);
           }
           auto passed = true;
           if (fieldConstrain)
@@ -283,7 +419,6 @@ int main(int argc, const char *argv[]) {
         }
       }
       std::cout << "#Processed CP: " << cp_counter << " filtered and saved: " << passing_rate_counter << "("<< double(passing_rate_counter)*100/cp_counter <<"%)" << std::endl;
-      std::cout << "# Not centralized in X: " << not_x_cetral << std::endl;
     } catch (const cxxopts::OptionException &e) {
       std::cout << "Error parsing options: " << e.what() << std::endl;
       std::exit(EXIT_FAILURE);

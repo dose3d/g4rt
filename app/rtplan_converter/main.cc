@@ -402,7 +402,7 @@ int main(int argc, const char *argv[]) {
           std::cout << "MLC B: " << mlc_b.size() << std::endl;
 
           std::string dat_plan_file = svc::getFileName(rtplan_file);
-          dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
+          dat_plan_file = output_dir + "/Beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
           if (fieldCentre){
             centralize_field(mlc_a, mlc_b);
           }

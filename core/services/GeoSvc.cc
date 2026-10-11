@@ -398,8 +398,6 @@ void GeoSvc::PerformRequestedExport() {
     ExportToGateGenericRepeater();
   if(thisConfig()->GetValue<bool>("ExportGeometryToGDML"))
     WriteWorldToGdml();
-  if (thisConfig()->GetValue<bool>("GenerateRTStruct"))
-    WritePatientToRTStruct();
 }
 
 

@@ -605,6 +605,9 @@ void RunSvc::WriteGeometryData() const {
     geoSvc->WritePatientToCsvCT();
     geoSvc->WritePatientToDicomCT();
   }
+  if(thisConfig()->GetValue<bool>("GenerateRTStruct")){
+    geoSvc->WritePatientToRTStruct();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

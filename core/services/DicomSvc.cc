@@ -307,6 +307,49 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+class IRtStructSvc::Impl {
+public:
+    Impl()
+        : m_py_rtstruct(py::reinterpret_borrow<py::object>(
+              py::module::import("dicom_rtstruct").attr("RtStructSvc")().ptr())){}
+
+    ~Impl() {
+        m_py_rtstruct.release();
+    }
+
+    void set_paths(const std::string& output_path) const {
+        m_py_rtstruct.attr("set_output_path")(output_path);
+        m_py_rtstruct.attr("set_project_path")(PROJECT_DATA_PATH);
+    }
+
+    void create_rtstruct(const std::string& ct_series_path,
+                         const std::vector<IRtStructSvc::CellVoxelDescriptor>& cells) const {
+        // TODO
+    }
+
+  private:
+      py::object m_py_rtstruct;
+  };
+
+IRtStructSvc::IRtStructSvc()
+    : m_impl(std::make_unique<Impl>())
+{}
+
+IRtStructSvc::~IRtStructSvc() = default;
+
+void IRtStructSvc::set_paths(const std::string& output_path) const {
+    m_impl->set_paths(output_path);
+}
+
+void IRtStructSvc::create_rtstruct(const std::string& ct_series_path,
+                                   const std::vector<IRtStructSvc::CellVoxelDescriptor>& cells) const {
+    m_impl->create_rtstruct(ct_series_path, cells);
+}
+void DicomSvc::ExportCellsToRTStruct(const std::string& ct_path, const std::string& output_path) const{
+  // TODO
+}
+////////////////////////////////////////////////////////////////////////////////
+///
 double DicomSvc::GetRTPlanAngle(int current_beam, int current_controlpoint) const {
   auto rtplanAngleReader = py::module::import("dicom_rtplan_angle");
   // Zakomentowane części kodu - na przyszłość przy większej ilości runów

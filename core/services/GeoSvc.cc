@@ -398,6 +398,8 @@ void GeoSvc::PerformRequestedExport() {
     ExportToGateGenericRepeater();
   if(thisConfig()->GetValue<bool>("ExportGeometryToGDML"))
     WriteWorldToGdml();
+  if (thisConfig()->GetValue<bool>("GenerateRTStruct"))
+    WritePatientToRTStruct();
 }
 
 
@@ -550,4 +552,28 @@ std::string GeoSvc::GetOutputDir() {
             "/"+Service<ConfigSvc>()->GetValue<std::string>("GeoSvc","GeoDir");
   IO::CreateDirIfNotExits(dir);
   return dir;
+}
+////////////////////////////////////////////////////////////////////////////////
+///
+void GeoSvc::WritePatientToRTStruct() {
+    INFO_GEO("Writing Patient / Cells to RT-Struct...");
+
+    std::vector<CellVoxelDescriptor> cells;
+    for (const auto* gc : m_scoring_components) {
+        if (!gc) continue;
+        for (const auto& cell : gc->GetCellsDescriptors()) {
+            cells.push_back({
+                cell.label,
+                cell.center,
+                cell.halfLength
+            });
+        }
+    }
+    INFO_GEO("Collected {} cells. Passing directly to DicomSvc...", cells.size());
+
+    auto ct_dir = GetOutputDir() + "/dicom/ct_dcm";
+    auto rtstruct_dir = GetOutputDir() + "/dicom/rtstruct";
+
+    auto dicomSvc = Service<DicomSvc>();
+    dicomSvc->ExportCellsToRTStruct(ct_dir, cells, rtstruct_dir);
 }

@@ -75,11 +75,6 @@ class ICustomPlan : public IPlan {
 ///
 class IRtStructSvc {
   public:
-    struct CellVoxelDescriptor {
-      std::string label;
-      G4ThreeVector center;
-      G4ThreeVector halfLength;
-    };
     IRtStructSvc();
     ~IRtStructSvc();
     void set_paths(const std::string& output_path) const;
@@ -162,7 +157,9 @@ class DicomSvc {
     void ExportPatientToCT(const std::string& series_csv_path, const std::string& output_path) const;
 
     ///
-    void ExportCellsToRTStruct(const std::string& ct_series_path, const std::string& output_path) const;
+    void ExportCellsToRTStruct(const std::string& ct_series_path, 
+                               const std::vector<CellVoxelDescriptor>& cells,                         
+                               const std::string& output_path) const;
     ///
     static ControlPointConfig GetControlPointConfig(int id, const std::string& planFile);
 

@@ -1,5 +1,8 @@
 #include "DicomSvc.hh"
+#include "PatientGeometry.hh"
 #include "Services.hh"
+#include "WorldConstruction.hh"
+#include <pybind11/cast.h>
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -323,8 +326,25 @@ public:
     }
 
     void create_rtstruct(const std::string& ct_series_path,
-                         const std::vector<IRtStructSvc::CellVoxelDescriptor>& cells) const {
-        // TODO
+                         const std::vector<CellVoxelDescriptor>& cells) const {
+        py::list py_cells;
+
+        for(const auto& cell : cells){
+          py::dict cell_dict;
+          cell_dict["label"] = cell.label;
+          cell_dict["center"] = py::make_tuple(
+            cell.center.x(),
+            cell.center.y(),
+            cell.center.z()
+          );
+          cell_dict["halflength"] = py::make_tuple(
+            cell.halfLength.x(),
+            cell.halfLength.y(),
+            cell.halfLength.z()
+          );
+          py_cells.append(cell_dict);
+        }
+        m_py_rtstruct.attr("create_rtstruct_from_cells")(ct_series_path, py_cells);
     }
 
   private:
@@ -342,11 +362,16 @@ void IRtStructSvc::set_paths(const std::string& output_path) const {
 }
 
 void IRtStructSvc::create_rtstruct(const std::string& ct_series_path,
-                                   const std::vector<IRtStructSvc::CellVoxelDescriptor>& cells) const {
+                                   const std::vector<CellVoxelDescriptor>& cells) const {
     m_impl->create_rtstruct(ct_series_path, cells);
 }
-void DicomSvc::ExportCellsToRTStruct(const std::string& ct_path, const std::string& output_path) const{
-  // TODO
+////////////////////////////////////////////////////////////////////////////////
+///
+void DicomSvc::ExportCellsToRTStruct(const std::string& ct_series_path,
+                           const std::vector<CellVoxelDescriptor>& cells,
+                           const std::string& output_path) const {
+    m_rtstruct_svc.set_paths(output_path);
+    m_rtstruct_svc.create_rtstruct(ct_series_path, cells);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///

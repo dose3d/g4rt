@@ -33,10 +33,6 @@ class RtStructSvc:
         print(f"RT-Struct Project root was set to: {project_path}")
 
     def create_rtstruct_from_cells(self, ct_series_path: str, cells_list: list):
-        """
-        Wczytuje serię CT wygenerowaną przez CtSvc i tworzy dopasowany plik RTSTRUCT.
-        cells_list: [{'label': str, 'center': (x, y, z), 'halflength': (dx, dy, dz)}]
-        """
         print("Starting RT-Struct creation...")
 
         ct_files = sorted(glob.glob(os.path.join(ct_series_path, "*.dcm")))
@@ -45,12 +41,6 @@ class RtStructSvc:
 
         ct_datasets = [pydicom.dcmread(f) for f in ct_files]
 
-        # in CtSvc axis Z is vertical
-        def get_slice_pos(ds):
-            pos = ds.ImagePositionPatient
-            return float(pos[2])
-
-        ct_datasets.sort(key=get_slice_pos)
         ref_ct = ct_datasets[0]
 
         # file Metadata
@@ -132,16 +122,17 @@ class RtStructSvc:
             roi_contour.ContourSequence = []
 
             for ct in ct_datasets:
-                slice_coord = get_slice_pos(ct)
-                if y_min <= slice_coord <= y_max:
+                pos = [float(x) for x in ct.ImagePositionPatient]
+                slice_z = pos[2]
+                if z_min <= slice_z <= z_max:
                     c_item = Dataset()
                     c_item.ContourGeometricType = "CLOSED_PLANAR"
                     
                     c_item.ContourData = [
-                        x_min, z_min, slice_coord,
-                        x_max, z_min, slice_coord,
-                        x_max, z_max, slice_coord,
-                        x_min, z_max, slice_coord
+                        x_min, y_min, slice_z,
+                        x_max, y_min, slice_z,
+                        x_max, y_max, slice_z,
+                        x_min, y_max, slice_z
                     ]
                     c_item.NumberOfContourPoints = 4
 

@@ -490,11 +490,11 @@ std::string D3DDetector::SetGeometrySource() {
     return geo_type = "GeometryDB";
   }
 
-  if ((m_config.m_stl_geometry_file_path.compare("None") == 0)) {
+    if ((m_config.m_stl_geometry_file_path.compare("None") == 0) && (m_config.m_stl_positioning_file_path.compare("None") == 0)) {
     ComputeRegularCellPositioning();
     return geo_type = "Standard";
   }
-
+  
   else if ((m_config.m_stl_geometry_file_path.compare("None") != 0) && (m_config.m_stl_positioning_file_path.compare("None") == 0)) {
     ERROR_GEO("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
     return geo_type;

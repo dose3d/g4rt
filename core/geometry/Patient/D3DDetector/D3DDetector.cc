@@ -1,4 +1,5 @@
 #include "D3DDetector.hh"
+#include "D3DCell.hh"
 #include "G4SystemOfUnits.hh"
 #include "GeoSvc.hh"
 #include "G4Box.hh"
@@ -385,7 +386,35 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
   }
   outGateFile.close();
 }
+////////////////////////////////////////////////////////////////////////////////
+///
+std::vector<CellVoxelDescriptor> D3DDetector::GetCellsDescriptors() const {
+  std::vector<CellVoxelDescriptor> descriptors;
 
+  auto run_collections = ControlPoint::GetRunCollectionNames();
+  if (run_collections.empty()) {
+      WARN_GEO("D3DDetector::GetCellsDescriptors:: No RunCollection found.");
+      return descriptors;
+  }
+
+  const auto& run_collection = run_collections.at(0);
+  auto hashed_scoring_map = GetScoringHashedMap(run_collection, Scoring::Type::Cell);
+  G4ThreeVector halfSize = D3DCell::SIZE / 2;
+
+  descriptors.reserve(hashed_scoring_map.size());
+
+  for (const auto& scoring_volume : hashed_scoring_map) {
+      const auto& hit = scoring_volume.second;
+      
+      CellVoxelDescriptor desc;
+      desc.label = hit.GetLabel();
+      desc.center = hit.GetCentre();
+      desc.halfLength = halfSize;
+
+      descriptors.emplace_back(std::move(desc));
+  }
+  return descriptors;
+}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
@@ -461,11 +490,11 @@ std::string D3DDetector::SetGeometrySource() {
     return geo_type = "GeometryDB";
   }
 
-  if ((m_config.m_stl_geometry_file_path.compare("None") == 0)) {
+    if ((m_config.m_stl_geometry_file_path.compare("None") == 0) && (m_config.m_stl_positioning_file_path.compare("None") == 0)) {
     ComputeRegularCellPositioning();
     return geo_type = "Standard";
   }
-
+  
   else if ((m_config.m_stl_geometry_file_path.compare("None") != 0) && (m_config.m_stl_positioning_file_path.compare("None") == 0)) {
     ERROR_GEO("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
     return geo_type;
